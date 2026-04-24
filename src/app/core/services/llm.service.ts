@@ -16,7 +16,7 @@ export interface RationaleResult {
  *
  * Architecture decision: backend endpoints remain the sole inference boundary.
  * This service routes all rationale requests through BdtApiService → server.ts.
- * If LLM_ENDPOINT is configured server-side, the backend forwards to an LLM.
+ * If OPENROUTER_API_KEY is configured server-side, the backend forwards to OpenRouter.
  * Otherwise, the backend returns deterministic fallback text.
  * Either way, this service never makes direct LLM calls from the browser.
  */

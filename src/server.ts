@@ -22,6 +22,11 @@ const angularApp = new AngularNodeAppEngine();
 const LOCK_PASSWORD = process.env['APP_LOCK_PASSWORD'] ?? 'SteelSmartStridsledning2026';
 const LOCK_TOKEN_TTL_SECONDS = Number(process.env['APP_LOCK_TOKEN_TTL_SECONDS'] ?? 60 * 60);
 const LOCK_COOKIE_NAME = 'bdt_access';
+const OPENROUTER_API_KEY = process.env['OPENROUTER_API_KEY'] ?? '';
+const OPENROUTER_MODEL = process.env['OPENROUTER_MODEL'] ?? 'mistral/mistral-large-2411';
+const RUNPOD_API_KEY = process.env['RUNPOD_API_KEY'] ?? '';
+const RUNPOD_ENDPOINT_ID = process.env['RUNPOD_ENDPOINT_ID'] ?? '';
+const RUNPOD_LAB_URL = RUNPOD_ENDPOINT_ID ? `https://api.runpod.ai/v2/${RUNPOD_ENDPOINT_ID}/runsync?wait=120000` : '';
 
 // ── Mock theater state ────────────────────────────────────────────────────────
 
@@ -52,6 +57,38 @@ interface MockCOA {
     asymmetryRatio: number; robustnessScore: number; confidence: number;
   };
   assignments: { threatId: string; baseId: string; effectorType: string; pk: number; }[];
+}
+
+interface Distribution {
+  mean: number;
+  std: number;
+  p10: number;
+  p90: number;
+}
+
+interface MOEDistributions {
+  interceptFraction: Distribution;
+  readiness6h: Distribution;
+  blueExpenditure: Distribution;
+  asymmetryRatio: Distribution;
+}
+
+interface LabRunResult {
+  robustnessScore: number;
+  legacyComparisonScore: number;
+  fragilityPoint: string;
+  failureProbability: number;
+  failureHeatmap: number[][];
+  moeDistributions: MOEDistributions;
+  runsCompleted: number;
+  runTimeMs: number;
+  correctionRecommendation: string;
+}
+
+interface RunpodSyncResponse {
+  status?: string;
+  output?: unknown;
+  error?: string;
 }
 
 function isPublicPath(pathname: string): boolean {
@@ -831,21 +868,8 @@ app.post('/api/coa/solve', (req, res) => {
   });
 });
 
-app.post('/api/lab/run', (req, res) => {
-  const {
-    coaId, redModel = 'DECEPTIVE',
-    jammerSeverity = 2, trackDegradation = 1, nRuns = 500,
-  } = req.body ?? {};
-
-  const coa = coas.find(c => c.id === coaId) ?? coas[0];
-  if (!coa) { res.status(404).json({ error: 'No COA available — run /api/coa/solve first' }); return; }
-
-  const start = Date.now();
-  const j = Number(jammerSeverity);     // 1-3
-  const d = Number(trackDegradation);   // 1-3
-
-  // Build TheaterState for adversary policy evaluation
-  const theaterState: TheaterState = {
+function buildLabTheaterState(jammerSeverity: number, trackDegradation: number): TheaterState {
+  return {
     tracks: threats
       .filter(t => t.status !== 'NEUTRALIZED' && t.status !== 'LEAKED')
       .map(t => ({
@@ -862,22 +886,39 @@ app.post('/api/lab/run', (req, res) => {
     interceptorCounts: Object.fromEntries(BASES.map(b => [b.id,
       b.missileInventory.interceptorShort + b.missileInventory.interceptorMid + b.missileInventory.interceptorLong,
     ])),
-    jammerSeverity: j,
-    trackDegradation: d,
+    jammerSeverity,
+    trackDegradation,
   };
+}
 
-  const jamFactor  = 1 - (j - 1) * 0.15;
-  const degradeF   = 1 - (d - 1) * 0.12;
-  const baseScore  = +(coa.projectedOutcome.robustnessScore * jamFactor * degradeF).toFixed(3);
+function buildLabDistribution(mean: number, std: number): Distribution {
+  return {
+    mean: +mean.toFixed(3),
+    std:  +std.toFixed(3),
+    p10:  +(mean - std * 1.28).toFixed(3),
+    p90:  +(mean + std * 1.28).toFixed(3),
+  };
+}
 
-  // Policy-derived robustness via red adversary heuristics
-  const adversary = computeAdversaryImpact(redModel as RedModel, theaterState, baseScore);
-  const robustness  = adversary.robustness;
+function buildLocalLabResult(
+  coa: MockCOA,
+  redModel: RedModel,
+  theaterState: TheaterState,
+  jammerSeverity: number,
+  trackDegradation: number,
+  nRuns: number,
+): LabRunResult {
+  const start = Date.now();
+  const jamFactor = 1 - (jammerSeverity - 1) * 0.15;
+  const degradeF = 1 - (trackDegradation - 1) * 0.12;
+  const baseScore = +(coa.projectedOutcome.robustnessScore * jamFactor * degradeF).toFixed(3);
+
+  const adversary = computeAdversaryImpact(redModel, theaterState, baseScore);
+  const robustness = adversary.robustness;
   const legacyScore = +(robustness * 0.55).toFixed(3);
   const failureProb = +(1 - robustness).toFixed(3);
-  const r6h = +(0.72 - (j - 1) * 0.06 - (d - 1) * 0.04).toFixed(3);
+  const r6h = +(0.72 - (jammerSeverity - 1) * 0.06 - (trackDegradation - 1) * 0.04).toFixed(3);
 
-  // Build a 12×12 failure heatmap (row = swarm density, col = jammer amplitude)
   const heatmap: number[][] = Array.from({ length: 12 }, (_, r) =>
     Array.from({ length: 12 }, (_, c) =>
       +(Math.min(0.95, Math.max(0.02,
@@ -886,55 +927,141 @@ app.post('/api/lab/run', (req, res) => {
     )
   );
 
-  const dist = (mean: number, std: number) => ({
-    mean: +mean.toFixed(3),
-    std:  +std.toFixed(3),
-    p10:  +(mean - std * 1.28).toFixed(3),
-    p90:  +(mean + std * 1.28).toFixed(3),
-  });
-
-  res.json({
-    robustnessScore:          robustness,
-    legacyComparisonScore:    legacyScore,
-    fragilityPoint:           adversary.primaryThreat,
-    failureProbability:       failureProb,
-    failureHeatmap:           heatmap,
+  return {
+    robustnessScore: robustness,
+    legacyComparisonScore: legacyScore,
+    fragilityPoint: adversary.primaryThreat,
+    failureProbability: failureProb,
+    failureHeatmap: heatmap,
     moeDistributions: {
-      interceptFraction: dist(robustness,       0.08),
-      readiness6h:       dist(r6h,              0.06),
-      blueExpenditure:   dist(coa.projectedOutcome.cost / 2_000_000, 0.05),
-      asymmetryRatio:    dist(coa.projectedOutcome.asymmetryRatio, 0.4),
+      interceptFraction: buildLabDistribution(robustness, 0.08),
+      readiness6h: buildLabDistribution(r6h, 0.06),
+      blueExpenditure: buildLabDistribution(coa.projectedOutcome.cost / 2_000_000, 0.05),
+      asymmetryRatio: buildLabDistribution(coa.projectedOutcome.asymmetryRatio, 0.4),
     },
-    runsCompleted:            Math.min(Number(nRuns), 500),
-    runTimeMs:                Date.now() - start,
+    runsCompleted: Math.min(Number(nRuns), 500),
+    runTimeMs: Date.now() - start,
     correctionRecommendation: adversary.correctionRecommendation,
-  });
+  };
+}
+
+function normalizeRunpodLabResult(output: unknown): LabRunResult | null {
+  if (!output) return null;
+  if (Array.isArray(output)) {
+    return output.length > 0 ? normalizeRunpodLabResult(output[0]) : null;
+  }
+  if (typeof output !== 'object') return null;
+
+  const candidate = output as Partial<LabRunResult> & {
+    output?: unknown;
+    result?: unknown;
+    data?: unknown;
+  };
+
+  const hasRequiredFields =
+    typeof candidate.robustnessScore === 'number' &&
+    typeof candidate.legacyComparisonScore === 'number' &&
+    typeof candidate.fragilityPoint === 'string' &&
+    typeof candidate.failureProbability === 'number' &&
+    Array.isArray(candidate.failureHeatmap) &&
+    candidate.moeDistributions !== undefined &&
+    typeof candidate.runsCompleted === 'number' &&
+    typeof candidate.runTimeMs === 'number' &&
+    typeof candidate.correctionRecommendation === 'string';
+
+  if (hasRequiredFields) {
+    return candidate as LabRunResult;
+  }
+
+  return normalizeRunpodLabResult(candidate.output ?? candidate.result ?? candidate.data ?? null);
+}
+
+async function callRunpodLab(
+  coa: MockCOA,
+  redModel: RedModel,
+  theaterState: TheaterState,
+  jammerSeverity: number,
+  trackDegradation: number,
+  nRuns: number,
+): Promise<LabRunResult | null> {
+  if (!RUNPOD_API_KEY || !RUNPOD_ENDPOINT_ID) return null;
+
+  try {
+    const response = await fetch(RUNPOD_LAB_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RUNPOD_API_KEY}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        input: {
+          coaId: coa.id,
+          coa,
+          redModel,
+          jammerSeverity,
+          trackDegradation,
+          nRuns,
+          theaterState,
+          source: 'steel',
+        },
+      }),
+      signal: AbortSignal.timeout(120_000),
+    });
+
+    if (!response.ok) return null;
+
+    const payload = await response.json() as RunpodSyncResponse;
+    if (payload.status !== 'COMPLETED') return null;
+    return normalizeRunpodLabResult(payload.output);
+  } catch {
+    return null;
+  }
+}
+
+app.post('/api/lab/run', async (req, res) => {
+  const {
+    coaId, redModel = 'DECEPTIVE',
+    jammerSeverity = 2, trackDegradation = 1, nRuns = 500,
+  } = req.body ?? {};
+
+  const coa = coas.find(c => c.id === coaId) ?? coas[0];
+  if (!coa) { res.status(404).json({ error: 'No COA available — run /api/coa/solve first' }); return; }
+
+  const j = Number(jammerSeverity);     // 1-3
+  const d = Number(trackDegradation);   // 1-3
+  const theaterState = buildLabTheaterState(j, d);
+
+  const runpodResult = await callRunpodLab(coa, redModel as RedModel, theaterState, j, d, Number(nRuns));
+  if (runpodResult) {
+    res.json(runpodResult);
+    return;
+  }
+
+  res.json(buildLocalLabResult(coa, redModel as RedModel, theaterState, j, d, Number(nRuns)));
 });
 
-// ── Mistral Large via OpenRouter ──────────────────────────────────────────────
+// ── OpenRouter rationale backend ─────────────────────────────────────────────
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MISTRAL_MODEL  = 'mistral/mistral-large-2411';
-
-async function callMistral(system: string, user: string, maxTokens = 280): Promise<string | null> {
-  const apiKey = process.env['OPENROUTER_API_KEY'];
-  if (!apiKey) return null;
+async function callOpenRouter(system: string, user: string, maxTokens = 280): Promise<string | null> {
+  if (!OPENROUTER_API_KEY) return null;
   try {
     const res = await fetch(OPENROUTER_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type':  'application/json',
-        'HTTP-Referer':  'https://steel-smart-stridsledning.example',
-        'X-Title':       'Steel - Smart Stridsledning',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://steel-smart-stridsledning.example',
+        'X-Title': 'Steel - Smart Stridsledning',
       },
       body: JSON.stringify({
-        model:       MISTRAL_MODEL,
+        model: OPENROUTER_MODEL,
         temperature: 0.2,
-        max_tokens:  maxTokens,
+        max_tokens: maxTokens,
         messages: [
           { role: 'system', content: system },
-          { role: 'user',   content: user   },
+          { role: 'user', content: user },
         ],
       }),
       signal: AbortSignal.timeout(12_000),
@@ -976,10 +1103,10 @@ app.post('/api/rationale/coa', async (req, res) => {
     'Explain why this COA is superior to legacy rule-based fire control that engages threats in order of detection. ' +
     'Emphasize the dual-wave sustainability advantage and what readiness floor is preserved for Wave 2.';
 
-  const llm = await callMistral(system, user, 280);
+  const llm = await callOpenRouter(system, user, 280);
   res.json({
     rationaleText: llm ?? fallback,
-    model:         llm ? MISTRAL_MODEL : 'FALLBACK',
+    model:         llm ? OPENROUTER_MODEL : 'FALLBACK',
     generatedAt:   new Date().toISOString(),
   });
 });
@@ -1006,10 +1133,10 @@ app.post('/api/rationale/lab-result', async (req, res) => {
     `Recommended correction: ${rec}. ` +
     'State what the commander must know and what single action to take immediately.';
 
-  const llm = await callMistral(system, user, 160);
+  const llm = await callOpenRouter(system, user, 160);
   res.json({
     rationaleText: llm ?? fallback,
-    model:         llm ? MISTRAL_MODEL : 'FALLBACK',
+    model:         llm ? OPENROUTER_MODEL : 'FALLBACK',
     generatedAt:   new Date().toISOString(),
   });
 });
@@ -1063,10 +1190,10 @@ app.post('/api/rationale/logistics', async (req, res) => {
     (degraded.length ? `Degraded nodes: ${degraded.join(', ')}. ` : 'All nodes operational. ') +
     'Provide a tactical advisory focused on next-wave interceptor readiness and corridor risk.';
 
-  const llm = await callMistral(system, user, 160);
+  const llm = await callOpenRouter(system, user, 160);
   res.json({
     rationaleText: llm ?? fallback,
-    model:         llm ? MISTRAL_MODEL : 'FALLBACK',
+    model:         llm ? OPENROUTER_MODEL : 'FALLBACK',
     generatedAt:   new Date().toISOString(),
   });
 });
