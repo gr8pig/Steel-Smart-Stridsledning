@@ -1,64 +1,89 @@
 <svg width="1200" height="475" viewBox="0 0 1200 475" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Steel - Smart Stridsledning banner</title>
-  <desc id="desc">Minimal high-contrast banner with steel gradients, diagonal beams, and a centered monogram.</desc>
+  <desc id="desc">A dark, minimal banner with steel gradients, angular beams, and a compact command-surface motif.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="475" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#06070a"/>
-      <stop offset="0.55" stop-color="#0d1117"/>
-      <stop offset="1" stop-color="#131923"/>
+      <stop offset="0" stop-color="#05070a"/>
+      <stop offset="0.55" stop-color="#0d1219"/>
+      <stop offset="1" stop-color="#121a24"/>
     </linearGradient>
-    <linearGradient id="steel" x1="160" y1="92" x2="940" y2="382" gradientUnits="userSpaceOnUse">
+    <linearGradient id="steel" x1="110" y1="110" x2="620" y2="360" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#f8fafc"/>
-      <stop offset="0.45" stop-color="#9aa7b3"/>
-      <stop offset="1" stop-color="#586676"/>
+      <stop offset="0.4" stop-color="#b8c2cc"/>
+      <stop offset="1" stop-color="#607080"/>
     </linearGradient>
-    <linearGradient id="accent" x1="180" y1="0" x2="1020" y2="475" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#60a5fa" stop-opacity="0.0"/>
-      <stop offset="0.5" stop-color="#38bdf8" stop-opacity="0.95"/>
-      <stop offset="1" stop-color="#14b8a6" stop-opacity="0.25"/>
+    <linearGradient id="accent" x1="140" y1="70" x2="1080" y2="350" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.0"/>
+      <stop offset="0.45" stop-color="#38bdf8" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#14b8a6" stop-opacity="0.22"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(780 188) rotate(90) scale(210 320)">
-      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.28"/>
-      <stop offset="0.6" stop-color="#0ea5e9" stop-opacity="0.06"/>
+    <linearGradient id="panel" x1="86" y1="92" x2="640" y2="372" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b1118" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#05070a" stop-opacity="0.42"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(850 190) rotate(90) scale(180 240)">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.30"/>
+      <stop offset="0.7" stop-color="#0ea5e9" stop-opacity="0.06"/>
       <stop offset="1" stop-color="#0f172a" stop-opacity="0"/>
     </radialGradient>
-    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000000" flood-opacity="0.45"/>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000000" flood-opacity="0.5"/>
     </filter>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+    </pattern>
   </defs>
 
   <rect width="1200" height="475" rx="32" fill="url(#bg)"/>
   <rect x="0.5" y="0.5" width="1199" height="474" rx="31.5" stroke="rgba(255,255,255,0.06)"/>
-  <path d="M0 365C150 306 260 302 410 336C570 373 700 365 848 300C971 246 1080 234 1200 272V475H0V365Z" fill="#0f172a" fill-opacity="0.55"/>
-  <path d="M70 102L390 70" stroke="url(#accent)" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
-  <path d="M70 126L390 94" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M770 74L1095 206" stroke="rgba(255,255,255,0.08)" stroke-width="2" stroke-linecap="round"/>
-  <path d="M760 104L1102 248" stroke="url(#accent)" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
-  <circle cx="820" cy="206" r="150" fill="url(#glow)"/>
-  <g opacity="0.26">
-    <path d="M790 73L905 140L905 275L790 342L675 275V140L790 73Z" stroke="rgba(255,255,255,0.5)" stroke-width="1.4" fill="none"/>
-    <path d="M790 106L877 154V251L790 299L703 251V154L790 106Z" stroke="rgba(255,255,255,0.35)" stroke-width="1.2" fill="none"/>
-  </g>
+  <rect width="1200" height="475" rx="32" fill="url(#grid)" opacity="0.25"/>
+  <circle cx="845" cy="184" r="210" fill="url(#glow)"/>
+
+  <path d="M0 348C158 292 286 300 412 334C552 371 712 376 854 309C981 250 1090 235 1200 263V475H0V348Z" fill="#0f172a" fill-opacity="0.58"/>
+  <path d="M64 120L390 82" stroke="url(#accent)" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M64 145L390 106" stroke="rgba(255,255,255,0.08)" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M760 80L1088 194" stroke="rgba(255,255,255,0.08)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M760 108L1118 236" stroke="url(#accent)" stroke-width="2.2" stroke-linecap="round" opacity="0.55"/>
+  <path d="M760 340H1112" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <path d="M792 318H1084" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <path d="M822 296H1060" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
 
   <g filter="url(#shadow)">
-    <rect x="86" y="86" width="540" height="302" rx="22" fill="rgba(8,12,18,0.48)" stroke="rgba(255,255,255,0.08)"/>
-    <path d="M124 126H274" stroke="url(#accent)" stroke-width="3" stroke-linecap="round"/>
-    <text x="124" y="214" fill="url(#steel)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="84" font-weight="700" letter-spacing="10">STEEL</text>
-    <text x="128" y="258" fill="rgba(255,255,255,0.88)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="500" letter-spacing="6">SMART STRIDSLEDNING</text>
-    <text x="128" y="292" fill="rgba(226,232,240,0.72)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="500" letter-spacing="2.2">DEPLOYMENT-READY COMMAND SURFACE</text>
-    <g transform="translate(124 326)">
-      <rect width="112" height="28" rx="14" fill="rgba(56,189,248,0.11)" stroke="rgba(56,189,248,0.30)"/>
-      <text x="18" y="19" fill="#bae6fd" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" letter-spacing="2">CLOUD RUN</text>
-      <rect x="124" width="126" height="28" rx="14" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.10)"/>
-      <text x="142" y="19" fill="rgba(226,232,240,0.88)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" letter-spacing="2">STOCKHOLM</text>
-      <rect x="258" width="128" height="28" rx="14" fill="rgba(20,184,166,0.10)" stroke="rgba(20,184,166,0.28)"/>
-      <text x="276" y="19" fill="#99f6e4" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" letter-spacing="2">SSR / GCP</text>
+    <rect x="78" y="78" width="568" height="318" rx="24" fill="url(#panel)" stroke="rgba(255,255,255,0.08)"/>
+    <rect x="102" y="102" width="120" height="4" rx="2" fill="url(#accent)"/>
+    <text x="102" y="194" fill="url(#steel)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="80" font-weight="700" letter-spacing="8">STEEL</text>
+    <text x="106" y="236" fill="rgba(255,255,255,0.92)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="22" font-weight="500" letter-spacing="5">SMART STRIDSLEDNING</text>
+    <text x="106" y="272" fill="rgba(226,232,240,0.74)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="500" letter-spacing="2.4">DEPLOYMENT-READY COMMAND SURFACE</text>
+    <text x="106" y="306" fill="rgba(148,163,184,0.82)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="12" font-weight="500" letter-spacing="1.7">ANGULAR SSR  //  CLOUD RUN  //  STOCKHOLM</text>
+    <g transform="translate(102 332)">
+      <rect width="108" height="30" rx="15" fill="rgba(56,189,248,0.10)" stroke="rgba(56,189,248,0.34)"/>
+      <text x="16" y="20" fill="#bae6fd" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" letter-spacing="2">CLOUD RUN</text>
+      <rect x="120" width="120" height="30" rx="15" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.10)"/>
+      <text x="138" y="20" fill="rgba(226,232,240,0.88)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" letter-spacing="2">SSR APP</text>
+      <rect x="250" width="126" height="30" rx="15" fill="rgba(20,184,166,0.10)" stroke="rgba(20,184,166,0.28)"/>
+      <text x="268" y="20" fill="#99f6e4" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="600" letter-spacing="2">STOCKHOLM</text>
     </g>
   </g>
 
-  <g opacity="0.44">
-    <path d="M696 350H1095" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
-    <path d="M714 330H1068" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-    <path d="M734 310H1040" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <g opacity="0.9">
+    <rect x="744" y="124" width="300" height="180" rx="20" fill="rgba(7,10,14,0.42)" stroke="rgba(255,255,255,0.08)"/>
+    <path d="M786 154H954" stroke="rgba(255,255,255,0.08)" stroke-width="1.2"/>
+    <path d="M786 218H954" stroke="rgba(255,255,255,0.08)" stroke-width="1.2"/>
+    <path d="M786 282H954" stroke="rgba(255,255,255,0.08)" stroke-width="1.2"/>
+
+    <g transform="translate(786 150)">
+      <path d="M108 12L172 49V123L108 160L44 123V49L108 12Z" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
+      <path d="M108 34L152 59V111L108 136L64 111V59L108 34Z" fill="none" stroke="url(#accent)" stroke-width="2"/>
+      <path d="M108 56L132 70V100L108 114L84 100V70L108 56Z" fill="rgba(56,189,248,0.12)" stroke="rgba(255,255,255,0.28)" stroke-width="1.2"/>
+      <circle cx="108" cy="85" r="6" fill="#e2e8f0"/>
+      <path d="M108 40V132" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <path d="M76 67L140 103" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <path d="M76 103L140 67" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+    </g>
+    <text x="956" y="168" fill="rgba(226,232,240,0.94)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="14" font-weight="600" letter-spacing="2">LIVE DEPLOYMENT</text>
+    <text x="956" y="192" fill="rgba(148,163,184,0.82)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="500" letter-spacing="1.6">Containerized SSR surface</text>
+    <text x="956" y="214" fill="rgba(148,163,184,0.82)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="500" letter-spacing="1.6">Cloud Run ready</text>
+    <text x="956" y="236" fill="rgba(148,163,184,0.82)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="500" letter-spacing="1.6">Single-region Stockholm</text>
+    <text x="956" y="258" fill="rgba(148,163,184,0.82)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="11" font-weight="500" letter-spacing="1.6">GitHub-first delivery</text>
   </g>
 </svg>

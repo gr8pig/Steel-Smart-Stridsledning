@@ -4,29 +4,62 @@
 
 # Steel - Smart Stridsledning
 
-Steel - Smart Stridsledning is the deployment-ready Angular SSR command surface prepared from the prior workstream as a standalone repo for Cloud Run deployment. It keeps the decision-support UI, server entry points, and deploy scripts in one clean package.
+Steel - Smart Stridsledning is the canonical live copy of the command-support application. It packages the Angular SSR app, backend server, Docker build, and Cloud Run deployment path into one repo that can be pushed, deployed, and operated without the research artifacts.
 
-## What’s Included
+## Snapshot
 
-- Angular 21 SSR application with the existing operational surfaces
-- Dockerfile for container builds
-- Cloud Run deployment script for `europe-north2`
-- Static assets and favicon in `public/`
+- Angular 21 SSR application with Express server rendering
+- Cloud Run target region: `europe-north2` for Stockholm hosting
+- Single-instance runtime model for in-memory simulation and websocket state
+- Local branding assets in `public/`
+- Fresh GitHub-ready repo, not a research archive
 
-## What’s Not Included
+## What Ships
 
-- Research notes, planning material, and other non-deployable artifacts
-- Local secrets such as `.env`
+- Mission overview, tactical control, commander orchestration, readiness, governance, and robustness surfaces
+- SSR server entry points and backend rationale endpoints
+- Dockerfile for repeatable container builds
+- GCP deploy script for Artifact Registry and Cloud Run
+- Minimal favicon and banner asset for the repository landing page
 
-## Deployment
+## What Is Deliberately Excluded
+
+- Research notes, plans, and supporting documents
+- `.env` and any other local secrets
+- Historical scaffolding that is not needed to deploy the app
+
+## Operating Model
+
+The service is designed as a single Cloud Run instance:
+
+- `min-instances=1`
+- `max-instances=1`
+- `concurrency=1`
+- `cpu-throttling` disabled
+
+That is intentional. The app keeps state in memory and uses websockets, so horizontal scaling would create drift between replicas.
+
+## Architecture
+
+1. The browser loads the Angular SSR app.
+2. The server renders the route and exposes the API surface.
+3. Optional rationale requests go through the backend, which can forward to an LLM if configured.
+
+Deployment is intentionally narrow:
+
+- [`Dockerfile`](./Dockerfile) builds the container image.
+- [`deploy/gcp/deploy.sh`](./deploy/gcp/deploy.sh) builds and deploys to Cloud Run.
+- [`src/server.ts`](./src/server.ts) hosts SSR plus API routes.
+
+## Deploy
 
 ### Prerequisites
 
-- `gcloud` authenticated and pointing at the right project
-- A billing-enabled GCP project
-- Cloud Run and Artifact Registry access in that project
+- `gcloud` authenticated and pointed at the target project
+- Billing enabled on the GCP project
+- Cloud Run and Artifact Registry access
 
-### Deploy
+### Cloud Run
 
 ```bash
 chmod +x deploy/gcp/deploy.sh
@@ -47,14 +80,28 @@ The app starts on [http://localhost:3000](http://localhost:3000).
 ## Useful Scripts
 
 ```bash
-npm run build
-npm run test
-npm run lint
-npm run serve:ssr:app
+npm run build        # production build
+npm run test         # unit tests
+npm run lint         # static analysis
+npm run serve:ssr:app  # run the built SSR server
 ```
 
-## Notes
+## Repository Layout
 
-- The Cloud Run deployment is configured for a single instance with WebSocket support.
-- Optional OpenRouter-backed rationale generation can be enabled with `OPENROUTER_API_KEY`.
-- The live repo is intended to be copied into a fresh GitHub repository as-is.
+```text
+src/
+  app/
+    core/        services and state
+    features/    route-level surfaces
+    shared/      UI primitives and domain data
+  server.ts      SSR server and API routes
+deploy/gcp/      Cloud Run deployment scaffold
+public/          branding assets and favicon
+```
+
+## Runtime Notes
+
+- Cloud Run supports websockets, so the theater view remains interactive.
+- `OPENROUTER_API_KEY` enables live rationale generation through the backend.
+- `APP_LOCK_PASSWORD` overrides the built-in lock password if you need to set it at deploy time.
+- The repo is meant to stay as the deployable source of truth for the fresh GitHub repository.
