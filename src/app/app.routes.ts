@@ -31,6 +31,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/robustness-lab').then(m => m.RobustnessLab)
   },
   {
+    path: 'counterfactual-lab',
+    redirectTo: 'reference/counterfactual-lab',
+    pathMatch: 'full'
+  },
+  {
     path: 'governance',
     loadComponent: () => import('./features/governance').then(m => m.Governance)
   },
@@ -41,6 +46,20 @@ export const routes: Routes = [
   {
     path: 'logistics',
     loadComponent: () => import('./features/logistics-console').then(m => m.LogisticsConsole)
+  },
+  {
+    path: 'reference',
+    loadChildren: () => import('./features/reference/reference.routes').then(m => m.referenceRoutes)
+  },
+  {
+    path: 'c2-resilience-lab',
+    redirectTo: 'reference/c2-resilience-lab',
+    pathMatch: 'full'
+  },
+  {
+    path: 'c2-resilience',
+    redirectTo: 'reference/c2-resilience-lab',
+    pathMatch: 'full'
   },
   {
     path: 'knowledge-graph',

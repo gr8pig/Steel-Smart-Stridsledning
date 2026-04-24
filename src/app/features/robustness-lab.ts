@@ -7,6 +7,7 @@ import { LabStore } from '../core/state/lab.store';
 import { OrchestrationStore } from '../core/state/orchestration.store';
 import { CapabilityOrchestrator } from '../core/services/capability-orchestrator';
 import { BdtApiService, LabRunResult } from '../core/services/bdt-api.service';
+import { LLMService } from '../core/services/llm.service';
 
 @Component({
   selector: 'app-robustness-lab',
@@ -355,6 +356,7 @@ export class RobustnessLab {
     orchestration= inject(OrchestrationStore);
     orchestrator = inject(CapabilityOrchestrator);
     api          = inject(BdtApiService);
+    llm          = inject(LLMService);
 
     selectedRedModel  = signal<'DECEPTIVE' | 'SATURATION' | 'KINETIC'>('DECEPTIVE');
     jammerSeverity    = signal(2);
@@ -469,7 +471,7 @@ export class RobustnessLab {
 
         // Fire-and-forget: fetch AI rationale for audit log
         if (result) {
-            this.api.getRationaleForLabResult(result).subscribe({
+            this.llm.getRationaleForLabResult(result).subscribe({
                 next: r => this.orchestrator.showFeature({
                     name: 'Strategic Loop Closure (Lab → Commander)',
                     operationalFunction: r.rationaleText,

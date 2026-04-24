@@ -1,16 +1,19 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
 import { PolicyStore } from '../core/state/policy.store';
 import { ReadinessStore } from '../core/state/readiness.store';
 import { LabStore } from '../core/state/lab.store';
 import { OrchestrationStore } from '../core/state/orchestration.store';
+import { CapabilityLayerStore } from '../core/state/capability-layer.store';
 import { CapabilityOrchestrator } from '../core/services/capability-orchestrator';
+import { PublicCapabilityCard } from '../shared/domain/public-capability';
 
 @Component({
   selector: 'app-commander-orchestrator',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, RouterLink],
   template: `
     <div class="h-full w-full p-4 flex flex-col gap-4 overflow-hidden bg-boreal-canvas text-boreal-text-primary">
       <header class="flex items-center justify-between border-b border-boreal-border pb-3">
@@ -18,15 +21,74 @@ import { CapabilityOrchestrator } from '../core/services/capability-orchestrator
             <h1 class="text-2xl font-light tracking-tight text-boreal-text-primary uppercase tracking-[0.2em]">Commander Orchestrator</h1>
             <p class="text-[10px] text-boreal-text-muted font-mono uppercase tracking-widest italic leading-none">Policy-driven COA tradeoff analysis & intent publication</p>
         </div>
-        <div class="flex gap-4">
+        <div class="flex items-center gap-4">
+             <div class="hidden xl:flex items-center gap-2">
+                <a routerLink="/reference" class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all">
+                    Reference
+                </a>
+                <a routerLink="/reference/c2-resilience-lab" class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all">
+                    C2 Lab
+                </a>
+                <a routerLink="/reference/counterfactual-lab" class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all">
+                    What-If
+                </a>
+             </div>
+             <!-- Mode Indicator -->
+             <div class="flex flex-col items-end pr-4 border-r border-boreal-border">
+                <span class="text-[9px] font-mono text-boreal-text-muted uppercase">Remapping Mode</span>
+                <div class="flex items-center gap-2">
+                    @if (capabilityStore.mode() !== 'SYNTHETIC') {
+                        <span class="px-1.5 py-0.5 bg-boreal-amber/20 text-boreal-amber text-[8px] font-mono font-black tracking-widest rounded-sm border border-boreal-amber/40 animate-pulse cursor-help" 
+                              title="Public Interpretation Active: Capability estimates are derived from open-source patterns and may contain deceptive signals. Use with caution.">
+                            PUBLIC INTERPRETATION ACTIVE
+                        </span>
+                    }
+                    <span class="text-[10px] font-mono font-bold uppercase text-boreal-text-primary">
+                        {{ capabilityStore.mode() }}
+                    </span>
+                </div>
+             </div>
+
              <div class="flex flex-col items-end">
                 <span class="text-[9px] font-mono text-boreal-text-muted uppercase">Decision Status</span>
-                <span class="text-[10px] font-bold uppercase" [class.text-boreal-amber]="!orchestration.publishedIntent()" [class.text-boreal-green]="orchestration.publishedIntent()">
+                <span class="text-[10px] font-mono font-bold uppercase" [class.text-boreal-amber]="!orchestration.publishedIntent()" [class.text-boreal-green]="orchestration.publishedIntent()">
                     {{ orchestration.publishedIntent() ? 'Intent Published' : 'Awaiting Authorization' }}
                 </span>
              </div>
         </div>
       </header>
+
+      <!-- Capability Context Card -->
+      @if (capabilityStore.mode() !== 'SYNTHETIC') {
+        <div class="design-card bg-boreal-blue/5 border-boreal-blue/30 flex items-start gap-6 animate-in slide-in-from-top-2 duration-500">
+           <div class="flex flex-col gap-1 min-w-[200px]">
+              <span class="text-[9px] font-black text-boreal-blue uppercase tracking-widest">Active Interpretation Layer</span>
+              <h3 class="text-xs font-bold text-boreal-text-primary uppercase">{{ capabilityStore.mode().replace('_', ' ') }}</h3>
+              <div class="flex items-center gap-2 mt-1">
+                 <span class="w-1.5 h-1.5 rounded-full bg-boreal-blue animate-pulse"></span>
+                 <span class="text-[8px] font-mono text-boreal-text-muted uppercase tracking-tighter">OSINT-DATA-FETCH: OK</span>
+              </div>
+           </div>
+           
+           <div class="flex-grow">
+              <p class="text-[10px] text-boreal-text-secondary leading-relaxed italic max-w-2xl">
+                 Applying cross-domain remapping based on {{ capabilityStore.mode() === 'SWEDEN_SAAB_PUBLIC' ? 'Saab public product catalog' : 'identified archetypes' }}. 
+                 Boreal Twin is currently correlating synthetic threat behavior with these public signatures to provide human-readable capability estimates.
+              </p>
+           </div>
+
+           <div class="flex flex-col gap-2 min-w-[220px] border-l border-boreal-blue/20 pl-6">
+              <span class="text-[8px] font-bold text-boreal-text-muted uppercase tracking-widest">Active Archetypes</span>
+              <div class="flex flex-wrap gap-1">
+                 @for (card of activeArchetypes(); track card.id) {
+                    <span class="px-1.5 py-0.5 bg-boreal-panel border border-boreal-border rounded-sm text-[7px] font-mono text-boreal-text-secondary uppercase">
+                       {{ card.displayName }}
+                    </span>
+                 }
+              </div>
+           </div>
+        </div>
+      }
       
       <!-- Wave-2 Readiness Projection -->
       <div class="design-card !p-0 overflow-hidden shadow-lg flex-shrink-0">
@@ -35,7 +97,7 @@ import { CapabilityOrchestrator } from '../core/services/capability-orchestrator
           <div class="flex items-center gap-6">
             <div class="flex items-center gap-2">
               <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="var(--boreal-blue, #3b82f6)" stroke-width="2"/></svg>
-              <span class="text-[8px] font-bold text-boreal-blue uppercase tracking-tighter">Steel Policy</span>
+              <span class="text-[8px] font-bold text-boreal-blue uppercase tracking-tighter">BDT Policy</span>
             </div>
             <div class="flex items-center gap-2">
               <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="var(--boreal-red, #ef4444)" stroke-width="2" stroke-dasharray="4,2"/></svg>
@@ -68,19 +130,19 @@ import { CapabilityOrchestrator } from '../core/services/capability-orchestrator
             <!-- Legacy fill: under dashed red line to baseline y=80 -->
             <path d="M32,16 L97,28 L162,41 L227,53 L292,63 L357,70 L422,74 L422,80 L32,80 Z"
                   fill="var(--boreal-red, #ef4444)" fill-opacity="0.06"/>
-            <!-- Steel fill: under solid blue line to baseline y=80 -->
+            <!-- BDT fill: under solid blue line to baseline y=80 -->
             <path d="M32,16 L97,19 L162,22 L227,25 L292,29 L357,31 L422,34 L422,80 L32,80 Z"
                   fill="var(--boreal-blue, #3b82f6)" fill-opacity="0.08"/>
             <!-- Legacy line (red dashed) — 85%→70%→52%→36%→23%→14%→8% -->
             <polyline points="32,16 97,28 162,41 227,53 292,63 357,70 422,74"
                       fill="none" stroke="var(--boreal-red, #ef4444)" stroke-width="1.5" stroke-dasharray="5,3" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Steel line (blue solid) — 85%→82%→78%→73%→68%→65%→62% -->
+            <!-- BDT line (blue solid) — 85%→82%→78%→73%→68%→65%→62% -->
             <polyline points="32,16 97,19 162,22 227,25 292,29 357,31 422,34"
                       fill="none" stroke="var(--boreal-blue, #3b82f6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             <!-- T+12 endpoint: Legacy 8% at y=74 -->
             <circle cx="422" cy="74" r="2.5" fill="var(--boreal-red, #ef4444)"/>
             <text x="417" y="69" text-anchor="end" font-size="7" font-weight="bold" fill="var(--boreal-red, #ef4444)">8%</text>
-            <!-- T+12 endpoint: Steel 62% at y=34 -->
+            <!-- T+12 endpoint: BDT 62% at y=34 -->
             <circle cx="422" cy="34" r="3" fill="var(--boreal-blue, #3b82f6)"/>
             <text x="417" y="29" text-anchor="end" font-size="7" font-weight="bold" fill="var(--boreal-blue, #3b82f6)">62%</text>
             <!-- Divergence bracket at T+12 -->
@@ -573,7 +635,19 @@ export class CommanderOrchestrator {
     readiness = inject(ReadinessStore);
     lab = inject(LabStore);
     orchestration = inject(OrchestrationStore);
+    capabilityStore = inject(CapabilityLayerStore);
     orchestrator = inject(CapabilityOrchestrator);
+
+    activeArchetypes = computed<PublicCapabilityCard[]>(() => {
+        const seen = new Set<string>();
+        return this.capabilityStore.remappedTracks()
+            .map(track => track.publicInterpretation)
+            .filter((card): card is PublicCapabilityCard => {
+                if (!card || seen.has(card.id)) return false;
+                seen.add(card.id);
+                return true;
+            });
+    });
 
     vm = computed(() => {
         const selectedCOA = this.policy.selectedCOA();

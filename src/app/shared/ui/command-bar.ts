@@ -1,17 +1,20 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ScenarioStore } from '../../core/state/scenario.store';
 import { PolicyStore } from '../../core/state/policy.store';
 import { SensorFeedStore } from '../../core/state/sensor-feed.store';
 import { AuditLogger } from '../../core/services/audit-logger';
+import { DecisionFabricStore } from '../../core/state/decision-fabric.store';
 import { CapabilityOrchestrator } from '../../core/services/capability-orchestrator';
 import { RationaleOrchestrator } from './rationale-drawer';
+import { CapabilityLayerSwitch } from './capability-layer-switch';
 
 @Component({
   selector: 'app-command-bar',
   standalone: true,
-  imports: [MatIconModule, CommonModule],
+  imports: [MatIconModule, CommonModule, CapabilityLayerSwitch, RouterLink],
   template: `
     <div class="flex items-center justify-between px-6 h-14 bg-boreal-canvas/80 backdrop-blur-xl border-b border-boreal-border select-none z-50">
       <!-- Left: Operational Context -->
@@ -27,7 +30,7 @@ import { RationaleOrchestrator } from './rationale-drawer';
           <span class="text-[8px] font-mono font-black text-boreal-text-muted uppercase tracking-[0.2em]">Authority</span>
           <div class="flex items-center gap-1.5">
             <div class="w-1.5 h-1.5 rounded-full" [class]="getAuthorityColor()"></div>
-            <span class="text-[10px] font-black text-boreal-text-primary uppercase tracking-widest">{{policy.activePolicy()?.guardrails?.engagementAuthority}}</span>
+            <span class="text-[10px] font-mono font-black text-boreal-text-primary uppercase tracking-widest">{{policy.activePolicy()?.guardrails?.engagementAuthority}}</span>
           </div>
         </div>
 
@@ -35,8 +38,12 @@ import { RationaleOrchestrator } from './rationale-drawer';
 
         <div class="flex flex-col">
           <span class="text-[8px] font-mono font-black text-boreal-text-muted uppercase tracking-[0.2em]">Phase</span>
-          <span class="text-[10px] font-bold text-boreal-green uppercase tracking-wide">{{scenario.currentPhase()?.name}}</span>
+          <span class="text-[10px] font-mono font-bold text-boreal-green uppercase tracking-wide">{{scenario.currentPhase()?.name}}</span>
         </div>
+
+        <div class="h-6 w-px bg-boreal-border"></div>
+
+        <app-capability-layer-switch />
       </div>
 
       <!-- Right: System Controls & Station Status -->
@@ -47,6 +54,35 @@ import { RationaleOrchestrator } from './rationale-drawer';
                 <span class="text-[8px] font-black text-boreal-red uppercase tracking-[0.15em]">EW: Saturation Jamming</span>
             </div>
         }
+
+        <!-- Fabric Health Indicator -->
+        <a 
+          routerLink="/reference/c2-resilience-lab"
+          class="flex items-center gap-2 px-3 h-9 bg-boreal-panel-muted border border-boreal-border rounded-sm hover:border-boreal-blue/40 transition-all group no-underline cursor-pointer"
+        >
+          <div class="flex flex-col items-end">
+            <span class="text-[7px] font-mono text-boreal-text-muted uppercase tracking-widest leading-none mb-0.5">Fabric Health</span>
+            <span class="text-[9px] font-black uppercase tracking-tighter transition-colors group-hover:text-boreal-blue leading-none" [class]="getFabricStatusClass()">{{fabric.status()}}</span>
+          </div>
+          <div class="w-1 h-4 rounded-full" [class]="getFabricBarClass()"></div>
+        </a>
+
+        <div class="hidden xl:flex items-center gap-2">
+          <a
+            routerLink="/reference"
+            class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all"
+          >
+            Reference
+          </a>
+          <a
+            routerLink="/reference/counterfactual-lab"
+            class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all"
+          >
+            What-If
+          </a>
+        </div>
+
+        <div class="h-6 w-px bg-boreal-border mx-1"></div>
 
         <!-- Playback / Replay Module -->
         <div class="flex items-center bg-boreal-panel-muted border border-boreal-border px-3 h-9 gap-4 shadow-inner">
@@ -127,11 +163,32 @@ export class CommandBar {
   scenario = inject(ScenarioStore);
   policy = inject(PolicyStore);
   audit = inject(AuditLogger);
+  fabric = inject(DecisionFabricStore);
   orchestrator = inject(CapabilityOrchestrator);
   rationale = inject(RationaleOrchestrator);
   sensorFeed = inject(SensorFeedStore);
 
   alertCount = computed(() => this.audit.logs().length);
+
+  getFabricStatusClass(): string {
+    const status = this.fabric.status();
+    switch (status) {
+      case 'HEALTHY': return 'text-boreal-green';
+      case 'STRESSED': return 'text-boreal-amber';
+      case 'COLLAPSED': return 'text-boreal-red';
+      default: return 'text-boreal-text-muted';
+    }
+  }
+
+  getFabricBarClass(): string {
+    const status = this.fabric.status();
+    switch (status) {
+      case 'HEALTHY': return 'bg-boreal-green';
+      case 'STRESSED': return 'bg-boreal-amber animate-pulse';
+      case 'COLLAPSED': return 'bg-boreal-red animate-pulse';
+      default: return 'bg-boreal-panel-muted';
+    }
+  }
 
   togglePlayback(): void {
     if (this.scenario.runState() === 'RUNNING') {
@@ -165,4 +222,3 @@ export class CommandBar {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 }
-
