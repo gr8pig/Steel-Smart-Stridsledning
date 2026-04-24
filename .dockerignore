@@ -1,0 +1,11 @@
+node_modules
+dist
+tmp
+coverage
+.angular/cache
+.git
+.DS_Store
+*.log
+research
+api
+**/__pycache__

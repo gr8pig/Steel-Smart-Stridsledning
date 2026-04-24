@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "tailwindcss";
+
+:root {
+  /* Dark Theme (Default) */
+  --boreal-canvas: #070708;
+  --boreal-panel: #0a0a0b;
+  --boreal-panel-elevated: #111113;
+  --boreal-panel-muted: #0c0c0d;
+  --boreal-border: #1a1a1d;
+
+  --boreal-blue: #3b82f6;
+  --boreal-green: #10b981;
+  --boreal-amber: #f59e0b;
+  --boreal-red: #ef4444;
+
+  --boreal-text-primary: #fafafa;
+  --boreal-text-secondary: #a1a1aa;
+  --boreal-text-muted: #52525b;
+
+  --boreal-map-fill-bg: rgba(7, 7, 8, 0.4);
+  --boreal-shadow: rgba(0, 0, 0, 0.7);
+}
+
+:root.light {
+  /* Light Theme - Hardened Operational Look */
+  --boreal-canvas: #ebf1f5;
+  --boreal-panel: #f5f8fa;
+  --boreal-panel-elevated: #ffffff;
+  --boreal-panel-muted: #e1e8ed;
+  --boreal-border: #d8e1e8;
+
+  --boreal-blue: #2b5eb1; /* Slightly deepened for contrast on light */
+  --boreal-green: #0d9488;
+  --boreal-amber: #d97706;
+  --boreal-red: #dc2626;
+
+  --boreal-text-primary: #182026;
+  --boreal-text-secondary: #5c7080;
+  --boreal-text-muted: #8a9ba8;
+
+  --boreal-map-fill-bg: rgba(235, 241, 245, 0.6);
+  --boreal-shadow: rgba(16, 22, 26, 0.1);
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Boreal Semantic Colors Mapping */
+  --color-boreal-canvas: var(--boreal-canvas);
+  --color-boreal-panel: var(--boreal-panel);
+  --color-boreal-panel-elevated: var(--boreal-panel-elevated);
+  --color-boreal-panel-muted: var(--boreal-panel-muted);
+  --color-boreal-border: var(--boreal-border);
+
+  --color-boreal-blue: var(--boreal-blue);
+  --color-boreal-green: var(--boreal-green);
+  --color-boreal-amber: var(--boreal-amber);
+  --color-boreal-red: var(--boreal-red);
+
+  --color-boreal-text-primary: var(--boreal-text-primary);
+  --color-boreal-text-secondary: var(--boreal-text-secondary);
+  --color-boreal-text-muted: var(--boreal-text-muted);
+}
+
+@layer base {
+  body {
+    @apply bg-boreal-canvas text-boreal-text-primary font-sans antialiased overflow-hidden select-none;
+  }
+
+  /* Compact spacing utilities - Hardened Station look */
+  .panel-header {
+    @apply flex items-center justify-between px-4 py-1.5 border-b border-boreal-border font-sans font-black text-[9px] uppercase tracking-[0.25em] bg-boreal-panel-muted/20;
+  }
+
+  /* Sharpness Refinement: Precision Radius - 2px for high-density command look */
+  .rounded-sm {
+    border-radius: 1px !important;
+  }
+  
+  .rounded {
+    border-radius: 2px !important;
+  }
+  
+  .rounded-md {
+    border-radius: 2px !important;
+  }
+
+  /* Typography shortcuts */
+  .section-title {
+    @apply text-[9px] font-mono font-black uppercase tracking-[0.3em] text-boreal-text-muted;
+  }
+
+  .metric-value {
+    @apply font-mono text-xl font-bold tracking-tight tabular-nums text-boreal-text-primary;
+  }
+
+  .terminal-bg {
+    @apply bg-boreal-canvas border border-boreal-border p-4 rounded-sm font-mono text-[10px] leading-relaxed shadow-inner;
+  }
+
+  .design-card {
+    @apply p-4 rounded bg-boreal-panel border border-boreal-border shadow-[0_4px_24px_rgba(0,0,0,0.5)];
+  }
+
+  /* Stronger Panel Hierarchy */
+  .panel-elevated {
+    @apply bg-boreal-panel-elevated border border-white/[0.02] shadow-[0_20px_50px_var(--boreal-shadow)];
+  }
+
+  /* Custom Scrollbar for Operational Feel */
+  ::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-boreal-border);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-boreal-text-muted);
+  }
+}

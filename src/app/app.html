@@ -1,0 +1,20 @@
+<div class="flex h-screen w-screen overflow-hidden bg-boreal-canvas text-boreal-text-primary">
+  <!-- Sidebar Nav Rail -->
+  <app-nav-rail></app-nav-rail>
+
+  <div class="flex flex-col flex-grow min-w-0">
+    <!-- Top Command Bar -->
+    <app-command-bar></app-command-bar>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow overflow-hidden relative">
+      <router-outlet />
+    </main>
+  </div>
+
+  <!-- Global Rationale Drawer -->
+  <app-rationale-drawer></app-rationale-drawer>
+
+  <!-- Global Planned Capability Modal -->
+  <app-planned-capability-modal></app-planned-capability-modal>
+</div>

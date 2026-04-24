@@ -1,0 +1,17 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Steel favicon</title>
+  <desc id="desc">Minimal steel monogram on a dark background.</desc>
+  <defs>
+    <linearGradient id="g" x1="16" y1="12" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="0.55" stop-color="#94a3b8"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#090d14"/>
+  <path d="M34 42C34 34.268 40.268 28 48 28H80C87.732 28 94 34.268 94 42V86C94 93.732 87.732 100 80 100H48C40.268 100 34 93.732 34 86V42Z" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+  <path d="M40 44H88" stroke="url(#g)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M40 64H82" stroke="rgba(255,255,255,0.82)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M40 84H88" stroke="url(#g)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M84 38L96 26" stroke="#22d3ee" stroke-width="3" stroke-linecap="round"/>
+</svg>
