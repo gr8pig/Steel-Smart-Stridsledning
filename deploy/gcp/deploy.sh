@@ -9,6 +9,11 @@ REGION="${REGION:-europe-north2}"
 SERVICE_NAME="${SERVICE_NAME:-steel-smart-stridsledning}"
 REPOSITORY="${REPOSITORY:-steel-smart-stridsledning-web}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
+MIN_INSTANCES="${MIN_INSTANCES:-0}"
+MAX_INSTANCES="${MAX_INSTANCES:-1}"
+CONCURRENCY="${CONCURRENCY:-20}"
+CPU="${CPU:-1}"
+MEMORY="${MEMORY:-512Mi}"
 
 if [[ -z "${PROJECT_ID}" ]]; then
   echo "Set PROJECT_ID or run 'gcloud config set project <project-id>' first." >&2
@@ -41,14 +46,14 @@ gcloud run deploy "${SERVICE_NAME}" \
   --platform managed \
   --allow-unauthenticated \
   --execution-environment gen2 \
-  --min-instances 1 \
-  --max-instances 1 \
-  --concurrency 1 \
-  --cpu 1 \
-  --memory 1Gi \
+  --min-instances "${MIN_INSTANCES}" \
+  --max-instances "${MAX_INSTANCES}" \
+  --concurrency "${CONCURRENCY}" \
+  --cpu "${CPU}" \
+  --memory "${MEMORY}" \
   --timeout 3600 \
   --cpu-boost \
-  --no-cpu-throttling \
+  --cpu-throttling \
   --port 8080 \
   --set-env-vars NODE_ENV=production \
   --project "${PROJECT_ID}"
