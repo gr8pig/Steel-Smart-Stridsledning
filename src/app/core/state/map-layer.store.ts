@@ -12,7 +12,9 @@ export type MapLayerId =
   | 'intent_halos'
   | 'supply_nodes'
   | 'corridors'
-  | 'reinforcements';
+  | 'reinforcements'
+  | 'public_capabilities'
+  | 'source_badges';
 
 export type IFZDisplayMode = 'ENGAGED_ONLY' | 'ALL_ACTIVE';
 
@@ -35,6 +37,8 @@ export class MapLayerStore {
     { id: 'intent_halos',       label: 'Intent Halos',        visible: true,  icon: 'blur_circular' },
     { id: 'terrain',            label: 'Geospatial Terrain',  visible: true,  icon: 'map' },
     { id: 'labels',             label: 'Tactical Labels',     visible: true,  icon: 'label' },
+    { id: 'public_capabilities', label: 'Public Capabilities', visible: true,  icon: 'public' },
+    { id: 'source_badges',       label: 'Source Attribution',  visible: true,  icon: 'fact_check' },
     { id: 'supply_nodes',       label: 'Supply Nodes',        visible: false, icon: 'local_shipping' },
     { id: 'corridors',          label: 'Supply Corridors',    visible: false, icon: 'route' },
     { id: 'reinforcements',     label: 'Reinforcements',      visible: false, icon: 'military_tech' },
