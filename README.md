@@ -12,6 +12,7 @@ Steel - Smart Stridsledning is the canonical live copy of the command-support ap
 - Cloud Run target region: `europe-north2` for Stockholm hosting
 - Single-instance runtime model for in-memory simulation and websocket state
 - Local branding assets in `public/`
+- Runpod-backed lab inference with local fallback when the endpoint is offline
 - Fresh GitHub-ready repo, not a research archive
 
 ## What Ships
@@ -20,6 +21,7 @@ Steel - Smart Stridsledning is the canonical live copy of the command-support ap
 - SSR server entry points and backend rationale endpoints
 - Dockerfile for repeatable container builds
 - GCP deploy script for Artifact Registry and Cloud Run
+- OpenRouter-backed rationale generation through the backend
 - Minimal favicon and banner asset for the repository landing page
 
 ## What Is Deliberately Excluded
@@ -43,7 +45,8 @@ That is intentional. The app keeps state in memory and uses websockets, so horiz
 
 1. The browser loads the Angular SSR app.
 2. The server renders the route and exposes the API surface.
-3. Optional rationale requests go through the backend, which can forward to an LLM if configured.
+3. Optional rationale requests go through the backend, which can forward to OpenRouter if configured.
+4. The robustness lab can offload to Runpod when the remote endpoint is configured.
 
 Deployment is intentionally narrow:
 
@@ -103,5 +106,14 @@ public/          branding assets and favicon
 
 - Cloud Run supports websockets, so the theater view remains interactive.
 - `OPENROUTER_API_KEY` enables live rationale generation through the backend.
+- `OPENROUTER_MODEL` selects the OpenRouter chat model used for rationale text.
+- `RUNPOD_API_KEY` and `RUNPOD_ENDPOINT_ID` enable remote lab inference on Runpod.
+- `/api/lab/run` automatically falls back to Steel's deterministic local lab if Runpod is unavailable.
 - `APP_LOCK_PASSWORD` overrides the built-in lock password if you need to set it at deploy time.
 - The repo is meant to stay as the deployable source of truth for the fresh GitHub repository.
+
+## Cost Profile
+
+- Default deployment is request-based Cloud Run billing with `min-instances=0`, `max-instances=1`, and `concurrency=20`.
+- That keeps idle cost near zero and avoids the chunk-load 429s caused by `concurrency=1`.
+- If you want lower cold-start latency, set `MIN_INSTANCES=1` at deploy time and accept the extra idle cost.
