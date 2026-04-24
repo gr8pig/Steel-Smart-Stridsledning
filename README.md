@@ -13,15 +13,17 @@ Steel - Smart Stridsledning is the canonical live copy of the command-support ap
 - Single-instance runtime model for in-memory simulation and websocket state
 - Local branding assets in `public/`
 - Runpod-backed lab inference with local fallback when the endpoint is offline
+- OpenRouter-backed rationale generation through the backend
+- Public capability remapping, C2 resilience, counterfactual, and reference documentation surfaces
 - Fresh GitHub-ready repo, not a research archive
 
 ## What Ships
 
 - Mission overview, tactical control, commander orchestration, readiness, governance, and robustness surfaces
+- C2 resilience lab, counterfactual lab, and reference docs surfaces
 - SSR server entry points and backend rationale endpoints
 - Dockerfile for repeatable container builds
 - GCP deploy script for Artifact Registry and Cloud Run
-- OpenRouter-backed rationale generation through the backend
 - Minimal favicon and banner asset for the repository landing page
 
 ## What Is Deliberately Excluded
@@ -32,14 +34,14 @@ Steel - Smart Stridsledning is the canonical live copy of the command-support ap
 
 ## Operating Model
 
-The service is designed as a single Cloud Run instance:
+The service is designed as a single Cloud Run instance with request concurrency above one:
 
-- `min-instances=1`
+- `min-instances=0`
 - `max-instances=1`
-- `concurrency=1`
-- `cpu-throttling` disabled
+- `concurrency=20`
+- `cpu-throttling` enabled
 
-That is intentional. The app keeps state in memory and uses websockets, so horizontal scaling would create drift between replicas.
+That is intentional. The app keeps state in memory and uses websockets, so horizontal scaling would create drift between replicas. The higher concurrency avoids route-load failures when multiple browser assets arrive at once.
 
 ## Architecture
 
@@ -47,6 +49,7 @@ That is intentional. The app keeps state in memory and uses websockets, so horiz
 2. The server renders the route and exposes the API surface.
 3. Optional rationale requests go through the backend, which can forward to OpenRouter if configured.
 4. The robustness lab can offload to Runpod when the remote endpoint is configured.
+5. The counterfactual lab and public capability layer stay local and deterministic in the app shell.
 
 Deployment is intentionally narrow:
 
@@ -71,6 +74,8 @@ PROJECT_ID=your-project-id deploy/gcp/deploy.sh
 
 If `PROJECT_ID` is already set in your local `gcloud` config, you can omit it.
 
+Secrets should be injected through Cloud Run secret bindings or a local `.env` file. Do not bake `OPENROUTER_API_KEY` or `RUNPOD_API_KEY` into the image.
+
 ## Local Development
 
 ```bash
@@ -79,6 +84,7 @@ npm run dev
 ```
 
 The app starts on [http://localhost:3000](http://localhost:3000).
+For API-backed features, run the server-side env vars as well if you want OpenRouter or Runpod behavior locally.
 
 ## Useful Scripts
 
@@ -110,10 +116,11 @@ public/          branding assets and favicon
 - `RUNPOD_API_KEY` and `RUNPOD_ENDPOINT_ID` enable remote lab inference on Runpod.
 - `/api/lab/run` automatically falls back to Steel's deterministic local lab if Runpod is unavailable.
 - `APP_LOCK_PASSWORD` overrides the built-in lock password if you need to set it at deploy time.
+- `APP_LOCK_TOKEN_TTL_SECONDS` controls the lifetime of the lock cookie.
 - The repo is meant to stay as the deployable source of truth for the fresh GitHub repository.
 
 ## Cost Profile
 
 - Default deployment is request-based Cloud Run billing with `min-instances=0`, `max-instances=1`, and `concurrency=20`.
-- That keeps idle cost near zero and avoids the chunk-load 429s caused by `concurrency=1`.
+- That keeps idle cost near zero and avoids the route-load 429s caused by `concurrency=1`.
 - If you want lower cold-start latency, set `MIN_INSTANCES=1` at deploy time and accept the extra idle cost.

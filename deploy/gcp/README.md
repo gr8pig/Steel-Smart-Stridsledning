@@ -54,6 +54,9 @@ For production, add those through Secret Manager or Cloud Run secret bindings ra
 `OPENROUTER_MODEL` can be set to override the default rationale model if you want to swap providers without changing code.
 
 The lock page uses `APP_LOCK_PASSWORD`. The server falls back to the built-in password in the app, but you can override it at deploy time by setting the environment variable explicitly.
+`APP_LOCK_TOKEN_TTL_SECONDS` controls how long the lock cookie remains valid.
+
+Local `.env` files are fine for development. For Cloud Run, prefer Secret Manager bindings for the keys and normal env vars for the non-secret config.
 
 ## Notes
 
