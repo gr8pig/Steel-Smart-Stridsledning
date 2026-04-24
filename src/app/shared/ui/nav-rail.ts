@@ -106,7 +106,7 @@ export class NavRail {
 
   navItems = [
     { path: '/overview',        icon: 'dashboard',             label: 'Mission Overview',        flag: null },
-    { path: '/tactical',        icon: 'crosshairs',            label: 'Tactical Console',        flag: null },
+    { path: '/tactical',        icon: 'track_changes',         label: 'Tactical Console',        flag: null },
     { path: '/commander',       icon: 'account_tree',          label: 'Commander Orchestrator',  flag: null },
     { path: '/readiness',       icon: 'battery_charging_full', label: 'Base Resilience',         flag: null },
     { path: '/logistics',       icon: 'local_shipping',        label: 'Logistics & Supply',      flag: null },

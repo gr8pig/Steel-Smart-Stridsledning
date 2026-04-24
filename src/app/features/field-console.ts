@@ -1,11 +1,19 @@
-import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { TacticalStore } from '../core/state/tactical.store';
 import { ReadinessStore } from '../core/state/readiness.store';
 import { AuditLogger } from '../core/services/audit-logger';
+import { ThreatTwin } from '../shared/domain/models';
 
-interface Toast { message: string; icon: string; type: 'alert' | 'intercept' | 'sync'; }
+interface Toast { message: string; icon: string; type: 'alert' | 'intercept' | 'sync' | 'warning'; }
+
+interface SceneCapture {
+  fileName: string;
+  capturedAt: string;
+  dataUrl: string;
+  sizeLabel: string;
+}
 
 // Base dots scaled from tactical viewBox 1670×1300 → field viewBox 400×300
 const FIELD_BASES = [
@@ -16,16 +24,33 @@ const FIELD_BASES = [
   { name: 'SRD',  x: 77,  y: 231, side: 'south' },
 ];
 
+const COMMANDER_LOCATION = {
+  label: 'FIELD CMD',
+  sector: 'Sector 4',
+  grid: 'G-12',
+  x: 235,
+  y: 176,
+};
+
+const FIELD_VIEWBOX_WIDTH = 400;
+const FIELD_VIEWBOX_HEIGHT = 300;
+const TRACK_VIEWBOX_WIDTH = 1670;
+const TRACK_VIEWBOX_HEIGHT = 1300;
+const RESET_SENT_MS = 4000;
+const SYNCING_MS = 1200;
+const SYNC_RESET_MS = 5000;
+
 @Component({
   selector: 'app-field-console',
   standalone: true,
   imports: [CommonModule, MatIconModule],
   template: `
-    <div class="h-full w-full flex flex-col bg-boreal-canvas overflow-hidden">
+    <div class="relative h-full w-full flex flex-col bg-boreal-canvas overflow-hidden">
 
       <!-- Confirmation toast -->
       @if (_toast()) {
         <div class="absolute top-12 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-sm border shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 flex items-center gap-2"
+          aria-live="polite"
           [class.bg-boreal-red/20]="_toast()!.type === 'alert'"
           [class.border-boreal-red/50]="_toast()!.type === 'alert'"
           [class.text-boreal-red]="_toast()!.type === 'alert'"
@@ -35,6 +60,9 @@ const FIELD_BASES = [
           [class.bg-boreal-green/20]="_toast()!.type === 'sync'"
           [class.border-boreal-green/50]="_toast()!.type === 'sync'"
           [class.text-boreal-green]="_toast()!.type === 'sync'"
+          [class.bg-boreal-amber/20]="_toast()!.type === 'warning'"
+          [class.border-boreal-amber/50]="_toast()!.type === 'warning'"
+          [class.text-boreal-amber]="_toast()!.type === 'warning'"
         >
           <mat-icon class="!text-sm !w-4 !h-4">{{ _toast()!.icon }}</mat-icon>
           <span class="text-[10px] font-black uppercase tracking-widest">{{ _toast()!.message }}</span>
@@ -56,6 +84,9 @@ const FIELD_BASES = [
           </span>
           <span class="px-2 py-0.5 rounded border border-boreal-blue/40 bg-boreal-blue/10 text-boreal-blue text-[9px] font-mono font-bold">
             {{ avgReadiness() }}% RDY
+          </span>
+          <span class="px-2 py-0.5 rounded border border-boreal-amber/40 bg-boreal-amber/10 text-boreal-amber text-[9px] font-mono font-bold">
+            CMD {{ commanderLocationLabel() }}
           </span>
         </div>
       </header>
@@ -94,6 +125,26 @@ const FIELD_BASES = [
             font-family="monospace" font-size="6" fill="var(--boreal-amber)" opacity="0.5"
             font-weight="bold" letter-spacing="1">IFZ</text>
 
+          <!-- Commander location -->
+          <g [attr.transform]="'translate(' + commanderLocation.x + ',' + commanderLocation.y + ')'">
+            <circle r="10"
+              fill="var(--boreal-amber)" fill-opacity="0.14"
+              stroke="var(--boreal-amber)" stroke-width="1.2"
+            />
+            <circle r="3"
+              fill="var(--boreal-amber)"
+            />
+            <line x1="-8" y1="0" x2="8" y2="0"
+              stroke="var(--boreal-amber)" stroke-opacity="0.5" stroke-width="0.8"
+            />
+            <line x1="0" y1="-8" x2="0" y2="8"
+              stroke="var(--boreal-amber)" stroke-opacity="0.5" stroke-width="0.8"
+            />
+            <text y="-12" text-anchor="middle"
+              font-family="monospace" font-size="5.5" font-weight="bold"
+              fill="var(--boreal-amber)" opacity="0.85">{{ commanderLocation.label }}</text>
+          </g>
+
           <!-- Base dots -->
           @for (base of bases; track base.name) {
             <g [attr.transform]="'translate(' + base.x + ',' + base.y + ')'">
@@ -114,16 +165,18 @@ const FIELD_BASES = [
 
           <!-- Active threat triangles -->
           @for (track of tactical.activeThreats(); track track.id) {
-            <g [attr.transform]="'translate(' + trackX(track.geometry.x) + ',' + trackY(track.geometry.y) + ') rotate(' + track.geometry.heading + ')'">
-              <polygon points="0,-5 4,4 -4,4"
-                fill="var(--boreal-red)" fill-opacity="0.7"
-                stroke="var(--boreal-red)" stroke-width="0.8"
-              />
-              <line x1="0" y1="-5" x2="0" y2="-12"
-                stroke="var(--boreal-red)" stroke-opacity="0.4" stroke-width="0.8"
-                stroke-dasharray="2,2"
-              />
-            </g>
+            @if (projectTrack(track); as projectedTrack) {
+              <g [attr.transform]="'translate(' + projectedTrack.x + ',' + projectedTrack.y + ') rotate(' + projectedTrack.heading + ')'">
+                <polygon points="0,-5 4,4 -4,4"
+                  fill="var(--boreal-red)" fill-opacity="0.7"
+                  stroke="var(--boreal-red)" stroke-width="0.8"
+                />
+                <line x1="0" y1="-5" x2="0" y2="-12"
+                  stroke="var(--boreal-red)" stroke-opacity="0.4" stroke-width="0.8"
+                  stroke-dasharray="2,2"
+                />
+              </g>
+            }
           }
 
         </svg>
@@ -136,6 +189,78 @@ const FIELD_BASES = [
             </span>
           </div>
         }
+
+        <!-- Scene feed upload panel -->
+        <div class="absolute top-4 right-4 z-40 w-72 overflow-hidden rounded-sm border border-boreal-border bg-boreal-panel/90 backdrop-blur shadow-2xl">
+        <div class="flex items-center justify-between gap-3 border-b border-boreal-border px-3 py-2">
+          <input
+            #sceneInput
+            type="file"
+            accept="image/*"
+            capture="environment"
+            class="hidden"
+            (change)="onSceneUpload($event)"
+          />
+          <div class="flex flex-col">
+            <span class="text-[9px] font-black uppercase tracking-widest text-boreal-text-primary">Scene Feed</span>
+            <span class="text-[8px] font-mono uppercase text-boreal-text-muted">
+              {{ commanderLocation.sector }} · {{ commanderLocation.grid }}
+            </span>
+            </div>
+            <button
+              type="button"
+              (click)="sceneInput.click()"
+              class="rounded-sm border border-boreal-blue/40 bg-boreal-blue/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-boreal-blue transition-colors"
+            >
+              Upload
+            </button>
+          </div>
+
+          @if (sceneCapture(); as capture) {
+            <img [src]="capture.dataUrl" [alt]="'Scene upload ' + capture.fileName" class="h-40 w-full object-cover" />
+            <div class="space-y-2 p-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="truncate text-[10px] font-bold uppercase tracking-tight text-boreal-text-primary">
+                    {{ capture.fileName }}
+                  </p>
+                  <p class="text-[8px] font-mono uppercase text-boreal-text-muted">
+                    {{ capture.capturedAt | date:'HH:mm:ss' }}
+                  </p>
+                </div>
+                <span class="shrink-0 rounded border border-boreal-amber/40 bg-boreal-amber/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-boreal-amber">
+                  LIVE
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-[8px] font-mono uppercase">
+                <div class="rounded border border-boreal-border bg-boreal-canvas/50 px-2 py-1">
+                  <span class="block text-boreal-text-muted">Commander</span>
+                  <span class="block font-bold text-boreal-text-primary">{{ commanderLocation.label }}</span>
+                </div>
+                <div class="rounded border border-boreal-border bg-boreal-canvas/50 px-2 py-1">
+                  <span class="block text-boreal-text-muted">Position</span>
+                  <span class="block font-bold text-boreal-text-primary">{{ commanderLocationLabel() }}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-[8px] font-mono uppercase text-boreal-text-muted">
+                <span>{{ capture.sizeLabel }}</span>
+                <button type="button" (click)="clearSceneCapture()" class="text-boreal-text-secondary">Clear</button>
+              </div>
+            </div>
+          } @else {
+            <div class="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center">
+              <mat-icon class="!text-2xl !w-6 !h-6 text-boreal-text-muted">photo_camera</mat-icon>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-boreal-text-primary">
+                No scene image attached
+              </p>
+              <p class="text-[8px] font-mono uppercase leading-relaxed text-boreal-text-muted">
+                Use the camera or upload a field image from the scene.
+              </p>
+            </div>
+          }
+        </div>
       </div>
 
       <!-- Bottom action bar -->
@@ -159,12 +284,15 @@ const FIELD_BASES = [
         <button
           (click)="onRequestIntercept()"
           class="flex-1 h-14 flex flex-col items-center justify-center gap-0.5 rounded-sm border transition-all active:scale-[0.97]"
+          [disabled]="!hasActiveThreats() || _syncing()"
           [class.bg-boreal-blue/30]="_interceptSent()"
           [class.border-boreal-blue]="true"
           [class.text-boreal-blue]="true"
           [class.bg-boreal-blue/20]="!_interceptSent()"
           [class.shadow-lg]="_interceptSent()"
           [class.shadow-boreal-blue/30]="_interceptSent()"
+          [class.opacity-40]="!hasActiveThreats() || _syncing()"
+          [class.cursor-not-allowed]="!hasActiveThreats() || _syncing()"
         >
           <mat-icon class="!text-lg !w-5 !h-5">{{ _interceptSent() ? 'verified' : 'sensors' }}</mat-icon>
           <span class="text-[9px] font-bold uppercase tracking-widest leading-none">
@@ -201,6 +329,7 @@ export class FieldConsole {
   tactical  = inject(TacticalStore);
   readiness = inject(ReadinessStore);
   audit     = inject(AuditLogger);
+  private destroyRef = inject(DestroyRef);
 
   readonly bases = FIELD_BASES;
 
@@ -209,6 +338,18 @@ export class FieldConsole {
   readonly _alertSent     = signal(false);
   readonly _interceptSent = signal(false);
   readonly _toast         = signal<Toast | null>(null);
+  readonly commanderLocation = COMMANDER_LOCATION;
+  readonly sceneCapture = signal<SceneCapture | null>(null);
+
+  private _toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private _alertResetTimer: ReturnType<typeof setTimeout> | null = null;
+  private _interceptResetTimer: ReturnType<typeof setTimeout> | null = null;
+  private _syncTimer: ReturnType<typeof setTimeout> | null = null;
+  private _syncResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this._clearTimers());
+  }
 
   avgReadiness = computed(() => {
     const bases = this.readiness.bases();
@@ -216,16 +357,123 @@ export class FieldConsole {
     return Math.round(bases.reduce((sum, b) => sum + b.readiness * 100, 0) / bases.length);
   });
 
-  trackX(x: number): number { return x * 400 / 1670; }
-  trackY(y: number): number { return y * 300 / 1300; }
+  commanderLocationLabel = computed(() => `${this.commanderLocation.sector} / ${this.commanderLocation.grid}`);
+
+  hasActiveThreats(): boolean {
+    return this.tactical.activeThreats().length > 0;
+  }
+
+  projectTrack(track: ThreatTwin): { x: number; y: number; heading: number } | null {
+    const geometry = track?.geometry;
+    if (!geometry) return null;
+
+    const x = this._projectCoordinate(geometry.x, TRACK_VIEWBOX_WIDTH, FIELD_VIEWBOX_WIDTH);
+    const y = this._projectCoordinate(geometry.y, TRACK_VIEWBOX_HEIGHT, FIELD_VIEWBOX_HEIGHT);
+    if (x === null || y === null) return null;
+
+    const heading = Number.isFinite(geometry.heading) ? geometry.heading : 0;
+    return { x, y, heading };
+  }
+
+  private _projectCoordinate(value: unknown, sourceSize: number, targetSize: number): number | null {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+    const clamped = Math.max(0, Math.min(value, sourceSize));
+    return (clamped / sourceSize) * targetSize;
+  }
+
+  private _formatBytes(bytes: number): string {
+    if (!Number.isFinite(bytes) || bytes < 0) return 'Unknown size';
+    if (bytes < 1024) return `${bytes.toFixed(0)} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  private _clearTimers(): void {
+    if (this._toastTimer) clearTimeout(this._toastTimer);
+    if (this._alertResetTimer) clearTimeout(this._alertResetTimer);
+    if (this._interceptResetTimer) clearTimeout(this._interceptResetTimer);
+    if (this._syncTimer) clearTimeout(this._syncTimer);
+    if (this._syncResetTimer) clearTimeout(this._syncResetTimer);
+    this._toastTimer = null;
+    this._alertResetTimer = null;
+    this._interceptResetTimer = null;
+    this._syncTimer = null;
+    this._syncResetTimer = null;
+  }
 
   private _showToast(toast: Toast, duration = 2000): void {
+    if (this._toastTimer) clearTimeout(this._toastTimer);
     this._toast.set(toast);
-    setTimeout(() => this._toast.set(null), duration);
+    this._toastTimer = setTimeout(() => {
+      this._toast.set(null);
+      this._toastTimer = null;
+    }, duration);
+  }
+
+  onSceneUpload(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.audit.log({
+        actor: 'OPERATOR',
+        action: 'Scene Upload Rejected',
+        rationale: `Rejected ${file.name} because it is not an image.`,
+        category: 'TACTICAL',
+      });
+      this._showToast({ message: 'Only image files are supported', icon: 'warning', type: 'warning' });
+      if (input) input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : null;
+      if (!dataUrl) {
+        this._showToast({ message: 'Scene image could not be read', icon: 'warning', type: 'warning' });
+        return;
+      }
+
+      this.sceneCapture.set({
+        fileName: file.name,
+        capturedAt: new Date().toISOString(),
+        dataUrl,
+        sizeLabel: this._formatBytes(file.size),
+      });
+
+      this.audit.log({
+        actor: 'OPERATOR',
+        action: 'Scene Image Uploaded',
+        rationale: `Attached ${file.name} from the field scene for ${this.commanderLocation.label} at ${this.commanderLocation.sector}.`,
+        category: 'TACTICAL',
+      });
+      this._showToast({ message: 'Scene image attached', icon: 'photo_camera', type: 'sync' });
+    };
+
+    reader.onerror = () => {
+      this._showToast({ message: 'Scene image upload failed', icon: 'warning', type: 'warning' });
+    };
+
+    reader.readAsDataURL(file);
+    if (input) input.value = '';
+  }
+
+  clearSceneCapture(): void {
+    if (!this.sceneCapture()) return;
+    this.sceneCapture.set(null);
+    this.audit.log({
+      actor: 'OPERATOR',
+      action: 'Scene Image Cleared',
+      rationale: `Cleared the current field scene image for ${this.commanderLocation.label}.`,
+      category: 'TACTICAL',
+    });
+    this._showToast({ message: 'Scene image cleared', icon: 'close', type: 'warning' });
   }
 
   onAlertCommander(): void {
     const count = this.tactical.activeThreats().length;
+    if (this._alertResetTimer) clearTimeout(this._alertResetTimer);
     this._alertSent.set(true);
     this.audit.log({
       actor: 'OPERATOR',
@@ -234,11 +482,26 @@ export class FieldConsole {
       category: 'TACTICAL',
     });
     this._showToast({ message: 'Alert dispatched to commander', icon: 'report', type: 'alert' });
-    setTimeout(() => this._alertSent.set(false), 4000);
+    this._alertResetTimer = setTimeout(() => {
+      this._alertSent.set(false);
+      this._alertResetTimer = null;
+    }, RESET_SENT_MS);
   }
 
   onRequestIntercept(): void {
+    if (!this.hasActiveThreats()) {
+      this.audit.log({
+        actor: 'OPERATOR',
+        action: 'Intercept Request Blocked',
+        rationale: 'Intercept request suppressed because no active tracks are currently available.',
+        category: 'TACTICAL',
+      });
+      this._showToast({ message: 'No active tracks to intercept', icon: 'warning', type: 'warning' });
+      return;
+    }
+
     const track = this.tactical.activeThreats()[0];
+    if (this._interceptResetTimer) clearTimeout(this._interceptResetTimer);
     this._interceptSent.set(true);
     this.audit.log({
       actor: 'OPERATOR',
@@ -247,17 +510,26 @@ export class FieldConsole {
       category: 'TACTICAL',
     });
     this._showToast({ message: 'Intercept request transmitted', icon: 'sensors', type: 'intercept' });
-    setTimeout(() => this._interceptSent.set(false), 4000);
+    this._interceptResetTimer = setTimeout(() => {
+      this._interceptSent.set(false);
+      this._interceptResetTimer = null;
+    }, RESET_SENT_MS);
   }
 
   onSyncStatus(): void {
+    if (this._syncTimer) clearTimeout(this._syncTimer);
+    if (this._syncResetTimer) clearTimeout(this._syncResetTimer);
     this._syncing.set(true);
     this._synced.set(false);
-    setTimeout(() => {
+    this._syncTimer = setTimeout(() => {
       this._syncing.set(false);
       this._synced.set(true);
       this._showToast({ message: 'Status synchronized', icon: 'cloud_done', type: 'sync' }, 1800);
-      setTimeout(() => this._synced.set(false), 5000);
-    }, 1200);
+      this._syncResetTimer = setTimeout(() => {
+        this._synced.set(false);
+        this._syncResetTimer = null;
+      }, SYNC_RESET_MS);
+      this._syncTimer = null;
+    }, SYNCING_MS);
   }
 }
