@@ -1,0 +1,14 @@
+<svg width="1200" height="475" viewBox="0 0 1200 475" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="475" fill="white"/>
+  <!-- Outline -->
+  <rect x="20" y="20" width="1160" height="435" stroke="black" stroke-width="4" fill="none"/>
+  
+  <!-- Data Flow Chart -->
+  <path d="M700 350 L800 250 L900 300 L1000 150 L1100 250" stroke="black" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Content -->
+  <text x="60" y="160" fill="black" font-family="monospace" font-size="120" font-weight="900">STEEL</text>
+  <text x="60" y="210" fill="black" font-family="monospace" font-size="32" letter-spacing="4">SMART STRIDSLEDNING</text>
+  <text x="60" y="400" fill="black" font-family="monospace" font-size="20">COMMAND SUPPORT FABRIC</text>
+  <text x="1140" y="440" fill="black" font-family="monospace" font-size="16" text-anchor="end">v2.0.0 // 2026-04-25</text>
+</svg>

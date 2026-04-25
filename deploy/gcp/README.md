@@ -6,7 +6,7 @@ This scaffold is for deploying the Angular SSR app to **Google Cloud Run in `eur
 ## What This Deploys
 
 - One container running the SSR Node server from this repo
-- Same-origin `/api/*` and `/ws/theater` endpoints
+- Same-origin app shell, `/api/*`, and `/ws/theater` endpoints
 - A single Cloud Run instance by default
 
 ## Why One Instance
@@ -61,5 +61,6 @@ Local `.env` files are fine for development. For Cloud Run, prefer Secret Manage
 ## Notes
 
 - Cloud Run supports WebSockets.
+- The Angular build must keep asset URLs relative to the Cloud Run origin. Do not set `deployUrl` to a different host unless that host sends the correct CORS headers for module scripts.
 - The service listens on `PORT=8080` in the container.
 - If you later want a second backend service for `api/`, we can scaffold that separately.
