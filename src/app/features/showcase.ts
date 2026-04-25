@@ -157,6 +157,11 @@ const SLIDES: SlideConfig[] = [
 // ─── Map scenario data ────────────────────────────────────────────────────────
 
 interface MapTrack { id: string; x: number; y: number; tx: number; ty: number; type: 'missile' | 'ship' | 'air'; }
+interface AnimatedTrack extends MapTrack { cx: number; cy: number; }
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
 
 const MAP_SCENARIOS: MapTrack[][] = [
   // Scenario 1 – Naval incursion through the strait
@@ -293,7 +298,7 @@ const BASES_NORTH = [
 
           <div class="scenario-tabs">
             @for (s of scenarioLabels; track $index) {
-              <button class="s-tab" [class.active]="mapScenario() === $index" (click)="mapScenario.set($index)">
+              <button class="s-tab" [class.active]="mapScenario() === $index" (click)="selectScenario($index)">
                 <span class="s-tab-num">{{ $index + 1 }}</span>
                 <span class="s-tab-label">{{ s }}</span>
               </button>
@@ -308,9 +313,20 @@ const BASES_NORTH = [
           </div>
 
           <div class="map-stats">
-            <div class="stat"><span class="stat-v">{{ currentScenario().length }}</span><span class="stat-l">Detekterade hot</span></div>
-            <div class="stat"><span class="stat-v stat-g">0.81</span><span class="stat-l">Beslutssäkerhet</span></div>
+            <div class="stat"><span class="stat-v">{{ animatedTracks().length }}</span><span class="stat-l">Detekterade hot</span></div>
+            <div class="stat">
+              <span class="stat-v" [class.stat-g]="!intercepting()" [class.stat-r]="intercepting()">{{ intercepting() ? 'INTERCEPT' : '0.81' }}</span>
+              <span class="stat-l">{{ intercepting() ? 'Bekämpning' : 'Beslutssäkerhet' }}</span>
+            </div>
             <div class="stat"><span class="stat-v stat-a">127ms</span><span class="stat-l">AI-svarstid</span></div>
+          </div>
+          <div class="map-phase-bar">
+            <div class="map-phase-label" [class.phase-intercept]="intercepting()">
+              {{ intercepting() ? '⬡ INTERCEPT AKTIVT' : '→ SPÅR ANALYSERAS' }}
+            </div>
+            <div class="phase-bar-track">
+              <div class="phase-bar-fill" [style.width]="(trackProgress() * 100) + '%'" [class.phase-fill-intercept]="intercepting()"></div>
+            </div>
           </div>
         </div>
 
@@ -359,23 +375,40 @@ const BASES_NORTH = [
               </g>
             }
 
-            <!-- Threat tracks -->
-            @for (track of currentScenario(); track track.id) {
-              <!-- IFZ circle -->
+            <!-- Threat tracks (animated) -->
+            @for (track of animatedTracks(); track track.id) {
+              <!-- Full path line (faint ghost) -->
+              <line
+                [attr.x1]="track.x" [attr.y1]="track.y" [attr.x2]="track.tx" [attr.y2]="track.ty"
+                stroke="rgba(239,68,68,0.12)" stroke-width="1" stroke-dasharray="6,4"
+              />
+              <!-- Traveled trail (brighter) -->
+              <line
+                [attr.x1]="track.x" [attr.y1]="track.y" [attr.x2]="track.cx" [attr.y2]="track.cy"
+                stroke="rgba(239,68,68,0.55)" stroke-width="1.5"
+              />
+              <!-- Intercept marker at target -->
+              <g [attr.transform]="'translate('+track.tx+','+track.ty+')'">
+                <circle r="6" fill="none" stroke="rgba(92,167,255,0.4)" stroke-width="1" stroke-dasharray="3,2"/>
+                <circle r="2.5" fill="rgba(92,167,255,0.7)"/>
+              </g>
+              <!-- IFZ circle follows icon -->
               <circle
-                [attr.cx]="track.x" [attr.cy]="track.y" r="55"
+                [attr.cx]="track.cx" [attr.cy]="track.cy" r="55"
                 fill="rgba(239,68,68,0.04)" stroke="rgba(239,68,68,0.35)" stroke-width="0.8" stroke-dasharray="4,3"
                 class="track-pulse"
               />
-              <!-- Track path (faint) -->
-              <line
-                [attr.x1]="track.x" [attr.y1]="track.y" [attr.x2]="track.tx" [attr.y2]="track.ty"
-                stroke="rgba(239,68,68,0.25)" stroke-width="1" stroke-dasharray="6,4"
-              />
-              <!-- Intercept dot -->
-              <circle [attr.cx]="track.tx" [attr.cy]="track.ty" r="4" fill="rgba(92,167,255,0.6)"/>
-              <!-- Threat icon -->
-              <g [attr.transform]="'translate('+track.x+','+track.y+')'" class="track-move" filter="url(#sc-glow-r)">
+              <!-- Intercept burst when arrived -->
+              @if (intercepting()) {
+                <g [attr.transform]="'translate('+track.tx+','+track.ty+')'">
+                  <circle r="7" fill="rgba(92,167,255,0.95)" class="intercept-core"/>
+                  <circle r="18" fill="none" stroke="#5ca7ff" stroke-width="2" class="intercept-ring"/>
+                  <circle r="32" fill="none" stroke="#7ce0be" stroke-width="1" class="intercept-ring intercept-ring-2"/>
+                </g>
+              }
+              <!-- Threat icon at animated position -->
+              <g [attr.transform]="'translate('+track.cx+','+track.cy+')'" filter="url(#sc-glow-r)"
+                 [class.track-intercepted]="intercepting()">
                 @if (track.type === 'missile') {
                   <polygon points="0,-10 5,6 0,2 -5,6" fill="#ef4444"/>
                 }
@@ -1126,8 +1159,29 @@ const BASES_NORTH = [
     .stat-l { font-size: 9px; color: var(--s-muted); text-transform: uppercase; letter-spacing: 0.1em; }
     .track-pulse { animation: trackPulse 2s ease-in-out infinite; }
     @keyframes trackPulse { 0%,100% { opacity: 0.7; } 50% { opacity: 0.3; } }
-    .track-move { animation: trackMove 1.5s ease-in-out infinite alternate; }
-    @keyframes trackMove { from { transform: translateY(-3px); } to { transform: translateY(3px); } }
+    .track-intercepted { opacity: 0.3; transition: opacity 0.4s ease; }
+    .intercept-core { animation: interceptCoreFade 0.3s ease-out both; }
+    @keyframes interceptCoreFade { from { opacity: 0; } to { opacity: 1; } }
+    .intercept-ring {
+      transform-box: fill-box; transform-origin: center;
+      animation: interceptRingPing 1.1s ease-out infinite;
+    }
+    .intercept-ring-2 { animation-delay: 0.35s; }
+    @keyframes interceptRingPing {
+      from { opacity: 0.8; transform: scale(0.4); }
+      to { opacity: 0; transform: scale(2); }
+    }
+    .map-phase-bar { display: flex; flex-direction: column; gap: 4px; }
+    .map-phase-label {
+      font-size: 9px; font-weight: 900; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--s-blue); transition: color 0.3s ease;
+    }
+    .map-phase-label.phase-intercept { color: var(--s-green); animation: phaseFlash 0.6s ease-in-out infinite alternate; }
+    @keyframes phaseFlash { from { opacity: 1; } to { opacity: 0.35; } }
+    .phase-bar-track { height: 2px; background: rgba(148,189,255,0.1); border-radius: 1px; overflow: hidden; }
+    .phase-bar-fill { height: 100%; background: linear-gradient(90deg, #5ca7ff, #7ce0be); border-radius: 1px; transition: width 0.06s linear; }
+    .phase-bar-fill.phase-fill-intercept { background: linear-gradient(90deg, #7ce0be, #5ca7ff); }
+    .stat-r { color: var(--s-red); }
 
     /* ── AI slide ───────────────────────────────────────────────────── */
     .slide-ai { overflow-y: auto; }
@@ -1396,7 +1450,21 @@ export class Showcase implements OnInit, OnDestroy {
     return seq.slice(0, count);
   });
 
-  currentScenario = computed(() => MAP_SCENARIOS[this.mapScenario()]);
+  // Track animation
+  private _trackTimer: ReturnType<typeof setInterval> | null = null;
+  trackProgress = signal(0);
+  trackPhase = signal<'fly' | 'intercept'>('fly');
+
+  animatedTracks = computed<AnimatedTrack[]>(() => {
+    const p = easeInOutCubic(Math.min(1, this.trackProgress()));
+    return MAP_SCENARIOS[this.mapScenario()].map(t => ({
+      ...t,
+      cx: t.x + (t.tx - t.x) * p,
+      cy: t.y + (t.ty - t.y) * p,
+    }));
+  });
+
+  intercepting = computed(() => this.trackPhase() === 'intercept');
 
   ngOnInit(): void {
     this._startConsole(0);
@@ -1404,6 +1472,7 @@ export class Showcase implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this._consoleTimer) clearInterval(this._consoleTimer);
+    if (this._trackTimer) clearInterval(this._trackTimer);
   }
 
   private _startConsole(slide: number): void {
@@ -1419,9 +1488,43 @@ export class Showcase implements OnInit, OnDestroy {
     }, 700);
   }
 
+  private _startTrackAnim(): void {
+    if (this._trackTimer) clearInterval(this._trackTimer);
+    this.trackProgress.set(0);
+    this.trackPhase.set('fly');
+    let tick = 0;
+    const FLY_TICKS = 160;   // 8s at 50ms
+    const INTERCEPT_TICKS = 40; // 2s
+    this._trackTimer = setInterval(() => {
+      tick++;
+      if (tick <= FLY_TICKS) {
+        this.trackProgress.set(tick / FLY_TICKS);
+      } else if (tick === FLY_TICKS + 1) {
+        this.trackPhase.set('intercept');
+      } else if (tick > FLY_TICKS + INTERCEPT_TICKS) {
+        // Auto-cycle to next scenario
+        this.mapScenario.set((this.mapScenario() + 1) % MAP_SCENARIOS.length);
+        tick = 0;
+        this.trackProgress.set(0);
+        this.trackPhase.set('fly');
+      }
+    }, 50);
+  }
+
+  selectScenario(idx: number): void {
+    this.mapScenario.set(idx);
+    this._startTrackAnim();
+  }
+
   goTo(index: number): void {
+    const prev = this.currentSlide();
     this.currentSlide.set(index);
     this._startConsole(index);
+    if (index === 1) {
+      this._startTrackAnim();
+    } else if (prev === 1) {
+      if (this._trackTimer) { clearInterval(this._trackTimer); this._trackTimer = null; }
+    }
   }
 
   next(): void {

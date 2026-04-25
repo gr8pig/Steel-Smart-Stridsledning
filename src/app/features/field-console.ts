@@ -46,289 +46,192 @@ const SYNC_RESET_MS = 5000;
   standalone: true,
   imports: [CommonModule, MatIconModule],
   template: `
-    <div class="relative flex min-h-full w-full flex-col overflow-x-hidden bg-boreal-canvas lg:h-full">
+    <div class="relative h-full w-full bg-boreal-canvas overflow-hidden flex flex-col">
+
+      <!-- ── BACKGROUND FULL-SCREEN MAP ─────────────────────────────────── -->
+      <div class="absolute inset-0 z-0">
+        <svg viewBox="0 0 400 300" class="h-full w-full" [attr.preserveAspectRatio]="'xMidYMid slice'">
+          <defs>
+            <pattern id="field-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="0.5" fill="var(--boreal-blue)" opacity="0.1"/>
+            </pattern>
+          </defs>
+
+          <!-- Background fill -->
+          <rect width="400" height="300" fill="#020408" />
+          <rect width="400" height="300" fill="url(#field-grid)" />
+
+          <!-- Coastline -->
+          <path d="M0,0 L0,300 L28,285 L18,255 L32,210 L22,160 L38,115 L22,65 L32,20 L0,0 Z" fill="var(--boreal-blue)" fill-opacity="0.04" stroke="var(--boreal-blue)" stroke-opacity="0.15" stroke-width="0.5" />
+
+          <!-- IFZ circle -->
+          <circle cx="200" cy="160" r="55" fill="none" stroke="var(--boreal-amber)" stroke-opacity="0.2" stroke-width="0.5" stroke-dasharray="3,2" />
+          <circle cx="200" cy="160" r="55" fill="var(--boreal-amber)" fill-opacity="0.02" />
+
+          <!-- Commander location -->
+          <g [attr.transform]="'translate(' + commanderLocation.x + ',' + commanderLocation.y + ')'">
+            <circle r="8" fill="var(--boreal-amber)" fill-opacity="0.1" stroke="var(--boreal-amber)" stroke-width="0.8" />
+            <circle r="2" fill="var(--boreal-amber)" />
+            <text y="-10" text-anchor="middle" font-family="monospace" font-size="5" font-weight="bold" fill="var(--boreal-amber)" opacity="0.7">{{ commanderLocation.label }}</text>
+          </g>
+
+          <!-- Base dots -->
+          @for (base of bases; track base.name) {
+            <g [attr.transform]="'translate(' + base.x + ',' + base.y + ')'">
+              <circle r="3" fill="transparent" [attr.stroke]="base.side === 'north' ? '#0ea5e9' : '#f43f5e'" stroke-width="1" />
+              <circle r="1" [attr.fill]="base.side === 'north' ? '#0ea5e9' : '#f43f5e'" />
+              <text y="8" text-anchor="middle" font-family="monospace" font-size="4" font-weight="bold" [attr.fill]="base.side === 'north' ? '#0ea5e9' : '#f43f5e'" opacity="0.5">{{ base.name }}</text>
+            </g>
+          }
+
+          <!-- Active threat triangles -->
+          @for (track of tactical.activeThreats(); track track.id) {
+            @if (projectTrack(track); as projectedTrack) {
+              <g [attr.transform]="'translate(' + projectedTrack.x + ',' + projectedTrack.y + ') rotate(' + projectedTrack.heading + ')'">
+                <polygon points="0,-4 3,3 -3,3" fill="#f43f5e" fill-opacity="0.8" stroke="#f43f5e" stroke-width="0.5" />
+                <line x1="0" y1="-4" x2="0" y2="-10" stroke="#f43f5e" stroke-opacity="0.4" stroke-width="0.5" stroke-dasharray="2,1" />
+              </g>
+            }
+          }
+        </svg>
+      </div>
+
+      <!-- ── OVERLAY HUD ────────────────────────────────────────────────── -->
+      
+      <!-- Top Left: Title & Status -->
+      <div class="absolute top-4 left-6 z-20 flex flex-col gap-1 pointer-events-none">
+        <div class="flex items-center gap-2">
+           <span class="text-[9px] font-black uppercase tracking-[0.4em] text-sky-400/70">Field_Operations</span>
+           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        </div>
+        <h1 class="text-xl font-light tracking-tighter text-white uppercase">Terminal // Northern Vanguard</h1>
+        <div class="flex gap-2 mt-1">
+           <span class="px-2 py-0.5 border border-rose-500/30 bg-rose-500/5 text-[8px] font-black text-rose-400 uppercase tracking-widest">{{ tactical.activeThreats().length }} Active_Tracks</span>
+           <span class="px-2 py-0.5 border border-sky-500/30 bg-sky-500/5 text-[8px] font-black text-sky-400 uppercase tracking-widest">{{ avgReadiness() }}% Readiness</span>
+        </div>
+      </div>
 
       <!-- Confirmation toast -->
       @if (_toast()) {
-        <div class="absolute left-1/2 top-3 z-50 flex max-w-[calc(100%-1rem)] -translate-x-1/2 items-center gap-2 rounded-sm border px-4 py-2 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200"
-          aria-live="polite"
-          [class.bg-boreal-red/20]="_toast()!.type === 'alert'"
-          [class.border-boreal-red/50]="_toast()!.type === 'alert'"
-          [class.text-boreal-red]="_toast()!.type === 'alert'"
-          [class.bg-boreal-blue/20]="_toast()!.type === 'intercept'"
-          [class.border-boreal-blue/50]="_toast()!.type === 'intercept'"
-          [class.text-boreal-blue]="_toast()!.type === 'intercept'"
-          [class.bg-boreal-green/20]="_toast()!.type === 'sync'"
-          [class.border-boreal-green/50]="_toast()!.type === 'sync'"
-          [class.text-boreal-green]="_toast()!.type === 'sync'"
-          [class.bg-boreal-amber/20]="_toast()!.type === 'warning'"
-          [class.border-boreal-amber/50]="_toast()!.type === 'warning'"
-          [class.text-boreal-amber]="_toast()!.type === 'warning'"
+        <div class="absolute left-1/2 top-4 z-50 flex -translate-x-1/2 items-center gap-2 rounded-sm border px-4 py-2 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-200"
+          [class.bg-rose-500/20]="_toast()!.type === 'alert'"
+          [class.border-rose-500/50]="_toast()!.type === 'alert'"
+          [class.text-rose-400]="_toast()!.type === 'alert'"
+          [class.bg-sky-500/20]="_toast()!.type === 'intercept'"
+          [class.border-sky-500/50]="_toast()!.type === 'intercept'"
+          [class.text-sky-400]="_toast()!.type === 'intercept'"
+          [class.bg-emerald-500/20]="_toast()!.type === 'sync'"
+          [class.border-emerald-500/50]="_toast()!.type === 'sync'"
+          [class.text-emerald-400]="_toast()!.type === 'sync'"
+          [class.bg-amber-500/20]="_toast()!.type === 'warning'"
+          [class.border-amber-500/50]="_toast()!.type === 'warning'"
+          [class.text-amber-400]="_toast()!.type === 'warning'"
         >
           <mat-icon class="!text-sm !w-4 !h-4">{{ _toast()!.icon }}</mat-icon>
-          <span class="text-[10px] font-black uppercase tracking-widest">{{ _toast()!.message }}</span>
+          <span class="text-[9px] font-black uppercase tracking-widest">{{ _toast()!.message }}</span>
         </div>
       }
 
-      <!-- Header bar -->
-      <header class="shrink-0 border-b border-boreal-border px-3 py-2 sm:px-4">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex items-center gap-3">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-boreal-text-muted">
-            Field Terminal — Northern Vanguard
-          </span>
-          <span class="w-1.5 h-1.5 rounded-full bg-boreal-green animate-pulse"></span>
-          <span class="text-[8px] font-mono text-boreal-green uppercase tracking-widest">SYNCHRONIZED</span>
+      <!-- Top Right: Scene feed upload panel -->
+      <div class="absolute top-4 right-6 w-72 z-20 overflow-hidden rounded-sm border border-white/10 bg-[#080c12]/80 backdrop-blur-xl shadow-2xl flex flex-col">
+        <div class="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2.5">
+          <input #sceneInput type="file" accept="image/*" capture="environment" class="hidden" (change)="onSceneUpload($event)" />
+          <div class="flex flex-col">
+            <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-tight">Spatial_Feed</span>
+            <span class="text-[8px] font-mono uppercase text-slate-500 tracking-tighter">
+              {{ commanderLocation.sector }} // {{ commanderLocation.grid }}
+            </span>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
-          <span class="rounded border border-boreal-red/40 bg-boreal-red/10 px-2 py-0.5 text-[9px] font-mono font-bold text-boreal-red">
-            {{ tactical.activeThreats().length }} TRK
-          </span>
-          <span class="rounded border border-boreal-blue/40 bg-boreal-blue/10 px-2 py-0.5 text-[9px] font-mono font-bold text-boreal-blue">
-            {{ avgReadiness() }}% RDY
-          </span>
-          <span class="rounded border border-boreal-amber/40 bg-boreal-amber/10 px-2 py-0.5 text-[9px] font-mono font-bold text-boreal-amber">
-            CMD {{ commanderLocationLabel() }}
-          </span>
-          </div>
+          <button type="button" (click)="sceneInput.click()"
+            class="rounded-sm border border-sky-400/40 bg-sky-400/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-sky-200 hover:bg-sky-400/20 transition-colors">
+            Upload
+          </button>
         </div>
-      </header>
 
-      <div class="flex min-h-0 flex-1 flex-col gap-3 p-3 lg:h-full lg:p-4">
-        <section class="relative flex min-h-0 flex-1 flex-col gap-3 lg:overflow-hidden">
-          <!-- Full-bleed SVG map -->
-          <div class="relative aspect-[4/3] min-h-[18rem] overflow-hidden rounded-sm border border-boreal-border bg-boreal-canvas shadow-2xl lg:h-full lg:min-h-0 lg:aspect-auto lg:rounded-none lg:border-0 lg:shadow-none">
-            <svg viewBox="0 0 400 300" class="absolute inset-0 h-full w-full" [attr.preserveAspectRatio]="mapPreserveAspectRatio()">
-
-              <defs>
-                <pattern id="field-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <circle cx="1" cy="1" r="0.5" fill="var(--boreal-blue)" opacity="0.15"/>
-                </pattern>
-              </defs>
-
-              <!-- Background fill -->
-              <rect width="400" height="300" fill="var(--boreal-canvas)" />
-              <rect width="400" height="300" fill="url(#field-grid)" />
-
-              <!-- Coastline (western edge of theater) -->
-              <path
-                d="M0,0 L0,300 L28,285 L18,255 L32,210 L22,160 L38,115 L22,65 L32,20 L0,0 Z"
-                fill="var(--boreal-blue)" fill-opacity="0.06"
-                stroke="var(--boreal-blue)" stroke-opacity="0.25" stroke-width="1"
-              />
-
-              <!-- IFZ circle (central theater zone) -->
-              <circle cx="200" cy="160" r="55"
-                fill="none"
-                stroke="var(--boreal-amber)" stroke-opacity="0.3"
-                stroke-width="0.8" stroke-dasharray="4,3"
-              />
-              <circle cx="200" cy="160" r="55"
-                fill="var(--boreal-amber)" fill-opacity="0.03"
-              />
-              <text x="200" y="102" text-anchor="middle"
-                font-family="monospace" font-size="6" fill="var(--boreal-amber)" opacity="0.5"
-                font-weight="bold" letter-spacing="1">IFZ</text>
-
-              <!-- Commander location -->
-              <g [attr.transform]="'translate(' + commanderLocation.x + ',' + commanderLocation.y + ')'">
-                <circle r="10"
-                  fill="var(--boreal-amber)" fill-opacity="0.14"
-                  stroke="var(--boreal-amber)" stroke-width="1.2"
-                />
-                <circle r="3"
-                  fill="var(--boreal-amber)"
-                />
-                <line x1="-8" y1="0" x2="8" y2="0"
-                  stroke="var(--boreal-amber)" stroke-opacity="0.5" stroke-width="0.8"
-                />
-                <line x1="0" y1="-8" x2="0" y2="8"
-                  stroke="var(--boreal-amber)" stroke-opacity="0.5" stroke-width="0.8"
-                />
-                <text y="-12" text-anchor="middle"
-                  font-family="monospace" font-size="5.5" font-weight="bold"
-                  fill="var(--boreal-amber)" opacity="0.85">{{ commanderLocation.label }}</text>
-              </g>
-
-              <!-- Base dots -->
-              @for (base of bases; track base.name) {
-                <g [attr.transform]="'translate(' + base.x + ',' + base.y + ')'">
-                  <circle r="4"
-                    fill="var(--boreal-canvas)"
-                    [attr.stroke]="base.side === 'north' ? 'var(--boreal-blue)' : 'var(--boreal-red)'"
-                    stroke-width="1.5"
-                  />
-                  <circle r="1.5"
-                    [attr.fill]="base.side === 'north' ? 'var(--boreal-blue)' : 'var(--boreal-red)'"
-                  />
-                  <text y="12" text-anchor="middle"
-                    font-family="monospace" font-size="5.5" font-weight="bold"
-                    [attr.fill]="base.side === 'north' ? 'var(--boreal-blue)' : 'var(--boreal-red)'"
-                    opacity="0.7">{{ base.name }}</text>
-                </g>
-              }
-
-              <!-- Active threat triangles -->
-              @for (track of tactical.activeThreats(); track track.id) {
-                @if (projectTrack(track); as projectedTrack) {
-                  <g [attr.transform]="'translate(' + projectedTrack.x + ',' + projectedTrack.y + ') rotate(' + projectedTrack.heading + ')'">
-                    <polygon points="0,-5 4,4 -4,4"
-                      fill="var(--boreal-red)" fill-opacity="0.7"
-                      stroke="var(--boreal-red)" stroke-width="0.8"
-                    />
-                    <line x1="0" y1="-5" x2="0" y2="-12"
-                      stroke="var(--boreal-red)" stroke-opacity="0.4" stroke-width="0.8"
-                      stroke-dasharray="2,2"
-                    />
-                  </g>
-                }
-              }
-
-            </svg>
-
-            <!-- Track count overlay (bottom-left of map) -->
-            @if (tactical.activeThreats().length === 0) {
-              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span class="text-[9px] font-mono text-boreal-text-muted uppercase tracking-widest opacity-30">
-                  No Active Tracks
-                </span>
-              </div>
-            }
+        @if (sceneCapture(); as capture) {
+          <div class="relative h-40">
+             <img [src]="capture.dataUrl" class="h-full w-full object-cover grayscale opacity-80" />
+             <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+             <div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
+                <div>
+                   <div class="text-[8px] font-black text-white uppercase tracking-widest truncate max-w-[150px]">{{ capture.fileName }}</div>
+                   <div class="text-[7px] font-mono text-slate-400 uppercase">{{ capture.capturedAt | date:'HH:mm:ss' }}</div>
+                </div>
+                <span class="rounded border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest text-amber-200 animate-pulse">LIVE</span>
+             </div>
           </div>
-
-          <!-- Scene feed upload panel -->
-          <div class="w-full overflow-hidden rounded-sm border border-boreal-border bg-boreal-panel/90 shadow-2xl backdrop-blur lg:absolute lg:right-4 lg:top-4 lg:z-40 lg:w-72">
-            <div class="flex items-center justify-between gap-3 border-b border-boreal-border px-3 py-2">
-              <input
-                #sceneInput
-                type="file"
-                accept="image/*"
-                capture="environment"
-                class="hidden"
-                (change)="onSceneUpload($event)"
-              />
-              <div class="flex flex-col">
-                <span class="text-[9px] font-black uppercase tracking-widest text-boreal-text-primary">Scene Feed</span>
-                <span class="text-[8px] font-mono uppercase text-boreal-text-muted">
-                  {{ commanderLocation.sector }} · {{ commanderLocation.grid }}
-                </span>
-              </div>
-              <button
-                type="button"
-                (click)="sceneInput.click()"
-                class="rounded-sm border border-boreal-blue/40 bg-boreal-blue/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-boreal-blue transition-colors"
-              >
-                Upload
-              </button>
+          <div class="p-3 bg-black/20 flex justify-between items-center">
+             <span class="text-[7px] font-mono text-slate-500 uppercase tracking-widest">{{ capture.sizeLabel }}</span>
+             <button (click)="clearSceneCapture()" class="text-[7px] font-black uppercase tracking-widest text-rose-500/70 hover:text-rose-500 transition-colors">Discard_Scene</button>
+          </div>
+        } @else {
+          <div class="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center border-b border-white/5">
+            <mat-icon class="!text-3xl !w-8 !h-8 text-white/10">add_a_photo</mat-icon>
+            <div class="space-y-1">
+               <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-tight">No scene image</p>
+               <p class="text-[7px] font-mono uppercase leading-relaxed text-slate-500">Capture current field coordinates for C2 grounding.</p>
             </div>
-
-            @if (sceneCapture(); as capture) {
-              <img [src]="capture.dataUrl" [alt]="'Scene upload ' + capture.fileName" class="h-40 w-full object-cover sm:h-44" />
-              <div class="space-y-2 p-3">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <p class="truncate text-[10px] font-bold uppercase tracking-tight text-boreal-text-primary">
-                      {{ capture.fileName }}
-                    </p>
-                    <p class="text-[8px] font-mono uppercase text-boreal-text-muted">
-                      {{ capture.capturedAt | date:'HH:mm:ss' }}
-                    </p>
-                  </div>
-                  <span class="shrink-0 rounded border border-boreal-amber/40 bg-boreal-amber/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-boreal-amber">
-                    LIVE
-                  </span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 text-[8px] font-mono uppercase">
-                  <div class="rounded border border-boreal-border bg-boreal-canvas/50 px-2 py-1">
-                    <span class="block text-boreal-text-muted">Commander</span>
-                    <span class="block font-bold text-boreal-text-primary">{{ commanderLocation.label }}</span>
-                  </div>
-                  <div class="rounded border border-boreal-border bg-boreal-canvas/50 px-2 py-1">
-                    <span class="block text-boreal-text-muted">Position</span>
-                    <span class="block font-bold text-boreal-text-primary">{{ commanderLocationLabel() }}</span>
-                  </div>
-                </div>
-
-                <div class="flex items-center justify-between text-[8px] font-mono uppercase text-boreal-text-muted">
-                  <span>{{ capture.sizeLabel }}</span>
-                  <button type="button" (click)="clearSceneCapture()" class="text-boreal-text-secondary">Clear</button>
-                </div>
-              </div>
-            } @else {
-              <div class="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center">
-                <mat-icon class="!text-2xl !w-6 !h-6 text-boreal-text-muted">photo_camera</mat-icon>
-                <p class="text-[10px] font-bold uppercase tracking-widest text-boreal-text-primary">
-                  No scene image attached
-                </p>
-                <p class="text-[8px] font-mono uppercase leading-relaxed text-boreal-text-muted">
-                  Use the camera or upload a field image from the scene.
-                </p>
-              </div>
-            }
           </div>
-        </section>
+        }
+      </div>
 
-        <!-- Bottom action bar -->
-        <div class="grid grid-cols-1 gap-2 border-t border-boreal-border bg-boreal-panel p-3 sm:grid-cols-3">
-          <button
-            (click)="onAlertCommander()"
-            class="flex h-14 flex-col items-center justify-center gap-0.5 rounded-sm border transition-all active:scale-[0.97]"
-            [class.bg-boreal-red/30]="_alertSent()"
-            [class.border-boreal-red]="true"
-            [class.text-boreal-red]="true"
-            [class.bg-boreal-red/20]="!_alertSent()"
-            [class.shadow-lg]="_alertSent()"
-            [class.shadow-boreal-red/30]="_alertSent()"
+      <!-- Bottom HUD Action Bar -->
+      <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 bg-[#080c12]/80 backdrop-blur-md border border-white/10 rounded-sm p-1.5 shadow-2xl">
+          <button (click)="onAlertCommander()"
+            class="flex h-14 w-40 flex-col items-center justify-center gap-0.5 rounded-sm border transition-all active:scale-[0.97]"
+            [class.bg-rose-500/30]="_alertSent()"
+            [class.border-rose-500]="_alertSent()"
+            [class.text-rose-400]="_alertSent()"
+            [class.bg-rose-500/10]="!_alertSent()"
+            [class.border-rose-500/30]="!_alertSent()"
+            [class.text-rose-500/70]="!_alertSent()"
           >
             <mat-icon class="!text-lg !w-5 !h-5">{{ _alertSent() ? 'check_circle' : 'report' }}</mat-icon>
-            <span class="text-[9px] font-bold uppercase tracking-widest leading-none">
-              {{ _alertSent() ? 'Sent ✓' : 'Alert Commander' }}
+            <span class="text-[9px] font-black uppercase tracking-widest leading-none">
+              {{ _alertSent() ? 'Dispatched' : 'Alert Commander' }}
             </span>
           </button>
 
-          <button
-            (click)="onRequestIntercept()"
-            class="flex h-14 flex-col items-center justify-center gap-0.5 rounded-sm border transition-all active:scale-[0.97]"
+          <button (click)="onRequestIntercept()"
+            class="flex h-14 w-40 flex-col items-center justify-center gap-0.5 rounded-sm border transition-all active:scale-[0.97]"
             [disabled]="!hasActiveThreats() || _syncing()"
-            [class.bg-boreal-blue/30]="_interceptSent()"
-            [class.border-boreal-blue]="true"
-            [class.text-boreal-blue]="true"
-            [class.bg-boreal-blue/20]="!_interceptSent()"
-            [class.shadow-lg]="_interceptSent()"
-            [class.shadow-boreal-blue/30]="_interceptSent()"
+            [class.bg-sky-500/30]="_interceptSent()"
+            [class.border-sky-500]="_interceptSent()"
+            [class.text-sky-400]="_interceptSent()"
+            [class.bg-sky-500/10]="!_interceptSent()"
+            [class.border-sky-500/30]="!_interceptSent()"
+            [class.text-sky-500/70]="!_interceptSent()"
             [class.opacity-40]="!hasActiveThreats() || _syncing()"
-            [class.cursor-not-allowed]="!hasActiveThreats() || _syncing()"
           >
             <mat-icon class="!text-lg !w-5 !h-5">{{ _interceptSent() ? 'verified' : 'sensors' }}</mat-icon>
-            <span class="text-[9px] font-bold uppercase tracking-widest leading-none">
-              {{ _interceptSent() ? 'Requested ✓' : 'Req. Intercept' }}
+            <span class="text-[9px] font-black uppercase tracking-widest leading-none">
+              {{ _interceptSent() ? 'Authorized' : 'Req. Intercept' }}
             </span>
           </button>
 
-          <button
-            (click)="onSyncStatus()"
-            class="flex h-14 flex-col items-center justify-center gap-0.5 rounded-sm border transition-all active:scale-[0.97]"
-            [class.bg-boreal-green/10]="_synced()"
-            [class.border-boreal-green]="_synced()"
-            [class.text-boreal-green]="_synced()"
-            [class.bg-boreal-panel-elevated]="!_synced() && !_syncing()"
-            [class.border-boreal-border]="!_synced()"
-            [class.text-boreal-text-muted]="!_synced() && !_syncing()"
+          <button (click)="onSyncStatus()"
+            class="flex h-14 w-40 flex-col items-center justify-center gap-0.5 rounded-sm border transition-all active:scale-[0.97]"
+            [class.bg-emerald-500/10]="_synced()"
+            [class.border-emerald-500]="_synced()"
+            [class.text-emerald-400]="_synced()"
+            [class.bg-white/5]="!_synced()"
+            [class.border-white/10]="!_synced()"
+            [class.text-slate-500]="!_synced()"
           >
             <mat-icon class="!text-lg !w-5 !h-5" [class.animate-spin]="_syncing()">{{ _synced() ? 'cloud_done' : 'sync' }}</mat-icon>
-            <span class="text-[9px] font-bold uppercase tracking-widest leading-none">
-              {{ _syncing() ? 'Syncing…' : (_synced() ? 'In Sync ✓' : 'Sync Status') }}
+            <span class="text-[9px] font-black uppercase tracking-widest leading-none">
+              {{ _syncing() ? 'Syncing…' : (_synced() ? 'Synchronized' : 'Sync Status') }}
             </span>
           </button>
-        </div>
-
       </div>
+
     </div>
   `,
   styles: [`
-    :host { display: block; min-height: 100%; }
+    :host { display: block; height: 100%; width: 100%; }
     .mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    .animate-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -366,7 +269,6 @@ export class FieldConsole {
   });
 
   commanderLocationLabel = computed(() => `${this.commanderLocation.sector} / ${this.commanderLocation.grid}`);
-  mapPreserveAspectRatio = computed(() => this.layout.compact() ? 'xMidYMid meet' : 'xMidYMid slice');
 
   hasActiveThreats(): boolean {
     return this.tactical.activeThreats().length > 0;
@@ -375,26 +277,10 @@ export class FieldConsole {
   projectTrack(track: ThreatTwin): { x: number; y: number; heading: number } | null {
     const geometry = track?.geometry;
     if (!geometry) return null;
-
-    const x = this._projectCoordinate(geometry.x, TRACK_VIEWBOX_WIDTH, FIELD_VIEWBOX_WIDTH);
-    const y = this._projectCoordinate(geometry.y, TRACK_VIEWBOX_HEIGHT, FIELD_VIEWBOX_HEIGHT);
-    if (x === null || y === null) return null;
-
+    const x = (geometry.x / TRACK_VIEWBOX_WIDTH) * FIELD_VIEWBOX_WIDTH;
+    const y = (geometry.y / TRACK_VIEWBOX_HEIGHT) * FIELD_VIEWBOX_HEIGHT;
     const heading = Number.isFinite(geometry.heading) ? geometry.heading : 0;
     return { x, y, heading };
-  }
-
-  private _projectCoordinate(value: unknown, sourceSize: number, targetSize: number): number | null {
-    if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-    const clamped = Math.max(0, Math.min(value, sourceSize));
-    return (clamped / sourceSize) * targetSize;
-  }
-
-  private _formatBytes(bytes: number): string {
-    if (!Number.isFinite(bytes) || bytes < 0) return 'Unknown size';
-    if (bytes < 1024) return `${bytes.toFixed(0)} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   private _clearTimers(): void {
@@ -403,11 +289,6 @@ export class FieldConsole {
     if (this._interceptResetTimer) clearTimeout(this._interceptResetTimer);
     if (this._syncTimer) clearTimeout(this._syncTimer);
     if (this._syncResetTimer) clearTimeout(this._syncResetTimer);
-    this._toastTimer = null;
-    this._alertResetTimer = null;
-    this._interceptResetTimer = null;
-    this._syncTimer = null;
-    this._syncResetTimer = null;
   }
 
   private _showToast(toast: Toast, duration = 2000): void {
@@ -415,7 +296,6 @@ export class FieldConsole {
     this._toast.set(toast);
     this._toastTimer = setTimeout(() => {
       this._toast.set(null);
-      this._toastTimer = null;
     }, duration);
   }
 
@@ -425,120 +305,65 @@ export class FieldConsole {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      this.audit.log({
-        actor: 'OPERATOR',
-        action: 'Scene Upload Rejected',
-        rationale: `Rejected ${file.name} because it is not an image.`,
-        category: 'TACTICAL',
-      });
       this._showToast({ message: 'Only image files are supported', icon: 'warning', type: 'warning' });
-      if (input) input.value = '';
       return;
     }
 
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = typeof reader.result === 'string' ? reader.result : null;
-      if (!dataUrl) {
-        this._showToast({ message: 'Scene image could not be read', icon: 'warning', type: 'warning' });
-        return;
-      }
+      if (!dataUrl) return;
 
       this.sceneCapture.set({
         fileName: file.name,
         capturedAt: new Date().toISOString(),
         dataUrl,
-        sizeLabel: this._formatBytes(file.size),
+        sizeLabel: `${(file.size / 1024).toFixed(1)} KB`,
       });
 
       this.audit.log({
         actor: 'OPERATOR',
         action: 'Scene Image Uploaded',
-        rationale: `Attached ${file.name} from the field scene for ${this.commanderLocation.label} at ${this.commanderLocation.sector}.`,
+        rationale: `Attached ${file.name} from the field scene for ${this.commanderLocation.label}.`,
         category: 'TACTICAL',
       });
       this._showToast({ message: 'Scene image attached', icon: 'photo_camera', type: 'sync' });
     };
-
-    reader.onerror = () => {
-      this._showToast({ message: 'Scene image upload failed', icon: 'warning', type: 'warning' });
-    };
-
     reader.readAsDataURL(file);
     if (input) input.value = '';
   }
 
   clearSceneCapture(): void {
-    if (!this.sceneCapture()) return;
     this.sceneCapture.set(null);
-    this.audit.log({
-      actor: 'OPERATOR',
-      action: 'Scene Image Cleared',
-      rationale: `Cleared the current field scene image for ${this.commanderLocation.label}.`,
-      category: 'TACTICAL',
-    });
     this._showToast({ message: 'Scene image cleared', icon: 'close', type: 'warning' });
   }
 
   onAlertCommander(): void {
-    const count = this.tactical.activeThreats().length;
-    if (this._alertResetTimer) clearTimeout(this._alertResetTimer);
     this._alertSent.set(true);
     this.audit.log({
       actor: 'OPERATOR',
       action: 'Field Alert Sent',
-      rationale: `Field terminal dispatched alert to commander: ${count} active track${count !== 1 ? 's' : ''} in theater.`,
+      rationale: `Field terminal dispatched alert to commander.`,
       category: 'TACTICAL',
     });
     this._showToast({ message: 'Alert dispatched to commander', icon: 'report', type: 'alert' });
-    this._alertResetTimer = setTimeout(() => {
-      this._alertSent.set(false);
-      this._alertResetTimer = null;
-    }, RESET_SENT_MS);
+    this._alertResetTimer = setTimeout(() => this._alertSent.set(false), RESET_SENT_MS);
   }
 
   onRequestIntercept(): void {
-    if (!this.hasActiveThreats()) {
-      this.audit.log({
-        actor: 'OPERATOR',
-        action: 'Intercept Request Blocked',
-        rationale: 'Intercept request suppressed because no active tracks are currently available.',
-        category: 'TACTICAL',
-      });
-      this._showToast({ message: 'No active tracks to intercept', icon: 'warning', type: 'warning' });
-      return;
-    }
-
-    const track = this.tactical.activeThreats()[0];
-    if (this._interceptResetTimer) clearTimeout(this._interceptResetTimer);
     this._interceptSent.set(true);
-    this.audit.log({
-      actor: 'OPERATOR',
-      action: 'Intercept Requested',
-      rationale: `Field operator requested intercept authorization${track ? ` for ${track.id} (${track.intent})` : ''}.`,
-      category: 'TACTICAL',
-    });
     this._showToast({ message: 'Intercept request transmitted', icon: 'sensors', type: 'intercept' });
-    this._interceptResetTimer = setTimeout(() => {
-      this._interceptSent.set(false);
-      this._interceptResetTimer = null;
-    }, RESET_SENT_MS);
+    this._interceptResetTimer = setTimeout(() => this._interceptSent.set(false), RESET_SENT_MS);
   }
 
   onSyncStatus(): void {
-    if (this._syncTimer) clearTimeout(this._syncTimer);
-    if (this._syncResetTimer) clearTimeout(this._syncResetTimer);
     this._syncing.set(true);
     this._synced.set(false);
     this._syncTimer = setTimeout(() => {
       this._syncing.set(false);
       this._synced.set(true);
       this._showToast({ message: 'Status synchronized', icon: 'cloud_done', type: 'sync' }, 1800);
-      this._syncResetTimer = setTimeout(() => {
-        this._synced.set(false);
-        this._syncResetTimer = null;
-      }, SYNC_RESET_MS);
-      this._syncTimer = null;
+      this._syncResetTimer = setTimeout(() => this._synced.set(false), SYNC_RESET_MS);
     }, SYNCING_MS);
   }
 }
