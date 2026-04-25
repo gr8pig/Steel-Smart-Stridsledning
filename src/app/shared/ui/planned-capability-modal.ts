@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { CapabilityOrchestrator, PlannedCapabilityInfo } from '../../core/services/capability-orchestrator';
 import { AuditLogger } from '../../core/services/audit-logger';
@@ -65,61 +66,65 @@ interface FeatureViewModel {
             <!-- TACTICAL ALERTS                                               -->
             <!-- ============================================================ -->
             @case ('detailed-alerts') {
-              <header class="panel-header flex items-center justify-between border-b border-boreal-border p-4 h-14 bg-boreal-panel-muted/40">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded bg-boreal-red/20 flex items-center justify-center">
-                    <mat-icon class="text-boreal-red !text-lg">notifications_none</mat-icon>
+              <header class="panel-header flex items-center justify-between border-b border-white/10 p-5 bg-black/20 shrink-0">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-sm bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(244,63,94,0.15)]">
+                    <mat-icon class="text-rose-500 !text-xl">notifications_none</mat-icon>
                   </div>
                   <div>
-                    <h2 class="text-[10px] uppercase tracking-[0.25em] font-black text-boreal-text-primary">Tactical Alerts</h2>
-                    <p class="text-[8px] text-boreal-text-muted font-mono uppercase tracking-[0.15em]">{{audit.logs().length}} EVENTS LOGGED THIS SESSION</p>
+                    <h2 class="text-[11px] uppercase tracking-[0.3em] font-black text-white">Tactical Alerts</h2>
+                    <p class="text-[8px] text-slate-400 font-mono uppercase tracking-[0.2em] mt-0.5">{{audit.logs().length}} EVENTS LOGGED THIS SESSION</p>
                   </div>
                 </div>
-                <button (click)="orchestrator.close()" class="p-2 hover:bg-boreal-blue/10 rounded transition-colors group">
-                  <mat-icon class="text-boreal-text-muted group-hover:text-boreal-blue">close</mat-icon>
+                <button (click)="orchestrator.close()" class="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-sm transition-colors group">
+                  <mat-icon class="!text-sm">close</mat-icon>
                 </button>
               </header>
 
-              <div class="flex gap-1 px-4 py-2 border-b border-boreal-border bg-boreal-canvas/20 shrink-0">
+              <div class="flex gap-1.5 px-5 py-3 border-b border-white/5 bg-white/2 shrink-0 overflow-x-auto custom-scrollbar">
                 @for (cat of alertCategories; track cat) {
                   <button
                     (click)="logFilter.set(cat)"
-                    class="px-2.5 py-1 text-[8px] font-black uppercase tracking-widest rounded-sm transition-all"
-                    [class.bg-boreal-blue]="logFilter() === cat"
+                    class="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-sm transition-all border border-transparent"
+                    [class.bg-sky-500]="logFilter() === cat"
                     [class.text-white]="logFilter() === cat"
-                    [class.text-boreal-text-muted]="logFilter() !== cat"
-                    [class.hover:bg-boreal-panel-elevated]="logFilter() !== cat"
+                    [class.shadow-[0_0_10px_rgba(14,165,233,0.3)]]="logFilter() === cat"
+                    [class.text-slate-400]="logFilter() !== cat"
+                    [class.hover:bg-white/5]="logFilter() !== cat"
+                    [class.hover:text-slate-200]="logFilter() !== cat"
+                    [class.hover:border-white/10]="logFilter() !== cat"
                   >{{cat}}</button>
                 }
               </div>
 
-              <div class="flex-grow overflow-y-auto bg-boreal-panel divide-y divide-boreal-border/40">
+              <div class="flex-grow overflow-y-auto bg-transparent divide-y divide-white/5">
                 @for (log of filteredLogs(); track log.id) {
-                  <div class="flex items-start gap-3 px-4 py-3 hover:bg-boreal-panel-elevated/40 transition-colors">
-                    <span class="text-[9px] font-mono text-boreal-text-muted shrink-0 pt-0.5 w-[4.5rem]">{{log.time}}</span>
-                    <span class="shrink-0 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-sm" [class]="actorClass(log.actor)">{{log.actor}}</span>
-                    <span class="shrink-0 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-sm" [class]="categoryClass(log.category)">{{log.category}}</span>
-                    <div class="flex flex-col gap-0.5 min-w-0 flex-grow">
-                      <span class="text-[10px] font-bold text-boreal-text-primary">{{log.action}}</span>
-                      <span class="text-[9px] text-boreal-text-muted leading-tight">{{log.rationale}}</span>
+                  <div class="flex items-start gap-4 px-5 py-4 hover:bg-white/5 transition-colors group">
+                    <span class="text-[9px] font-mono text-slate-500 shrink-0 pt-0.5 w-[4.5rem] opacity-70 group-hover:opacity-100 transition-opacity">{{log.time}}</span>
+                    <span class="shrink-0 px-2 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-[2px]" [class]="actorClass(log.actor)">{{log.actor}}</span>
+                    <span class="shrink-0 px-2 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-[2px]" [class]="categoryClass(log.category)">{{log.category}}</span>
+                    <div class="flex flex-col gap-1 min-w-0 flex-grow">
+                      <span class="text-[10.5px] font-bold text-slate-200 tracking-tight">{{log.action}}</span>
+                      <span class="text-[9.5px] text-slate-400 leading-relaxed">{{log.rationale}}</span>
                     </div>
                   </div>
                 }
                 @empty {
-                  <div class="flex items-center justify-center h-24 text-boreal-text-muted text-[10px] font-mono uppercase tracking-widest">
+                  <div class="flex flex-col items-center justify-center h-40 text-slate-500 text-[10px] font-black uppercase tracking-widest opacity-50">
+                    <mat-icon class="!text-3xl mb-3 !w-8 !h-8 opacity-50">check_circle_outline</mat-icon>
                     No events in this category
                   </div>
                 }
               </div>
 
-              <footer class="p-4 border-t border-boreal-border flex justify-between items-center bg-boreal-panel-muted/40 shrink-0">
+              <footer class="p-4 px-5 border-t border-white/10 flex justify-between items-center bg-black/20 shrink-0">
                 <button
                   (click)="audit.clear()"
-                  class="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-boreal-text-muted border border-boreal-border rounded-sm hover:text-boreal-red hover:border-boreal-red/40 transition-colors"
+                  class="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-slate-500 border border-white/10 rounded-sm hover:text-rose-400 hover:border-rose-400/40 hover:bg-rose-400/10 transition-all"
                 >
                   Clear Log
                 </button>
-                <button (click)="orchestrator.close()" class="px-8 py-2 bg-boreal-blue text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-boreal-blue/20">
+                <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-sky-500 text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 active:scale-95 transition-all shadow-[0_0_15px_rgba(14,165,233,0.3)]">
                   Close
                 </button>
               </footer>
@@ -194,59 +199,59 @@ interface FeatureViewModel {
             <!-- POLICY LOGIC TRACE                                            -->
             <!-- ============================================================ -->
             @case ('policy-trace') {
-              <header class="panel-header flex items-center justify-between border-b border-boreal-border p-4 h-14 bg-boreal-panel-muted/40">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded bg-boreal-blue/20 flex items-center justify-center">
-                    <mat-icon class="text-boreal-blue !text-lg">biotech</mat-icon>
+              <header class="panel-header flex items-center justify-between border-b border-white/10 p-5 bg-black/20 shrink-0">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-sm bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(14,165,233,0.15)]">
+                    <mat-icon class="text-sky-500 !text-xl">biotech</mat-icon>
                   </div>
                   <div>
-                    <h2 class="text-[10px] uppercase tracking-[0.25em] font-black text-boreal-text-primary">Policy Logic Trace</h2>
-                    <p class="text-[8px] text-boreal-text-muted font-mono uppercase tracking-[0.15em]">COA ATTRIBUTION · {{policy.availableCOAs().length}} ALTERNATIVES ON PARETO FRONT</p>
+                    <h2 class="text-[11px] uppercase tracking-[0.3em] font-black text-white">Policy Logic Trace</h2>
+                    <p class="text-[8px] text-slate-400 font-mono uppercase tracking-[0.2em] mt-0.5">COA ATTRIBUTION · {{policy.availableCOAs().length}} ALTERNATIVES ON PARETO FRONT</p>
                   </div>
                 </div>
-                <button (click)="orchestrator.close()" class="p-2 hover:bg-boreal-blue/10 rounded transition-colors group">
-                  <mat-icon class="text-boreal-text-muted group-hover:text-boreal-blue">close</mat-icon>
+                <button (click)="orchestrator.close()" class="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-sm transition-colors group">
+                  <mat-icon class="!text-sm">close</mat-icon>
                 </button>
               </header>
 
-              <div class="flex-grow overflow-y-auto p-6 space-y-6 bg-boreal-panel">
+              <div class="flex-grow overflow-y-auto p-6 space-y-8 bg-transparent">
                 @if (policy.activePolicy(); as p) {
 
                   <!-- Weight Vector -->
                   <section>
-                    <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em] block mb-4">Active Policy Weight Vector</span>
-                    <div class="space-y-3">
-                      <div class="flex items-center gap-3">
-                        <span class="w-24 text-[9px] font-black text-boreal-text-muted uppercase tracking-wider shrink-0">Safety</span>
-                        <div class="flex-grow h-2 bg-boreal-panel-elevated rounded-full overflow-hidden">
-                          <div class="h-full bg-boreal-red rounded-full transition-all duration-500" [style.width.%]="p.weights.safety * 100"></div>
+                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-4">Active Policy Weight Vector</span>
+                    <div class="space-y-4">
+                      <div class="flex items-center gap-4">
+                        <span class="w-24 text-[9px] font-black text-slate-400 uppercase tracking-wider shrink-0">Safety</span>
+                        <div class="flex-grow h-2 bg-white/5 rounded-full overflow-hidden">
+                          <div class="h-full bg-rose-500 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" [style.width.%]="p.weights.safety * 100"></div>
                         </div>
-                        <span class="w-10 text-right text-[10px] font-black text-boreal-text-primary font-mono">{{(p.weights.safety * 100).toFixed(0)}}%</span>
+                        <span class="w-10 text-right text-[10px] font-black text-white font-mono">{{(p.weights.safety * 100).toFixed(0)}}%</span>
                       </div>
-                      <div class="flex items-center gap-3">
-                        <span class="w-24 text-[9px] font-black text-boreal-text-muted uppercase tracking-wider shrink-0">Sustainability</span>
-                        <div class="flex-grow h-2 bg-boreal-panel-elevated rounded-full overflow-hidden">
-                          <div class="h-full bg-boreal-green rounded-full transition-all duration-500" [style.width.%]="p.weights.sustainability * 100"></div>
+                      <div class="flex items-center gap-4">
+                        <span class="w-24 text-[9px] font-black text-slate-400 uppercase tracking-wider shrink-0">Sustainability</span>
+                        <div class="flex-grow h-2 bg-white/5 rounded-full overflow-hidden">
+                          <div class="h-full bg-emerald-500 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" [style.width.%]="p.weights.sustainability * 100"></div>
                         </div>
-                        <span class="w-10 text-right text-[10px] font-black text-boreal-text-primary font-mono">{{(p.weights.sustainability * 100).toFixed(0)}}%</span>
+                        <span class="w-10 text-right text-[10px] font-black text-white font-mono">{{(p.weights.sustainability * 100).toFixed(0)}}%</span>
                       </div>
-                      <div class="flex items-center gap-3">
-                        <span class="w-24 text-[9px] font-black text-boreal-text-muted uppercase tracking-wider shrink-0">Resilience</span>
-                        <div class="flex-grow h-2 bg-boreal-panel-elevated rounded-full overflow-hidden">
-                          <div class="h-full bg-boreal-blue rounded-full transition-all duration-500" [style.width.%]="p.weights.resilience * 100"></div>
+                      <div class="flex items-center gap-4">
+                        <span class="w-24 text-[9px] font-black text-slate-400 uppercase tracking-wider shrink-0">Resilience</span>
+                        <div class="flex-grow h-2 bg-white/5 rounded-full overflow-hidden">
+                          <div class="h-full bg-sky-500 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]" [style.width.%]="p.weights.resilience * 100"></div>
                         </div>
-                        <span class="w-10 text-right text-[10px] font-black text-boreal-text-primary font-mono">{{(p.weights.resilience * 100).toFixed(0)}}%</span>
+                        <span class="w-10 text-right text-[10px] font-black text-white font-mono">{{(p.weights.resilience * 100).toFixed(0)}}%</span>
                       </div>
                     </div>
-                    <div class="mt-4 p-3 bg-boreal-canvas/40 rounded-sm border border-boreal-border">
-                      <span class="text-[8px] text-boreal-text-muted font-mono">
+                    <div class="mt-5 p-4 bg-white/5 rounded-sm border border-white/10">
+                      <span class="text-[8.5px] text-slate-400 font-mono leading-relaxed">
                         ATTRIBUTION CHAIN: Safety&nbsp;
                         @if (p.weights.safety > 0.75) {
-                          &gt; 75% threshold → selects <span class="text-boreal-red font-bold">MAX_PROTECTION</span>
+                          &gt; 75% threshold → selects <span class="text-rose-400 font-bold">MAX_PROTECTION</span>
                         } @else if (p.weights.sustainability > 0.75) {
-                          &lt; 75% · Sustainability &gt; 75% → selects <span class="text-boreal-green font-bold">DEEP_SUSTAINABILITY</span>
+                          &lt; 75% · Sustainability &gt; 75% → selects <span class="text-emerald-400 font-bold">DEEP_SUSTAINABILITY</span>
                         } @else {
-                          &lt; 75% · all balanced → selects <span class="text-boreal-blue font-bold">BALANCED</span>
+                          &lt; 75% · all balanced → selects <span class="text-sky-400 font-bold">BALANCED</span>
                         }
                       </span>
                     </div>
@@ -255,31 +260,31 @@ interface FeatureViewModel {
                   <!-- Recommended COA -->
                   @if (policy.recommendedCOA(); as rec) {
                     <section>
-                      <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em] block mb-3">Recommended COA</span>
-                      <div class="p-5 bg-boreal-blue/5 border border-boreal-blue/30 rounded-sm">
-                        <div class="flex justify-between items-start mb-3">
-                          <span class="text-base font-bold text-boreal-text-primary">{{rec.name}}</span>
-                          <span class="px-2 py-0.5 bg-boreal-blue/20 text-boreal-blue border border-boreal-blue/30 text-[7px] font-black uppercase tracking-widest rounded-sm">{{rec.type}}</span>
+                      <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-4">Recommended COA</span>
+                      <div class="p-6 bg-sky-500/5 border border-sky-500/20 rounded-sm">
+                        <div class="flex justify-between items-start mb-4">
+                          <span class="text-lg font-bold text-white tracking-tight">{{rec.name}}</span>
+                          <span class="px-2.5 py-1 bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[8px] font-black uppercase tracking-widest rounded-[2px]">{{rec.type}}</span>
                         </div>
-                        <p class="text-[9px] text-boreal-text-secondary italic mb-4 leading-relaxed">{{rec.rationale}}</p>
-                        <div class="grid grid-cols-4 gap-4">
-                          <div class="flex flex-col gap-0.5">
-                            <span class="text-[7px] font-black text-boreal-text-muted uppercase tracking-widest">Intercepts</span>
-                            <span class="text-[18px] font-black font-mono text-boreal-green leading-none">{{rec.projectedOutcome.intercepts}}</span>
+                        <p class="text-[10px] text-slate-400 italic mb-5 leading-relaxed">{{rec.rationale}}</p>
+                        <div class="grid grid-cols-4 gap-6">
+                          <div class="flex flex-col gap-1">
+                            <span class="text-[7.5px] font-black text-slate-500 uppercase tracking-widest">Intercepts</span>
+                            <span class="text-[20px] font-black font-mono text-emerald-400 leading-none">{{rec.projectedOutcome.intercepts}}</span>
                           </div>
-                          <div class="flex flex-col gap-0.5">
-                            <span class="text-[7px] font-black text-boreal-text-muted uppercase tracking-widest">Leakage</span>
-                            <span class="text-[18px] font-black font-mono leading-none"
-                              [class.text-boreal-green]="rec.projectedOutcome.leakage === 0"
-                              [class.text-boreal-red]="rec.projectedOutcome.leakage > 0">{{rec.projectedOutcome.leakage}}</span>
+                          <div class="flex flex-col gap-1">
+                            <span class="text-[7.5px] font-black text-slate-500 uppercase tracking-widest">Leakage</span>
+                            <span class="text-[20px] font-black font-mono leading-none"
+                              [class.text-emerald-400]="rec.projectedOutcome.leakage === 0"
+                              [class.text-rose-400]="rec.projectedOutcome.leakage > 0">{{rec.projectedOutcome.leakage}}</span>
                           </div>
-                          <div class="flex flex-col gap-0.5">
-                            <span class="text-[7px] font-black text-boreal-text-muted uppercase tracking-widest">Robustness</span>
-                            <span class="text-[18px] font-black font-mono text-boreal-text-primary leading-none">{{(rec.projectedOutcome.robustnessScore * 100).toFixed(0)}}%</span>
+                          <div class="flex flex-col gap-1">
+                            <span class="text-[7.5px] font-black text-slate-500 uppercase tracking-widest">Robustness</span>
+                            <span class="text-[20px] font-black font-mono text-white leading-none">{{(rec.projectedOutcome.robustnessScore * 100).toFixed(0)}}%</span>
                           </div>
-                          <div class="flex flex-col gap-0.5">
-                            <span class="text-[7px] font-black text-boreal-text-muted uppercase tracking-widest">Confidence</span>
-                            <span class="text-[18px] font-black font-mono text-boreal-text-primary leading-none">{{(rec.projectedOutcome.confidence * 100).toFixed(0)}}%</span>
+                          <div class="flex flex-col gap-1">
+                            <span class="text-[7.5px] font-black text-slate-500 uppercase tracking-widest">Confidence</span>
+                            <span class="text-[20px] font-black font-mono text-white leading-none">{{(rec.projectedOutcome.confidence * 100).toFixed(0)}}%</span>
                           </div>
                         </div>
                       </div>
@@ -288,38 +293,38 @@ interface FeatureViewModel {
 
                   <!-- Full Pareto Set -->
                   <section>
-                    <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em] block mb-3">Full Pareto Comparison</span>
-                    <div class="overflow-x-auto">
+                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-4">Full Pareto Comparison</span>
+                    <div class="overflow-x-auto rounded-sm border border-white/10 bg-white/2">
                       <table class="w-full">
                         <thead>
-                          <tr class="border-b border-boreal-border text-boreal-text-muted text-[7px] font-black uppercase tracking-widest">
-                            <th class="text-left py-2 pr-4">COA ID</th>
-                            <th class="text-left py-2 pr-4">Type</th>
-                            <th class="text-right py-2 pr-4">Intercepts</th>
-                            <th class="text-right py-2 pr-4">Leakage</th>
-                            <th class="text-right py-2 pr-4">Robustness</th>
-                            <th class="text-right py-2 pr-4">Confidence</th>
-                            <th class="text-right py-2">Cost ($K)</th>
+                          <tr class="border-b border-white/10 bg-black/20 text-slate-400 text-[8px] font-black uppercase tracking-widest">
+                            <th class="text-left py-3 px-4">COA ID</th>
+                            <th class="text-left py-3 px-4">Type</th>
+                            <th class="text-right py-3 px-4">Intercepts</th>
+                            <th class="text-right py-3 px-4">Leakage</th>
+                            <th class="text-right py-3 px-4">Robustness</th>
+                            <th class="text-right py-3 px-4">Confidence</th>
+                            <th class="text-right py-3 px-4">Cost ($K)</th>
                           </tr>
                         </thead>
-                        <tbody class="divide-y divide-boreal-border/30">
+                        <tbody class="divide-y divide-white/5">
                           @for (coa of policy.availableCOAs(); track coa.id) {
-                            <tr class="transition-colors hover:bg-boreal-panel-elevated/50 font-mono text-[9px]"
-                                [class.bg-boreal-blue/5]="coa.id === policy.selectedCOAId()">
-                              <td class="py-2.5 pr-4 font-bold text-boreal-text-primary">
+                            <tr class="transition-colors hover:bg-white/5 font-mono text-[10px]"
+                                [class.bg-sky-500/10]="coa.id === policy.selectedCOAId()">
+                              <td class="py-3 px-4 font-bold text-slate-200">
                                 {{coa.id}}
                                 @if (coa.id === policy.selectedCOAId()) {
-                                  <span class="ml-1.5 px-1 py-0.5 text-[6px] bg-boreal-blue/20 text-boreal-blue rounded-sm uppercase tracking-widest font-black">Active</span>
+                                  <span class="ml-2 px-1.5 py-0.5 text-[7px] bg-sky-500/20 text-sky-400 rounded-[2px] uppercase tracking-widest font-black">Active</span>
                                 }
                               </td>
-                              <td class="py-2.5 pr-4 text-boreal-text-secondary text-[8px]">{{coa.type.replace('_', ' ')}}</td>
-                              <td class="py-2.5 pr-4 text-right font-bold text-boreal-green">{{coa.projectedOutcome.intercepts}}</td>
-                              <td class="py-2.5 pr-4 text-right font-bold"
-                                  [class.text-boreal-green]="coa.projectedOutcome.leakage === 0"
-                                  [class.text-boreal-red]="coa.projectedOutcome.leakage > 0">{{coa.projectedOutcome.leakage}}</td>
-                              <td class="py-2.5 pr-4 text-right text-boreal-text-primary">{{(coa.projectedOutcome.robustnessScore * 100).toFixed(0)}}%</td>
-                              <td class="py-2.5 pr-4 text-right text-boreal-text-primary">{{(coa.projectedOutcome.confidence * 100).toFixed(0)}}%</td>
-                              <td class="py-2.5 text-right text-boreal-text-secondary">{{(coa.projectedOutcome.cost / 1000).toFixed(0)}}</td>
+                              <td class="py-3 px-4 text-slate-400 text-[9px]">{{coa.type.replace('_', ' ')}}</td>
+                              <td class="py-3 px-4 text-right font-bold text-emerald-400">{{coa.projectedOutcome.intercepts}}</td>
+                              <td class="py-3 px-4 text-right font-bold"
+                                  [class.text-emerald-400]="coa.projectedOutcome.leakage === 0"
+                                  [class.text-rose-400]="coa.projectedOutcome.leakage > 0">{{coa.projectedOutcome.leakage}}</td>
+                              <td class="py-3 px-4 text-right text-slate-200">{{(coa.projectedOutcome.robustnessScore * 100).toFixed(0)}}%</td>
+                              <td class="py-3 px-4 text-right text-slate-200">{{(coa.projectedOutcome.confidence * 100).toFixed(0)}}%</td>
+                              <td class="py-3 px-4 text-right text-slate-500">{{(coa.projectedOutcome.cost / 1000).toFixed(0)}}</td>
                             </tr>
                           }
                         </tbody>
@@ -329,25 +334,25 @@ interface FeatureViewModel {
 
                   <!-- Guardrails -->
                   <section>
-                    <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em] block mb-3">Active Guardrails</span>
-                    <div class="grid grid-cols-2 gap-3">
-                      <div class="p-3 bg-boreal-canvas/40 rounded-sm border border-boreal-border flex justify-between items-center">
-                        <span class="text-[9px] font-bold text-boreal-text-secondary">Engagement Authority</span>
-                        <span class="text-[9px] font-black text-boreal-text-primary font-mono uppercase">{{p.guardrails.engagementAuthority}}</span>
+                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-4">Active Guardrails</span>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div class="p-4 bg-white/5 rounded-sm border border-white/10 flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-slate-400">Engagement Authority</span>
+                        <span class="text-[10px] font-black text-white font-mono uppercase">{{p.guardrails.engagementAuthority}}</span>
                       </div>
-                      <div class="p-3 bg-boreal-canvas/40 rounded-sm border border-boreal-border flex justify-between items-center">
-                        <span class="text-[9px] font-bold text-boreal-text-secondary">Reserve Floor</span>
-                        <span class="text-[9px] font-black text-boreal-text-primary font-mono">{{p.guardrails.reserveInterceptorFloor}} units</span>
+                      <div class="p-4 bg-white/5 rounded-sm border border-white/10 flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-slate-400">Reserve Floor</span>
+                        <span class="text-[10px] font-black text-white font-mono">{{p.guardrails.reserveInterceptorFloor}} units</span>
                       </div>
-                      <div class="p-3 bg-boreal-canvas/40 rounded-sm border border-boreal-border flex justify-between items-center">
-                        <span class="text-[9px] font-bold text-boreal-text-secondary">Min Readiness Threshold</span>
-                        <span class="text-[9px] font-black text-boreal-text-primary font-mono">{{(p.guardrails.minReadinessThreshold * 100).toFixed(0)}}%</span>
+                      <div class="p-4 bg-white/5 rounded-sm border border-white/10 flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-slate-400">Min Readiness Threshold</span>
+                        <span class="text-[10px] font-black text-white font-mono">{{(p.guardrails.minReadinessThreshold * 100).toFixed(0)}}%</span>
                       </div>
-                      <div class="p-3 bg-boreal-canvas/40 rounded-sm border border-boreal-border flex justify-between items-center">
-                        <span class="text-[9px] font-bold text-boreal-text-secondary">Civilian Protection</span>
-                        <span class="text-[9px] font-black uppercase font-mono"
-                          [class.text-boreal-green]="p.guardrails.civilianProtected"
-                          [class.text-boreal-red]="!p.guardrails.civilianProtected">
+                      <div class="p-4 bg-white/5 rounded-sm border border-white/10 flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-slate-400">Civilian Protection</span>
+                        <span class="text-[10px] font-black uppercase font-mono"
+                          [class.text-emerald-400]="p.guardrails.civilianProtected"
+                          [class.text-rose-400]="!p.guardrails.civilianProtected">
                           {{p.guardrails.civilianProtected ? 'ACTIVE' : 'INACTIVE'}}
                         </span>
                       </div>
@@ -357,8 +362,8 @@ interface FeatureViewModel {
                 }
               </div>
 
-              <footer class="p-4 border-t border-boreal-border flex justify-end bg-boreal-panel-muted/40 shrink-0">
-                <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-boreal-blue text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-boreal-blue/20 hover:brightness-110 active:scale-95 transition-all">
+              <footer class="p-4 px-5 border-t border-white/10 flex justify-end bg-black/20 shrink-0">
+                <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-sky-500 text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:brightness-110 active:scale-95 transition-all">
                   Close
                 </button>
               </footer>
@@ -517,112 +522,114 @@ interface FeatureViewModel {
             <!-- DEFAULT: Architecture Preview (ad-hoc / unregistered features) -->
             <!-- ============================================================ -->
             @default {
-              <header class="panel-header flex items-center justify-between border-b border-boreal-border p-4 h-14 bg-boreal-panel-muted/40">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded bg-boreal-blue/20 flex items-center justify-center">
-                    <mat-icon class="text-boreal-blue !text-lg">architecture</mat-icon>
+              <header class="panel-header flex items-center justify-between border-b border-white/10 p-5 bg-black/20 shrink-0">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-sm bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(14,165,233,0.15)]">
+                    <mat-icon class="text-sky-500 !text-xl">architecture</mat-icon>
                   </div>
                   <div>
-                    <h2 class="text-[10px] uppercase tracking-[0.25em] font-black text-boreal-text-primary">Operational Intent</h2>
-                    <p class="text-[8px] text-boreal-text-muted font-mono uppercase tracking-[0.15em]">SYSTEM ARCHITECTURE PREVIEW</p>
+                    <h2 class="text-[11px] uppercase tracking-[0.3em] font-black text-white">Operational Intent</h2>
+                    <p class="text-[8px] text-slate-400 font-mono uppercase tracking-[0.2em] mt-0.5">SYSTEM ARCHITECTURE PREVIEW</p>
                   </div>
                 </div>
-                <button (click)="orchestrator.close()" class="p-2 hover:bg-boreal-blue/10 rounded transition-colors group">
-                  <mat-icon class="text-boreal-text-muted group-hover:text-boreal-blue">close</mat-icon>
+                <button (click)="orchestrator.close()" class="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-sm transition-colors group">
+                  <mat-icon class="!text-sm">close</mat-icon>
                 </button>
               </header>
 
-              <div class="flex-grow overflow-y-auto p-8 space-y-8 bg-boreal-panel">
+              <div class="flex-grow overflow-y-auto p-8 space-y-8 bg-transparent">
                 <section>
-                  <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-2xl font-light text-boreal-text-primary tracking-tight">{{feature.name}}</h3>
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-2xl font-light text-white tracking-tight">{{feature.name}}</h3>
                     <div class="flex gap-2">
-                      <span class="px-2 py-0.5 rounded-sm bg-boreal-panel-muted text-boreal-text-secondary text-[8px] font-black border border-boreal-border uppercase tracking-widest">
+                      <span class="px-2.5 py-1 rounded-[2px] bg-white/5 text-slate-300 text-[8px] font-black border border-white/10 uppercase tracking-widest">
                         {{feature.status.replace('_', ' ')}}
                       </span>
                       <span
-                        class="px-2 py-0.5 rounded-sm text-[8px] font-black border uppercase tracking-widest"
-                        [class.bg-boreal-blue/10]="feature.tier === 'MVP'"
-                        [class.text-boreal-blue]="feature.tier === 'MVP'"
-                        [class.border-boreal-blue/20]="feature.tier === 'MVP'"
-                        [class.bg-boreal-amber/10]="feature.tier === 'SECONDARY'"
-                        [class.text-boreal-amber]="feature.tier === 'SECONDARY'"
-                        [class.border-boreal-amber/20]="feature.tier === 'SECONDARY'"
-                        [class.bg-boreal-panel-elevated]="feature.tier === 'STRETCH'"
-                        [class.text-boreal-text-muted]="feature.tier === 'STRETCH'"
-                        [class.border-boreal-border]="feature.tier === 'STRETCH'"
+                        class="px-2.5 py-1 rounded-[2px] text-[8px] font-black border uppercase tracking-widest shadow-sm"
+                        [class.bg-sky-500/10]="feature.tier === 'MVP'"
+                        [class.text-sky-400]="feature.tier === 'MVP'"
+                        [class.border-sky-500/30]="feature.tier === 'MVP'"
+                        [class.bg-amber-500/10]="feature.tier === 'SECONDARY'"
+                        [class.text-amber-400]="feature.tier === 'SECONDARY'"
+                        [class.border-amber-500/30]="feature.tier === 'SECONDARY'"
+                        [class.bg-white/5]="feature.tier === 'STRETCH'"
+                        [class.text-slate-400]="feature.tier === 'STRETCH'"
+                        [class.border-white/10]="feature.tier === 'STRETCH'"
                       >
                         Tier: {{feature.tier}}
                       </span>
                     </div>
                   </div>
-                  <p class="text-sm text-boreal-text-secondary leading-relaxed font-sans italic border-l-2 border-boreal-blue/30 pl-4 py-1">{{feature.rationale}}</p>
+                  <p class="text-sm text-slate-400 leading-relaxed font-sans italic border-l-2 border-sky-500/50 pl-5 py-1">{{feature.rationale}}</p>
                 </section>
 
                 @if (feature.liveMetrics?.length) {
-                  <section class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  <section class="grid grid-cols-2 gap-4 md:grid-cols-4">
                     @for (metric of feature.liveMetrics; track metric.label) {
                       <div
-                        class="rounded-sm border bg-boreal-canvas/40 px-3 py-2"
-                        [class.border-boreal-blue/30]="metric.tone === 'blue'"
-                        [class.border-boreal-amber/30]="metric.tone === 'amber'"
-                        [class.border-boreal-green/30]="metric.tone === 'green'"
-                        [class.border-boreal-border]="metric.tone === 'muted'"
-                        [class.border-boreal-red/30]="metric.tone === 'red'"
+                        class="rounded-sm border bg-white/5 px-4 py-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+                        [class.border-sky-500/30]="metric.tone === 'blue'"
+                        [class.border-amber-500/30]="metric.tone === 'amber'"
+                        [class.border-emerald-500/30]="metric.tone === 'green'"
+                        [class.border-white/10]="metric.tone === 'muted'"
+                        [class.border-rose-500/30]="metric.tone === 'red'"
                       >
-                        <span class="block text-[7px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">{{metric.label}}</span>
+                        <span class="block text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">{{metric.label}}</span>
                         <span
-                          class="block pt-1 text-[10px] font-bold uppercase tracking-tight"
-                          [class.text-boreal-blue]="metric.tone === 'blue'"
-                          [class.text-boreal-amber]="metric.tone === 'amber'"
-                          [class.text-boreal-green]="metric.tone === 'green'"
-                          [class.text-boreal-text-primary]="metric.tone === 'muted'"
-                          [class.text-boreal-red]="metric.tone === 'red'"
+                          class="block pt-1.5 text-[11px] font-bold uppercase tracking-tight"
+                          [class.text-sky-400]="metric.tone === 'blue'"
+                          [class.text-amber-400]="metric.tone === 'amber'"
+                          [class.text-emerald-400]="metric.tone === 'green'"
+                          [class.text-white]="metric.tone === 'muted'"
+                          [class.text-rose-400]="metric.tone === 'red'"
                         >{{metric.value}}</span>
                       </div>
                     }
                   </section>
                 }
 
-                <div class="grid grid-cols-2 gap-8 pt-8 border-t border-boreal-border">
-                  <div class="space-y-4">
-                    <div class="flex flex-col gap-1">
-                      <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em]">Primary Persona</span>
-                      <span class="text-[11px] font-bold text-boreal-text-primary uppercase tracking-tight">{{feature.persona}}</span>
+                <div class="grid grid-cols-2 gap-10 pt-8 border-t border-white/10">
+                  <div class="space-y-6">
+                    <div class="flex flex-col gap-1.5">
+                      <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Primary Persona</span>
+                      <span class="text-[12px] font-bold text-white uppercase tracking-tight">{{feature.persona}}</span>
                     </div>
-                    <div class="flex flex-col gap-1">
-                      <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em]">Planned Inputs</span>
-                      <span class="text-[10px] text-boreal-text-secondary italic leading-tight">{{feature.inputs || 'Not specified'}}</span>
+                    <div class="flex flex-col gap-1.5">
+                      <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Planned Inputs</span>
+                      <span class="text-[11px] text-slate-400 italic leading-tight">{{feature.inputs || 'Not specified'}}</span>
                     </div>
                   </div>
-                  <div class="space-y-4">
-                    <div class="flex flex-col gap-1">
-                      <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em]">Target Decision</span>
-                      <span class="text-[11px] font-bold text-boreal-text-primary uppercase tracking-tight">{{feature.decisionImproved}}</span>
+                  <div class="space-y-6">
+                    <div class="flex flex-col gap-1.5">
+                      <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Target Decision</span>
+                      <span class="text-[12px] font-bold text-white uppercase tracking-tight">{{feature.decisionImproved}}</span>
                     </div>
-                    <div class="flex flex-col gap-1">
-                      <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em]">Planned Outputs</span>
-                      <span class="text-[10px] text-boreal-text-secondary italic leading-tight">{{feature.outputs || 'Not specified'}}</span>
+                    <div class="flex flex-col gap-1.5">
+                      <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Planned Outputs</span>
+                      <span class="text-[11px] text-slate-400 italic leading-tight">{{feature.outputs || 'Not specified'}}</span>
                     </div>
                   </div>
                 </div>
 
-                <section class="p-6 bg-boreal-canvas/40 border border-boreal-border rounded-sm space-y-3">
-                  <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em] block">Operational Logic</span>
-                  <p class="text-xs text-boreal-text-secondary leading-relaxed">{{feature.operationalFunction}}</p>
+                <section class="p-6 bg-white/5 border border-white/10 rounded-sm space-y-4">
+                  <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block">Operational Logic</span>
+                  <p class="text-sm text-slate-300 leading-relaxed">{{feature.operationalFunction}}</p>
                 </section>
 
-                <section class="p-5 bg-boreal-amber/5 rounded-sm border border-boreal-amber/20 flex items-start gap-4">
-                  <mat-icon class="text-boreal-amber !text-base mt-1">rocket_launch</mat-icon>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-[9px] font-black text-boreal-amber uppercase tracking-widest">Next Implementation Step</span>
-                    <span class="text-xs text-boreal-text-primary font-bold">{{feature.nextStep}}</span>
+                <section class="p-6 bg-amber-500/10 rounded-sm border border-amber-500/20 flex items-start gap-5 shadow-[0_0_15px_rgba(245,158,11,0.05)]">
+                  <div class="w-10 h-10 rounded-sm bg-amber-500/20 flex items-center justify-center shrink-0">
+                    <mat-icon class="text-amber-400 !text-xl">rocket_launch</mat-icon>
+                  </div>
+                  <div class="flex flex-col gap-1.5 pt-0.5">
+                    <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Next Implementation Step</span>
+                    <span class="text-[13px] text-white font-bold leading-tight">{{feature.nextStep}}</span>
                   </div>
                 </section>
               </div>
 
-              <footer class="p-4 border-t border-boreal-border flex justify-end bg-boreal-panel-muted/40 backdrop-blur-md shrink-0">
-                <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-boreal-blue text-white rounded-sm text-[10px] font-black transition-all uppercase tracking-[0.2em] shadow-lg shadow-boreal-blue/20 hover:brightness-110 active:scale-95">
+              <footer class="p-4 px-5 border-t border-white/10 flex justify-end bg-black/20 shrink-0">
+                <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-sky-500 text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:brightness-110 active:scale-95 transition-all">
                   {{feature.acknowledgeLabel || 'ACKNOWLEDGE PLAN'}}
                 </button>
               </footer>
@@ -644,6 +651,7 @@ export class PlannedCapabilityModal {
   policy       = inject(PolicyStore);
   scenario     = inject(ScenarioStore);
   sensorFeed   = inject(SensorFeedStore);
+  private readonly router: Router = inject(Router);
 
   readonly alertCategories: LogFilter[] = ['ALL', 'TACTICAL', 'POLICY', 'READINESS', 'LAB', 'SYSTEM'];
   logFilter = signal<LogFilter>('ALL');
@@ -778,25 +786,34 @@ export class PlannedCapabilityModal {
 
   actorClass(actor: string): string {
     const map: Record<string, string> = {
-      SYSTEM:    'bg-boreal-panel-elevated text-boreal-text-muted',
-      COMMANDER: 'bg-boreal-blue/20 text-boreal-blue',
-      ANALYST:   'bg-boreal-amber/20 text-boreal-amber',
-      OPERATOR:  'bg-boreal-green/20 text-boreal-green',
-      ADMIN:     'bg-boreal-panel-elevated text-boreal-text-secondary',
-      DIRECTOR:  'bg-boreal-red/20 text-boreal-red',
+      SYSTEM:    'bg-white/5 border border-white/10 text-slate-400',
+      COMMANDER: 'bg-sky-500/20 border border-sky-500/30 text-sky-400',
+      ANALYST:   'bg-amber-500/20 border border-amber-500/30 text-amber-400',
+      OPERATOR:  'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400',
+      ADMIN:     'bg-white/10 border border-white/20 text-slate-300',
+      DIRECTOR:  'bg-rose-500/20 border border-rose-500/30 text-rose-400',
     };
-    return map[actor] ?? 'bg-boreal-panel-elevated text-boreal-text-muted';
+    return map[actor] ?? 'bg-white/5 border border-white/10 text-slate-400';
   }
 
   categoryClass(category: string): string {
     const map: Record<string, string> = {
-      TACTICAL:  'bg-boreal-red/10 text-boreal-red',
-      POLICY:    'bg-boreal-blue/10 text-boreal-blue',
-      READINESS: 'bg-boreal-amber/10 text-boreal-amber',
-      LAB:       'bg-boreal-panel-elevated text-boreal-text-secondary',
-      SYSTEM:    'bg-boreal-panel-elevated text-boreal-text-muted',
+      TACTICAL:  'bg-rose-500/10 border border-rose-500/20 text-rose-400',
+      POLICY:    'bg-sky-500/10 border border-sky-500/20 text-sky-400',
+      READINESS: 'bg-amber-500/10 border border-amber-500/20 text-amber-400',
+      LAB:       'bg-white/10 border border-white/20 text-slate-300',
+      SYSTEM:    'bg-white/5 border border-white/10 text-slate-400',
     };
-    return map[category] ?? 'bg-boreal-panel-elevated text-boreal-text-muted';
+    return map[category] ?? 'bg-white/5 border border-white/10 text-slate-400';
+  }
+
+  handleAcknowledge(feature: FeatureViewModel) {
+    if (feature.id === 'robustness-lab-handoff') {
+      this.router.navigate(['/robustness-lab']);
+    } else if (feature.id === 'commander-intent-commitment' || feature.id === 'policy-propagation') {
+      this.router.navigate(['/tactical']);
+    }
+    this.orchestrator.close();
   }
 
   exportJSON(): void {
