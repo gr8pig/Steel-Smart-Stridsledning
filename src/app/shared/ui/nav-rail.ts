@@ -5,58 +5,85 @@ import { CapabilityOrchestrator } from '../../core/services/capability-orchestra
 import { ThemeManager } from '../../core/services/theme-manager';
 import { TacticalStore } from '../../core/state/tactical.store';
 import { FeatureFlagService } from '../../core/services/feature-flag.service';
+import { ShellLayoutService } from '../../core/services/shell-layout.service';
 
 @Component({
   selector: 'app-nav-rail',
   standalone: true,
   imports: [RouterLink, RouterLinkActive, MatIconModule],
   template: `
-    <div class="flex flex-col h-full bg-boreal-panel border-r border-boreal-border w-16 items-center py-4 gap-6 select-none">
-      <div class="w-10 h-10 bg-boreal-blue rounded-sm flex items-center justify-center mb-4 cursor-pointer shadow-lg shadow-boreal-blue/10">
-        <mat-icon class="text-white">radar</mat-icon>
+    <div
+      class="fixed inset-y-0 left-0 z-40 flex w-[18rem] max-w-[85vw] -translate-x-full flex-col overflow-y-auto border-r border-boreal-border bg-boreal-panel py-4 text-boreal-text-primary shadow-2xl transition-transform duration-300 select-none lg:static lg:z-auto lg:h-full lg:w-16 lg:max-w-none lg:translate-x-0 lg:items-center lg:gap-6 lg:overflow-hidden lg:border-r lg:shadow-none"
+      [class.translate-x-0]="layout.compact() && layout.navOpen()"
+    >
+      <div class="flex w-full items-center justify-between px-4 pb-3 lg:mb-4 lg:justify-center lg:px-0">
+        <div class="flex items-center gap-3 lg:mb-0 lg:flex-col">
+          <div class="flex h-10 w-10 items-center justify-center rounded-sm bg-boreal-blue shadow-lg shadow-boreal-blue/10">
+            <mat-icon class="text-white">radar</mat-icon>
+          </div>
+          <div class="flex flex-col lg:hidden">
+            <span class="text-[9px] font-black uppercase tracking-[0.25em] text-boreal-text-muted">Navigation</span>
+            <span class="text-[10px] font-bold uppercase tracking-tight text-boreal-text-primary">Northern Vanguard</span>
+          </div>
+        </div>
+
+        @if (layout.compact()) {
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-sm border border-boreal-border text-boreal-text-muted transition-colors hover:bg-boreal-panel-muted hover:text-boreal-text-primary lg:hidden"
+            (click)="layout.closeNav()"
+            aria-label="Close navigation drawer"
+          >
+            <mat-icon class="!text-sm">close</mat-icon>
+          </button>
+        }
       </div>
 
-      <div class="flex flex-col w-full gap-2">
+      <div class="flex flex-col w-full gap-2 px-3 lg:px-0">
         @for (item of visibleItems(); track item.path) {
           <a 
             [routerLink]="item.path" 
             routerLinkActive="bg-boreal-panel-muted/50 text-boreal-text-primary border-l-2 border-boreal-blue"
-            class="flex flex-col items-center justify-center w-full py-4 text-boreal-text-muted hover:text-boreal-text-primary transition-all cursor-pointer group relative border-l-2 border-transparent"
+            class="relative flex items-center gap-3 rounded-sm border border-transparent px-4 py-3 text-boreal-text-muted transition-all hover:bg-boreal-panel-muted/50 hover:text-boreal-text-primary group lg:w-full lg:flex-col lg:items-center lg:justify-center lg:border-l-2 lg:px-0 lg:py-4"
             [title]="item.label"
+            (click)="layout.closeNav()"
           >
             <mat-icon class="transition-transform group-hover:scale-110">{{item.icon}}</mat-icon>
+            <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-boreal-text-primary lg:hidden">
+              {{item.label}}
+            </span>
             
             @if (item.path === '/tactical' && tactical.activeThreats().length > 0) {
-              <div class="absolute top-3 right-3 w-1.5 h-1.5 bg-boreal-red rounded-full ring-2 ring-boreal-panel animate-pulse z-10"></div>
+              <div class="absolute right-4 top-1/2 z-10 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-boreal-red ring-2 ring-boreal-panel animate-pulse lg:right-3 lg:top-3 lg:translate-y-0"></div>
             }
 
-            <span class="text-[8px] mt-1 font-mono uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap absolute left-14 bg-boreal-panel-elevated px-2 py-1 border border-boreal-border z-[100] pointer-events-none skew-x-[-4deg]">
+            <span class="pointer-events-none absolute left-14 z-[100] whitespace-nowrap border border-boreal-border bg-boreal-panel-elevated px-2 py-1 text-[8px] font-mono uppercase tracking-tighter opacity-0 transition-opacity group-hover:opacity-100 skew-x-[-4deg] lg:block hidden">
               {{item.label}}
             </span>
           </a>
         }
       </div>
 
-      <div class="mt-auto w-full flex flex-col items-center gap-4 pb-4 border-t border-boreal-border/30 pt-6">
+      <div class="mt-auto flex w-full flex-col items-center gap-4 border-t border-boreal-border/30 px-3 pb-4 pt-6 lg:px-0">
         <!-- Station Illumination Toggle -->
         <button 
             (click)="theme.toggleTheme()"
-            class="w-9 h-9 rounded-sm border border-boreal-border flex flex-col items-center justify-center text-boreal-text-muted hover:text-boreal-blue hover:bg-boreal-blue/5 transition-all focus:outline-none group" 
+            class="flex h-9 w-full items-center justify-center gap-2 rounded-sm border border-boreal-border text-boreal-text-muted transition-all focus:outline-none group hover:bg-boreal-blue/5 hover:text-boreal-blue lg:w-9 lg:flex-col lg:justify-center" 
             [title]="theme.theme() === 'dark' ? 'Switch to Day Operation (Light Theme)' : 'Switch to Night Operation (Dark Theme)'"
         >
           <mat-icon class="!text-[12px] !w-3 !h-3">{{ theme.theme() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
-          <span class="text-[6px] font-mono font-black uppercase tracking-tighter mt-0.5 opacity-60 group-hover:opacity-100">MODE</span>
+          <span class="text-[9px] font-mono font-black uppercase tracking-tighter opacity-60 group-hover:opacity-100 lg:text-[6px]">MODE</span>
         </button>
 
         <!-- Station Context Module -->
-        <div class="flex flex-col items-center gap-1 group relative cursor-help">
-          <div class="w-9 h-9 rounded-sm bg-boreal-blue/5 border border-boreal-blue/20 flex items-center justify-center text-boreal-blue group-hover:bg-boreal-blue group-hover:text-white transition-all shadow-inner">
+        <div class="group relative flex cursor-help flex-col items-center gap-1">
+          <div class="flex h-9 w-9 items-center justify-center rounded-sm border border-boreal-blue/20 bg-boreal-blue/5 text-boreal-blue shadow-inner transition-all group-hover:bg-boreal-blue group-hover:text-white">
             <mat-icon class="!text-sm">fingerprint</mat-icon>
           </div>
-          <div class="text-[7px] font-mono font-black text-boreal-text-muted uppercase tracking-tighter group-hover:text-boreal-blue transition-colors">STN: 04</div>
+          <div class="text-[7px] font-mono font-black uppercase tracking-tighter text-boreal-text-muted transition-colors group-hover:text-boreal-blue">STN: 04</div>
           
           <!-- Context Tooltip -->
-          <div class="hidden group-hover:block absolute left-14 bottom-0 bg-boreal-panel-elevated border border-boreal-border p-4 rounded-sm z-[100] shadow-[10px_0_50px_var(--boreal-shadow)] w-56 pointer-events-none">
+          <div class="pointer-events-none hidden w-56 rounded-sm border border-boreal-border bg-boreal-panel-elevated p-4 shadow-[10px_0_50px_var(--boreal-shadow)] group-hover:block absolute left-14 bottom-0 z-[100]">
             <div class="text-[9px] font-black text-boreal-text-primary uppercase tracking-[0.2em] mb-3 border-b border-boreal-border pb-2">Operational Node Status</div>
             <div class="space-y-2.5">
               <div class="flex justify-between items-center">
@@ -84,7 +111,7 @@ import { FeatureFlagService } from '../../core/services/feature-flag.service';
 
         <button 
             (click)="orchestrator.showFeature('system-config')"
-            class="w-9 h-9 rounded-sm border border-white/5 flex items-center justify-center text-zinc-600 hover:text-white hover:bg-white/5 transition-all focus:outline-none" 
+            class="flex h-9 w-full items-center justify-center rounded-sm border border-white/5 text-zinc-600 transition-all focus:outline-none hover:bg-white/5 hover:text-white lg:w-9" 
             title="System Configuration"
         >
           <mat-icon class="!text-sm">settings_input_component</mat-icon>
@@ -103,6 +130,7 @@ export class NavRail {
   theme        = inject(ThemeManager);
   tactical     = inject(TacticalStore);
   flags        = inject(FeatureFlagService);
+  layout       = inject(ShellLayoutService);
 
   navItems = [
     { path: '/overview',        icon: 'dashboard',             label: 'Mission Overview',        flag: null },

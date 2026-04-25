@@ -1,11 +1,12 @@
 import { Injectable, signal, computed, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ThreatTwin } from '../../shared/domain/models';
+import { SyncMetadata, ThreatTwin } from '../../shared/domain/models';
 import { AuditLogger } from '../services/audit-logger';
 import { IntentEstimatorService } from '../services/intent-estimator.service';
 import { ScenarioStore } from './scenario.store';
 import { PolicyStore } from './policy.store';
 import { SensorFeedStore } from './sensor-feed.store';
+import { SteelLocalPersistenceService } from '../services/steel-local-persistence.service';
 
 function _upsertTracks(current: ThreatTwin[], incoming: ThreatTwin[]): ThreatTwin[] {
   if (!incoming?.length) return current;
@@ -21,17 +22,25 @@ export class TacticalStore {
   private estimator  = inject(IntentEstimatorService);
   private scenario  = inject(ScenarioStore);
   private policy    = inject(PolicyStore);
+  private persistence = inject(SteelLocalPersistenceService);
   private destroyRef = inject(DestroyRef);
 
   private _tracks = signal<ThreatTwin[]>([]);
   private _selectedTrackId = signal<string | null>(null);
   private _labHandoffTrackId = signal<string | null>(null);
   private _engagements = signal<Record<string, { status: 'ACCEPTED' | 'MANUAL' | 'HELD' | 'ESCALATED', rationale: string }>>({});
+  private _sync = signal<SyncMetadata>({
+    source: 'HEURISTIC',
+    lastSyncedAt: null,
+    updatedAt: new Date().toISOString(),
+    stale: true,
+  });
 
   tracks = this._tracks.asReadonly();
   selectedTrackId = this._selectedTrackId.asReadonly();
   labHandoffTrackId = this._labHandoffTrackId.asReadonly();
   engagements = this._engagements.asReadonly();
+  sync = this._sync.asReadonly();
 
   selectedTrack = computed(() =>
     this._tracks().find(t => t.id === this._selectedTrackId()) || null
@@ -62,7 +71,20 @@ export class TacticalStore {
   }
 
   constructor() {
+    const cached = this.persistence.loadTacticalSnapshot();
+    if (cached?.tracks?.length) {
+      this._tracks.set(cached.tracks);
+      this.scenario.setSimTime(cached.simTime ?? 0);
+      this._sync.set({
+        source: 'CACHED',
+        lastSyncedAt: cached.sync?.lastSyncedAt ?? cached.cachedAt,
+        updatedAt: cached.cachedAt,
+        stale: true,
+      });
+    }
+
     this.sensorFeed.frames$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(delta => {
+      const syncedAt = new Date().toISOString();
       if (delta.type === 'FULL_SNAPSHOT') {
         this._tracks.set(this._enrich((delta.threats ?? []) as ThreatTwin[]));
       } else if (delta.threats?.length) {
@@ -73,6 +95,12 @@ export class TacticalStore {
       if (delta.simTime !== undefined) {
         this.scenario.setSimTime(delta.simTime);
       }
+      this._sync.set({
+        source: 'AUTHORITATIVE',
+        lastSyncedAt: syncedAt,
+        updatedAt: syncedAt,
+        stale: false,
+      });
     });
 
     // Re-solve COAs whenever the number of active tracks changes.
@@ -83,6 +111,31 @@ export class TacticalStore {
       }
       this._prevTrackCount = count;
     });
+
+    effect(() => {
+      const status = this.sensorFeed.connectionStatus();
+      const sync = this._sync();
+      const tracks = this._tracks();
+      const simTime = this.scenario.simTime();
+
+      if (status === 'DISCONNECTED' && tracks.length > 0 && sync.source === 'AUTHORITATIVE') {
+        this._sync.update(current => ({
+          ...current,
+          source: 'CACHED',
+          updatedAt: new Date().toISOString(),
+          stale: true,
+        }));
+      }
+
+      if (tracks.length > 0) {
+        this.persistence.saveTacticalSnapshot({
+          tracks,
+          simTime,
+          sync: this._sync(),
+          cachedAt: new Date().toISOString(),
+        });
+      }
+    }, { allowSignalWrites: true });
   }
 
   selectTrack(id: string | null) {
@@ -101,10 +154,15 @@ export class TacticalStore {
     this._labHandoffTrackId.set(id);
   }
 
-  updateEngagement(trackId: string, status: 'ACCEPTED' | 'MANUAL' | 'HELD' | 'ESCALATED', rationale: string) {
+  updateEngagement(
+    trackId: string,
+    status: 'ACCEPTED' | 'MANUAL' | 'HELD' | 'ESCALATED',
+    rationale: string,
+    options?: { deferLocalResolution?: boolean }
+  ) {
     this._engagements.update(e => ({ ...e, [trackId]: { status, rationale } }));
     this.audit.log({ actor: 'OPERATOR', action: `Engagement Action: ${status}`, rationale, category: 'TACTICAL' });
-    if (status === 'ACCEPTED') {
+    if (status === 'ACCEPTED' && !options?.deferLocalResolution) {
       setTimeout(() => {
         this._tracks.update(tracks => tracks.map(t =>
           t.id === trackId ? { ...t, status: 'NEUTRALIZED' } : t

@@ -49,6 +49,45 @@ export interface ThreatTwin {
   jammingProbability?: number;
 }
 
+export type TwinDataSource = 'AUTHORITATIVE' | 'CACHED' | 'HEURISTIC';
+
+export interface SyncMetadata {
+  source: TwinDataSource;
+  lastSyncedAt: string | null;
+  updatedAt: string;
+  stale: boolean;
+}
+
+export type OperationalDirectiveType = 'ENGAGE_TRACK';
+export type OperationalDirectiveState = 'QUEUED' | 'SENT' | 'ACKNOWLEDGED' | 'FAILED';
+
+export interface OperationalDirective {
+  id: string;
+  type: OperationalDirectiveType;
+  state: OperationalDirectiveState;
+  createdAt: string;
+  updatedAt: string;
+  trackId: string;
+  baseId: string;
+  effectorType: string;
+  rationale: string;
+  source: 'OPERATOR' | 'OFFLINE_QUEUE';
+  lastAttemptAt?: string | null;
+  error?: string | null;
+}
+
+export interface TacticalSnapshot {
+  tracks: ThreatTwin[];
+  simTime: number;
+  sync: SyncMetadata;
+  cachedAt: string;
+}
+
+export interface ReadinessSnapshot {
+  bases: BaseTwin[];
+  cachedAt: string;
+}
+
 export interface PolicyTwin {
   id: string;
   name: string;

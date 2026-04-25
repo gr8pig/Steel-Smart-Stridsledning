@@ -114,6 +114,20 @@ class PolicyTwinModel(BDTModel):
     guardrails: Guardrails
 
 
+class DecisionFabricTwin(BDTModel):
+    id: str
+    sim_time: float
+    c2_resilience_score: float
+    trust_entropy: float
+    authority_friction: float
+    operator_load: float
+    audit_completeness: float
+    failure_probability: float
+    projected_collapse_sec: Optional[float] = None
+    status: Literal["HEALTHY", "STRESSED", "DEGRADED", "COLLAPSED"]
+    timestamp: str
+
+
 class COATwinModel(BDTModel):
     id: str
     name: str
@@ -126,8 +140,18 @@ class COATwinModel(BDTModel):
 # ── API request / response schemas ───────────────────────────────────────────
 
 class PolicyUpdateRequest(BDTModel):
-    policy_weights: PolicyWeights
+    policy_weights: Optional[PolicyWeights] = None
     guardrails: Optional[Guardrails] = None
+    client_action_id: Optional[str] = None
+    device_id: Optional[str] = None
+    queued_at: Optional[str] = None
+
+
+class PolicyUpdateResponse(PolicyTwinModel):
+    accepted: bool = True
+    replayed: bool = False
+    applied_at: Optional[str] = None
+    client_action_id: Optional[str] = None
 
 
 class COASolveRequest(BDTModel):
@@ -147,13 +171,21 @@ class EngageRequest(BDTModel):
     track_id: str
     base_id: str
     effector_type: str
+    client_action_id: Optional[str] = None
+    device_id: Optional[str] = None
+    queued_at: Optional[str] = None
 
 
 class EngagementResult(BDTModel):
     success: bool
     track_id: str
     new_status: str
+    pk: Optional[float] = None
     inventory_remaining: MissileInventory
+    accepted: bool = True
+    replayed: bool = False
+    applied_at: Optional[str] = None
+    client_action_id: Optional[str] = None
 
 
 class ReadinessProjectionPoint(BDTModel):

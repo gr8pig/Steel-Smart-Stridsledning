@@ -4,9 +4,9 @@ export type FeatureFlag = 'kgsa' | 'sensorFeedAdapter' | 'redAdversaryEvolution'
 
 @Injectable({ providedIn: 'root' })
 export class FeatureFlagService {
-  // Default: KGSA gated; sensor adapter and red adversary enabled for local dev
+  // Default: KGSA visible; sensor adapter and red adversary enabled for local dev
   private _flags = signal<Record<FeatureFlag, boolean>>({
-    kgsa:                 false,
+    kgsa:                 true,
     sensorFeedAdapter:    true,
     redAdversaryEvolution: true,
     publicCapabilityLayer: true,

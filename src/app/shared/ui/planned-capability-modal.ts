@@ -1,20 +1,47 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { CapabilityOrchestrator } from '../../core/services/capability-orchestrator';
+import { CapabilityOrchestrator, PlannedCapabilityInfo } from '../../core/services/capability-orchestrator';
 import { AuditLogger } from '../../core/services/audit-logger';
 import { PolicyStore } from '../../core/state/policy.store';
 import { ScenarioStore } from '../../core/state/scenario.store';
 import { SensorFeedStore } from '../../core/state/sensor-feed.store';
+import { PolicyTwin } from '../domain/models';
 
 type LogFilter = 'ALL' | 'TACTICAL' | 'POLICY' | 'READINESS' | 'LAB' | 'SYSTEM';
+type MetricTone = 'blue' | 'amber' | 'green' | 'muted' | 'red';
+
+interface FeatureMetric {
+  label: string;
+  value: string;
+  tone: MetricTone;
+}
+
+interface FeatureViewModel {
+  id?: string;
+  variant?: 'STATIC' | 'POLICY_PROPAGATION' | 'INTENT_COMMITMENT' | 'LAB_HANDOFF';
+  name: string;
+  operationalFunction: string;
+  persona: string;
+  decisionImproved: string;
+  inputs?: string;
+  outputs?: string;
+  dependencies?: string[];
+  affectedScreens?: string[];
+  rationale: string;
+  status: 'STUBBED_UI' | 'PARTIAL_FRONTEND' | 'MOCK_DATA' | 'AWAITING_BACKEND' | 'OPERATIONAL' | 'OPERATIONAL_MOCK';
+  tier: 'MVP' | 'SECONDARY' | 'STRETCH';
+  nextStep: string;
+  acknowledgeLabel?: string;
+  liveMetrics?: FeatureMetric[];
+}
 
 @Component({
   selector: 'app-planned-capability-modal',
   standalone: true,
   imports: [CommonModule, MatIconModule],
   template: `
-    @if (orchestrator.activeFeature(); as feature) {
+    @if (featureView(); as feature) {
       <div
         class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-boreal-canvas/80 backdrop-blur-sm"
         (click)="orchestrator.close()"
@@ -532,6 +559,31 @@ type LogFilter = 'ALL' | 'TACTICAL' | 'POLICY' | 'READINESS' | 'LAB' | 'SYSTEM';
                   <p class="text-sm text-boreal-text-secondary leading-relaxed font-sans italic border-l-2 border-boreal-blue/30 pl-4 py-1">{{feature.rationale}}</p>
                 </section>
 
+                @if (feature.liveMetrics?.length) {
+                  <section class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    @for (metric of feature.liveMetrics; track metric.label) {
+                      <div
+                        class="rounded-sm border bg-boreal-canvas/40 px-3 py-2"
+                        [class.border-boreal-blue/30]="metric.tone === 'blue'"
+                        [class.border-boreal-amber/30]="metric.tone === 'amber'"
+                        [class.border-boreal-green/30]="metric.tone === 'green'"
+                        [class.border-boreal-border]="metric.tone === 'muted'"
+                        [class.border-boreal-red/30]="metric.tone === 'red'"
+                      >
+                        <span class="block text-[7px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">{{metric.label}}</span>
+                        <span
+                          class="block pt-1 text-[10px] font-bold uppercase tracking-tight"
+                          [class.text-boreal-blue]="metric.tone === 'blue'"
+                          [class.text-boreal-amber]="metric.tone === 'amber'"
+                          [class.text-boreal-green]="metric.tone === 'green'"
+                          [class.text-boreal-text-primary]="metric.tone === 'muted'"
+                          [class.text-boreal-red]="metric.tone === 'red'"
+                        >{{metric.value}}</span>
+                      </div>
+                    }
+                  </section>
+                }
+
                 <div class="grid grid-cols-2 gap-8 pt-8 border-t border-boreal-border">
                   <div class="space-y-4">
                     <div class="flex flex-col gap-1">
@@ -571,7 +623,7 @@ type LogFilter = 'ALL' | 'TACTICAL' | 'POLICY' | 'READINESS' | 'LAB' | 'SYSTEM';
 
               <footer class="p-4 border-t border-boreal-border flex justify-end bg-boreal-panel-muted/40 backdrop-blur-md shrink-0">
                 <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-boreal-blue text-white rounded-sm text-[10px] font-black transition-all uppercase tracking-[0.2em] shadow-lg shadow-boreal-blue/20 hover:brightness-110 active:scale-95">
-                  ACKNOWLEDGE PLAN
+                  {{feature.acknowledgeLabel || 'ACKNOWLEDGE PLAN'}}
                 </button>
               </footer>
             }
@@ -602,6 +654,102 @@ export class PlannedCapabilityModal {
     return filter === 'ALL' ? logs : logs.filter(l => l.category === filter);
   });
 
+  featureView = computed<FeatureViewModel | null>(() => {
+    const feature = this.orchestrator.activeFeature();
+    if (!feature) return null;
+
+    const policy = this.policy.activePolicy();
+    const selectedCOA = this.policy.selectedCOA();
+    const recommendedCOA = this.policy.recommendedCOA();
+
+    if (!policy) {
+      return this._withDefaults(feature);
+    }
+
+    switch (feature.variant) {
+      case 'POLICY_PROPAGATION':
+        return {
+          ...this._withDefaults(feature),
+          inputs: [
+            `Safety ${(policy.weights.safety * 100).toFixed(0)}%`,
+            `Sustainability ${(policy.weights.sustainability * 100).toFixed(0)}%`,
+            `Resilience ${(policy.weights.resilience * 100).toFixed(0)}%`,
+            `Authority ${policy.guardrails.engagementAuthority}`,
+          ].join(' · '),
+          outputs: selectedCOA
+            ? `Synchronized theater state update for ${selectedCOA.name}`
+            : 'Synchronized theater state update for the active commander posture',
+          rationale: `${feature.rationale} Current posture is ${this._weightProfile(policy)} with reserve floor ${policy.guardrails.reserveInterceptorFloor} and min readiness ${this._formatPercent(policy.guardrails.minReadinessThreshold)}.`,
+          operationalFunction: `Broadcasts the live commander posture to all downstream stations. ${selectedCOA ? `The selected COA is ${selectedCOA.name}, while the recommended posture remains ${recommendedCOA?.name ?? 'unresolved'}.` : 'No COA has been selected yet, so the theater will synchronize against the active policy baseline.'}`,
+          nextStep: `Push the active policy snapshot to tactical stations and recalculate priorities around ${recommendedCOA?.name ?? 'the selected COA'}.`,
+          acknowledgeLabel: feature.acknowledgeLabel ?? 'ACKNOWLEDGE SNAPSHOT',
+          liveMetrics: [
+            { label: 'Active COA', value: selectedCOA?.name ?? 'UNASSIGNED', tone: 'blue' },
+            { label: 'Recommended', value: recommendedCOA?.name ?? 'UNRESOLVED', tone: 'green' },
+            { label: 'Authority', value: policy.guardrails.engagementAuthority, tone: 'amber' },
+            { label: 'Weight Profile', value: this._weightProfile(policy), tone: 'muted' },
+          ],
+        };
+
+      case 'INTENT_COMMITMENT':
+        return {
+          ...this._withDefaults(feature),
+          inputs: selectedCOA
+            ? `Selected COA ${selectedCOA.name} · ${this._weightProfile(policy)}`
+            : `Selected COA pending · ${this._weightProfile(policy)}`,
+          outputs: selectedCOA
+            ? `Published intent token for ${selectedCOA.id}`
+            : 'Published intent token for the active policy posture',
+          rationale: selectedCOA
+            ? `${feature.rationale} The current selection is ${selectedCOA.name}, which will inherit authority ${policy.guardrails.engagementAuthority} and reserve floor ${policy.guardrails.reserveInterceptorFloor}.`
+            : `${feature.rationale} No COA has been committed yet, so the command post is still staging the intent token.`,
+          operationalFunction: selectedCOA
+            ? `Authorizes ${selectedCOA.name} and commits its projected outcome to tactical stations under the current guardrails.`
+            : 'Authorizes the selected Course of Action and commits the projected constraints to tactical stations.',
+          nextStep: selectedCOA
+            ? `Tactical Console now inherits ${selectedCOA.name} under ${policy.guardrails.engagementAuthority} authority.`
+            : 'Select a COA before publishing intent to tactical stations.',
+          acknowledgeLabel: feature.acknowledgeLabel ?? 'ACKNOWLEDGE INTENT',
+          liveMetrics: [
+            { label: 'Selected COA', value: selectedCOA?.name ?? 'NONE', tone: selectedCOA ? 'blue' : 'red' },
+            { label: 'COA Type', value: selectedCOA?.type.replace('_', ' ') ?? 'UNASSIGNED', tone: 'green' },
+            { label: 'Authority', value: policy.guardrails.engagementAuthority, tone: 'amber' },
+            { label: 'Pub Payload', value: selectedCOA ? `${selectedCOA.projectedOutcome.intercepts} intercepts` : 'Pending', tone: 'muted' },
+          ],
+        };
+
+      case 'LAB_HANDOFF':
+        return {
+          ...this._withDefaults(feature),
+          inputs: selectedCOA
+            ? `COA Outcome · ${selectedCOA.name} · Active Weight Profile`
+            : 'COA Outcome · Active Weight Profile',
+          outputs: selectedCOA
+            ? `Robustness Heatmap for ${selectedCOA.name}`
+            : 'Robustness Heatmap for the active posture',
+          rationale: selectedCOA
+            ? `${feature.rationale} The current selection is ${selectedCOA.name}, which will be stress-tested against adversarial red behavior before publication.`
+            : `${feature.rationale} No COA has been selected yet, so the lab will evaluate the active posture baseline.`,
+          operationalFunction: selectedCOA
+            ? `Exports the current tradeoff curve for ${selectedCOA.name} into the Robustness Lab to test whether the chosen posture survives the next surprise.`
+            : 'Exports the current tradeoff curve into the Robustness Lab so the active posture can be stress-tested.',
+          nextStep: selectedCOA
+            ? `The Lab now displays ${selectedCOA.name} as the active stress-test target.`
+            : 'Select a COA before launching the robustness stress test.',
+          acknowledgeLabel: feature.acknowledgeLabel ?? 'ACKNOWLEDGE HANDOFF',
+          liveMetrics: [
+            { label: 'Stress Target', value: selectedCOA?.name ?? 'NONE', tone: selectedCOA ? 'blue' : 'red' },
+            { label: 'Robustness', value: selectedCOA ? `${(selectedCOA.projectedOutcome.robustnessScore * 100).toFixed(0)}%` : 'PENDING', tone: 'green' },
+            { label: 'Confidence', value: selectedCOA ? `${(selectedCOA.projectedOutcome.confidence * 100).toFixed(0)}%` : 'PENDING', tone: 'amber' },
+            { label: 'Weight Profile', value: this._weightProfile(policy), tone: 'muted' },
+          ],
+        };
+
+      default:
+        return this._withDefaults(feature);
+    }
+  });
+
   auditStats = computed(() => {
     const logs = this.audit.logs();
     return [
@@ -612,6 +760,21 @@ export class PlannedCapabilityModal {
       { label: 'System',         value: String(logs.filter(l => l.category === 'SYSTEM').length),     colorClass: 'text-boreal-text-muted' },
     ];
   });
+
+  private _withDefaults(feature: PlannedCapabilityInfo): FeatureViewModel {
+    return {
+      ...feature,
+      acknowledgeLabel: feature.acknowledgeLabel ?? 'ACKNOWLEDGE PLAN',
+    };
+  }
+
+  private _weightProfile(policy: PolicyTwin): string {
+    return `S ${(policy.weights.safety * 100).toFixed(0)} / U ${(policy.weights.sustainability * 100).toFixed(0)} / R ${(policy.weights.resilience * 100).toFixed(0)}%`;
+  }
+
+  private _formatPercent(value: number): string {
+    return `${(value * 100).toFixed(0)}%`;
+  }
 
   actorClass(actor: string): string {
     const map: Record<string, string> = {

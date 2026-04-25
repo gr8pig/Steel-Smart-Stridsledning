@@ -2,12 +2,12 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { debounceTime, Subject, switchMap } from 'rxjs';
 import { PolicyTwin, COATwin } from '../../shared/domain/models';
 import { AuditLogger } from '../services/audit-logger';
-import { BdtApiService, COASolveResult } from '../services/bdt-api.service';
+import { SteelApiService, COASolveResult } from '../services/steel-api.service';
 
 @Injectable({ providedIn: 'root' })
 export class PolicyStore {
   private audit = inject(AuditLogger);
-  private api   = inject(BdtApiService);
+  private api   = inject(SteelApiService);
 
   private _activePolicy   = signal<PolicyTwin | null>(null);
   private _solveResult    = signal<COASolveResult | null>(null);
@@ -26,8 +26,8 @@ export class PolicyStore {
 
   availableCOAs = computed<COATwin[]>(() => this._solveResult()?.coas ?? []);
 
-  selectedCOA = computed(() =>
-    this.availableCOAs().find(c => c.id === this._selectedCOAId()) || null
+  selectedCOA = computed((): COATwin | null =>
+    this.availableCOAs().find(c => c.id === this._selectedCOAId()) ?? null
   );
 
   legacyBaseline = computed(() => ({

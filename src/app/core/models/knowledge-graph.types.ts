@@ -1,5 +1,8 @@
 export type NodeCategory = 'CORE' | 'DECISION' | 'LOGISTICS' | 'INTELLIGENCE' | 'GOVERNANCE' | 'SURFACE';
+export type PlatformArea = 'runtime' | 'backend' | 'docs' | 'research' | 'scaffold';
 export type FlowType = 'DATA' | 'MATERIAL' | 'CONTROL' | 'LOGICAL' | 'DOCTRINAL';
+export type KnowledgeGraphStatus = 'implemented' | 'mock-simulation' | 'partial' | 'conceptual';
+export type KnowledgeGraphViewMode = 'GRAPH' | 'TWIN';
 
 export interface GraphEdge {
   id: string;
@@ -14,7 +17,15 @@ export interface TechNode {
   id: string;
   label: string;
   category: NodeCategory;
+  area?: PlatformArea;
+  status?: KnowledgeGraphStatus;
   description: string;
+  what?: string;
+  why?: string;
+  where?: string;
+  who?: string;
+  route?: string;
+  sourcePath?: string;
   technicalSpecs: {
     inputs: string[];
     outputs: string[];

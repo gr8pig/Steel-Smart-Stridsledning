@@ -89,11 +89,11 @@ import { LLMService } from '../core/services/llm.service';
                                 <span class="text-[9px] text-boreal-text-muted font-bold uppercase tracking-widest block">Governance Alignment</span>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div class="flex flex-col gap-0.5">
-                                        <span class="text-[10px] font-mono text-boreal-text-muted uppercase tracking-tighter">Risk Level</span>
-                                        <span class="text-xs font-bold uppercase {{ coa.projectedOutcome.leakage > 0 ? 'text-boreal-amber' : 'text-boreal-green' }}">
-                                            {{ coa.projectedOutcome.leakage > 0 ? 'Residual Risk' : 'Zero Leakage' }}
-                                        </span>
-                                    </div>
+                                            <span class="text-[10px] font-mono text-boreal-text-muted uppercase tracking-tighter">Risk Level</span>
+                                            <span class="text-xs font-bold uppercase {{ coa.projectedOutcome.leakage > 0 ? 'text-boreal-amber' : 'text-boreal-green' }}">
+                                                {{ coa.projectedOutcome.leakage > 0 ? 'Residual Risk' : 'Zero Leakage' }}
+                                            </span>
+                                        </div>
                                     <div class="flex flex-col gap-0.5">
                                         <span class="text-[10px] font-mono text-boreal-text-muted uppercase tracking-tighter">Robustness</span>
                                         <span class="text-xs font-bold uppercase text-boreal-blue">{{ (coa.projectedOutcome.robustnessScore * 100).toFixed(0) }}%</span>
@@ -119,7 +119,7 @@ import { LLMService } from '../core/services/llm.service';
                                     } @else if (_rationaleModel()) {
                                         <span class="text-[7px] text-boreal-green font-mono px-1.5 py-0.5 rounded border border-boreal-green/30 flex items-center gap-1">
                                             <span class="w-1 h-1 rounded-full bg-boreal-green inline-block"></span>
-                                            {{ _rationaleModel()!.split('/')[1] ?? _rationaleModel() }}
+                                            {{ _rationaleModel()!.split('/')[1] || _rationaleModel() }}
                                         </span>
                                     }
                                 </div>

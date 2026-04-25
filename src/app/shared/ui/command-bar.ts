@@ -10,21 +10,31 @@ import { DecisionFabricStore } from '../../core/state/decision-fabric.store';
 import { CapabilityOrchestrator } from '../../core/services/capability-orchestrator';
 import { RationaleOrchestrator } from './rationale-drawer';
 import { CapabilityLayerSwitch } from './capability-layer-switch';
+import { ShellLayoutService } from '../../core/services/shell-layout.service';
 
 @Component({
   selector: 'app-command-bar',
   standalone: true,
   imports: [MatIconModule, CommonModule, CapabilityLayerSwitch, RouterLink],
   template: `
-    <div class="flex items-center justify-between px-6 h-14 bg-boreal-canvas/80 backdrop-blur-xl border-b border-boreal-border select-none z-50">
+    <div class="flex flex-col gap-2 border-b border-boreal-border bg-boreal-canvas/80 px-3 py-2 backdrop-blur-xl select-none z-50 sm:px-4 lg:h-14 lg:flex-row lg:items-center lg:justify-between lg:px-6">
       <!-- Left: Operational Context -->
-      <div class="flex items-center gap-6">
-        <div class="flex flex-col">
+      <div class="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 lg:gap-6">
+        <button
+          type="button"
+          class="flex h-9 w-9 items-center justify-center rounded-sm border border-boreal-border bg-boreal-panel-muted text-boreal-text-muted transition-colors hover:bg-boreal-panel-elevated hover:text-boreal-text-primary lg:hidden"
+          (click)="layout.toggleNav()"
+          [attr.aria-label]="layout.navOpen() ? 'Close navigation drawer' : 'Open navigation drawer'"
+        >
+          <mat-icon class="!text-base">{{ layout.navOpen() ? 'close' : 'menu' }}</mat-icon>
+        </button>
+
+        <div class="flex min-w-0 flex-col">
           <span class="text-[8px] font-mono font-black text-boreal-text-muted uppercase tracking-[0.2em]">Scenario</span>
-          <span class="text-[11px] font-bold text-boreal-text-primary tracking-tight uppercase">{{scenario.scenarioName()}}</span>
+          <span class="truncate text-[11px] font-bold uppercase tracking-tight text-boreal-text-primary sm:text-[12px]">{{scenario.scenarioName()}}</span>
         </div>
 
-        <div class="h-6 w-px bg-boreal-border"></div>
+        <div class="hidden h-6 w-px bg-boreal-border lg:block"></div>
 
         <div class="flex flex-col">
           <span class="text-[8px] font-mono font-black text-boreal-text-muted uppercase tracking-[0.2em]">Authority</span>
@@ -34,22 +44,22 @@ import { CapabilityLayerSwitch } from './capability-layer-switch';
           </div>
         </div>
 
-        <div class="h-6 w-px bg-boreal-border"></div>
+        <div class="hidden h-6 w-px bg-boreal-border lg:block"></div>
 
-        <div class="flex flex-col">
+        <div class="hidden sm:flex flex-col">
           <span class="text-[8px] font-mono font-black text-boreal-text-muted uppercase tracking-[0.2em]">Phase</span>
           <span class="text-[10px] font-mono font-bold text-boreal-green uppercase tracking-wide">{{scenario.currentPhase()?.name}}</span>
         </div>
 
-        <div class="h-6 w-px bg-boreal-border"></div>
+        <div class="hidden h-6 w-px bg-boreal-border lg:block"></div>
 
-        <app-capability-layer-switch />
+        <app-capability-layer-switch class="hidden lg:block" />
       </div>
 
       <!-- Right: System Controls & Station Status -->
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center justify-end gap-2 lg:gap-3">
         @if (scenario.isJamming()) {
-            <div class="flex items-center gap-2 px-2 py-1 bg-boreal-red/10 border border-boreal-red/20 rounded-sm animate-pulse">
+            <div class="hidden animate-pulse items-center gap-2 rounded-sm border border-boreal-red/20 bg-boreal-red/10 px-2 py-1 sm:flex">
                 <mat-icon class="text-boreal-red !text-[10px] !w-2.5 !h-2.5">wifi_off</mat-icon>
                 <span class="text-[8px] font-black text-boreal-red uppercase tracking-[0.15em]">EW: Saturation Jamming</span>
             </div>
@@ -58,7 +68,7 @@ import { CapabilityLayerSwitch } from './capability-layer-switch';
         <!-- Fabric Health Indicator -->
         <a 
           routerLink="/c2-resilience"
-          class="flex items-center gap-2 px-3 h-9 bg-boreal-panel-muted border border-boreal-border rounded-sm hover:border-boreal-blue/40 transition-all group no-underline cursor-pointer"
+          class="flex h-9 items-center gap-2 rounded-sm border border-boreal-border bg-boreal-panel-muted px-3 no-underline transition-all group cursor-pointer hover:border-boreal-blue/40"
         >
           <div class="flex flex-col items-end">
             <span class="text-[7px] font-mono text-boreal-text-muted uppercase tracking-widest leading-none mb-0.5">Fabric Health</span>
@@ -67,10 +77,10 @@ import { CapabilityLayerSwitch } from './capability-layer-switch';
           <div class="w-1 h-4 rounded-full" [class]="getFabricBarClass()"></div>
         </a>
 
-        <div class="h-6 w-px bg-boreal-border mx-1"></div>
+        <div class="hidden h-6 w-px bg-boreal-border mx-1 lg:block"></div>
 
         <!-- Playback / Replay Module -->
-        <div class="flex items-center bg-boreal-panel-muted border border-boreal-border px-3 h-9 gap-4 shadow-inner">
+        <div class="hidden sm:flex h-9 items-center gap-3 border border-boreal-border bg-boreal-panel-muted px-3 shadow-inner sm:gap-4">
           <div class="flex flex-col items-end">
             <span class="text-[7px] font-mono text-boreal-text-muted uppercase tracking-widest">T-Sim</span>
             <span class="text-xs font-mono font-bold tabular-nums text-boreal-text-primary leading-none">{{formatTime(scenario.simTime())}}</span>
@@ -85,10 +95,10 @@ import { CapabilityLayerSwitch } from './capability-layer-switch';
           </div>
         </div>
 
-        <div class="h-6 w-px bg-boreal-border mx-1"></div>
+        <div class="hidden h-6 w-px bg-boreal-border mx-1 lg:block"></div>
 
         <!-- Boreal Station Semantics -->
-        <div class="flex items-center gap-1">
+        <div class="hidden sm:flex items-center gap-1">
              <!-- ALERTS -->
              <button 
                 (click)="orchestrator.showFeature('detailed-alerts')"
@@ -130,10 +140,10 @@ import { CapabilityLayerSwitch } from './capability-layer-switch';
         <!-- Rationale Toggle -->
         <button 
             (click)="rationale.toggle()" 
-            class="flex items-center gap-2 h-9 px-4 rounded-sm bg-boreal-blue/10 border border-boreal-blue/30 hover:bg-boreal-blue/20 transition-all group font-bold text-boreal-text-primary"
+            class="flex h-9 items-center gap-2 rounded-sm border border-boreal-blue/30 bg-boreal-blue/10 px-4 font-bold text-boreal-text-primary transition-all group hover:bg-boreal-blue/20"
         >
             <mat-icon class="text-boreal-blue !text-sm group-hover:scale-110 transition-transform">security</mat-icon>
-            <span class="text-[9px] font-black uppercase tracking-[0.2em]">Rationale</span>
+            <span class="hidden text-[9px] font-black uppercase tracking-[0.2em] sm:inline">Rationale</span>
         </button>
       </div>
     </div>
@@ -152,6 +162,7 @@ export class CommandBar {
   orchestrator = inject(CapabilityOrchestrator);
   rationale = inject(RationaleOrchestrator);
   sensorFeed = inject(SensorFeedStore);
+  layout = inject(ShellLayoutService);
 
   alertCount = computed(() => this.audit.logs().length);
 
@@ -207,4 +218,3 @@ export class CommandBar {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 }
-

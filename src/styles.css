@@ -3,6 +3,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
   /* Dark Theme (Default) */
   --boreal-canvas: #070708;
   --boreal-panel: #0a0a0b;
@@ -24,6 +25,7 @@
 }
 
 :root.light {
+  color-scheme: light;
   /* Light Theme - Hardened Operational Look */
   --boreal-canvas: #ebf1f5;
   --boreal-panel: #f5f8fa;
@@ -66,8 +68,33 @@
 }
 
 @layer base {
+  html,
   body {
-    @apply bg-boreal-canvas text-boreal-text-primary font-sans antialiased overflow-hidden select-none;
+    height: 100%;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    @apply bg-boreal-canvas text-boreal-text-primary font-sans antialiased overflow-x-hidden overflow-y-auto select-none;
+  }
+
+  app-root {
+    display: block;
+    height: 100%;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    min-width: 0;
   }
 
   /* Compact spacing utilities - Hardened Station look */
@@ -103,6 +130,7 @@
 
   .design-card {
     @apply p-4 rounded bg-boreal-panel border border-boreal-border shadow-[0_4px_24px_rgba(0,0,0,0.5)];
+    min-width: 0;
   }
 
   /* Stronger Panel Hierarchy */
@@ -123,5 +151,23 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-boreal-text-muted);
+  }
+
+  @media (max-width: 900px) {
+    .panel-header {
+      @apply px-3 py-2;
+      letter-spacing: 0.18em;
+    }
+
+    .design-card,
+    .terminal-bg {
+      @apply p-3;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .panel-header {
+      @apply flex-wrap gap-2;
+    }
   }
 }

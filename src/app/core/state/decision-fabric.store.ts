@@ -1,11 +1,14 @@
 import { Injectable, signal, computed, inject, effect, untracked } from '@angular/core';
-import { DecisionFabricTwin } from '../../shared/domain/decision-fabric';
+import { DecisionFabricSnapshot, DecisionFabricTwin } from '../../shared/domain/decision-fabric';
+import { SyncMetadata } from '../../shared/domain/models';
 import { TacticalStore } from './tactical.store';
 import { PolicyStore } from './policy.store';
 import { LogisticsStore } from './logistics.store';
 import { LabStore } from './lab.store';
 import { CommandFrictionEngine } from '../sim/command-friction-engine';
 import { AuditLogger } from '../services/audit-logger';
+import { SensorFeedStore } from './sensor-feed.store';
+import { SteelLocalPersistenceService } from '../services/steel-local-persistence.service';
 
 @Injectable({ providedIn: 'root' })
 export class DecisionFabricStore {
@@ -14,6 +17,8 @@ export class DecisionFabricStore {
   private logistics = inject(LogisticsStore);
   private lab = inject(LabStore);
   private audit = inject(AuditLogger);
+  private sensorFeed = inject(SensorFeedStore);
+  private persistence = inject(SteelLocalPersistenceService);
   
   private _prevScore = 1.0;
   private _prevTimestamp = Date.now();
@@ -32,13 +37,31 @@ export class DecisionFabricStore {
     status: 'HEALTHY',
     timestamp: new Date().toISOString()
   });
+  private _sync = signal<SyncMetadata>({
+    source: 'HEURISTIC',
+    lastSyncedAt: null,
+    updatedAt: new Date().toISOString(),
+    stale: true,
+  });
 
   state = this._state.asReadonly();
+  sync = this._sync.asReadonly();
   resilienceScore = computed(() => this._state().c2ResilienceScore);
   status = computed(() => this._state().status);
   collapseHorizon = computed(() => this._state().projectedCollapseSec);
 
   constructor() {
+    const cached = this.persistence.loadDecisionFabricSnapshot();
+    if (cached?.state) {
+      this._state.set(cached.state);
+      this._sync.set({
+        source: 'CACHED',
+        lastSyncedAt: cached.sync?.lastSyncedAt ?? cached.cachedAt,
+        updatedAt: cached.cachedAt,
+        stale: true,
+      });
+    }
+
     // Audit Logging for threshold crossings
     effect(() => {
       const currentStatus = this.status();
@@ -60,6 +83,8 @@ export class DecisionFabricStore {
       const authority = this.policy.activePolicy()?.guardrails.engagementAuthority;
       const supplyHealth = this.logistics.supplyHealth();
       const pFail = this.lab.latestInsight()?.fullResult?.failureProbability ?? 0;
+      const tacticalSync = this.tactical.sync();
+      const connectionStatus = this.sensorFeed.connectionStatus();
       
       // Heuristic: Cognitive capacity degrades by 5% per active track
       const cognitive = Math.max(0, 1 - (tracks * 0.05));
@@ -91,6 +116,7 @@ export class DecisionFabricStore {
 
       // Use untracked set to prevent infinite loop
       untracked(() => {
+        const updatedAt = new Date().toISOString();
         this._state.update(s => ({
           ...s,
           c2ResilienceScore: newScore,
@@ -100,12 +126,27 @@ export class DecisionFabricStore {
           failureProbability: pFail,
           projectedCollapseSec: collapseSec,
           status: newScore < 0.3 ? 'COLLAPSED' : (newScore < 0.6 ? 'STRESSED' : 'HEALTHY'),
-          timestamp: new Date().toISOString()
+          timestamp: updatedAt
         }));
+        this._sync.set({
+          source: connectionStatus === 'DISCONNECTED' ? 'HEURISTIC' : (tacticalSync.source === 'CACHED' ? 'CACHED' : 'HEURISTIC'),
+          lastSyncedAt: tacticalSync.lastSyncedAt,
+          updatedAt,
+          stale: connectionStatus !== 'CONNECTED',
+        });
         
         this._prevScore = newScore;
         this._prevTimestamp = now;
       });
     }, { allowSignalWrites: true });
+
+    effect(() => {
+      const snapshot: DecisionFabricSnapshot = {
+        state: this._state(),
+        sync: this._sync(),
+        cachedAt: new Date().toISOString(),
+      };
+      this.persistence.saveDecisionFabricSnapshot(snapshot);
+    });
   }
 }

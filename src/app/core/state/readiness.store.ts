@@ -1,8 +1,9 @@
-import { Injectable, signal, computed, inject, DestroyRef } from '@angular/core';
+import { Injectable, signal, computed, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BaseTwin } from '../../shared/domain/models';
 import { AuditLogger } from '../services/audit-logger';
 import { TheaterWsService } from '../services/theater-ws.service';
+import { SteelLocalPersistenceService } from '../services/steel-local-persistence.service';
 
 function _upsertBases(current: BaseTwin[], incoming: BaseTwin[]): BaseTwin[] {
   if (!incoming?.length) return current;
@@ -15,6 +16,7 @@ function _upsertBases(current: BaseTwin[], incoming: BaseTwin[]): BaseTwin[] {
 export class ReadinessStore {
   private audit = inject(AuditLogger);
   private ws = inject(TheaterWsService);
+  private persistence = inject(SteelLocalPersistenceService);
   private destroyRef = inject(DestroyRef);
 
   private _bases = signal<BaseTwin[]>([]);
@@ -28,11 +30,26 @@ export class ReadinessStore {
   });
 
   constructor() {
+    const cached = this.persistence.loadReadinessSnapshot();
+    if (cached?.bases?.length) {
+      this._bases.set(cached.bases);
+    }
+
     this.ws.messages$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(delta => {
       if (delta.type === 'FULL_SNAPSHOT') {
         this._bases.set((delta.bases ?? []) as BaseTwin[]);
       } else if (delta.bases?.length) {
         this._bases.update(current => _upsertBases(current, delta.bases as BaseTwin[]));
+      }
+    });
+
+    effect(() => {
+      const bases = this._bases();
+      if (bases.length > 0) {
+        this.persistence.saveReadinessSnapshot({
+          bases,
+          cachedAt: new Date().toISOString(),
+        });
       }
     });
   }

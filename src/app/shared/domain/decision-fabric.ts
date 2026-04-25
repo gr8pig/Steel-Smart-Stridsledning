@@ -1,3 +1,5 @@
+import { SyncMetadata } from './models';
+
 export interface DecisionFabricTwin {
   id: string;
   simTime: number;
@@ -16,4 +18,10 @@ export interface FrictionTrend {
   score: number;
   velocity: number; // ΔScore / ΔTime
   projectedCollapseSec: number | null;
+}
+
+export interface DecisionFabricSnapshot {
+  state: DecisionFabricTwin;
+  sync: SyncMetadata;
+  cachedAt: string;
 }

@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 
 export interface PlannedCapabilityInfo {
   id?: string;
+  variant?: 'STATIC' | 'POLICY_PROPAGATION' | 'INTENT_COMMITMENT' | 'LAB_HANDOFF';
   name: string;
   operationalFunction: string;
   persona: string;
@@ -14,6 +15,7 @@ export interface PlannedCapabilityInfo {
   status: 'STUBBED_UI' | 'PARTIAL_FRONTEND' | 'MOCK_DATA' | 'AWAITING_BACKEND' | 'OPERATIONAL' | 'OPERATIONAL_MOCK';
   tier: 'MVP' | 'SECONDARY' | 'STRETCH';
   nextStep: string;
+  acknowledgeLabel?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -33,6 +35,32 @@ export class CapabilityOrchestrator {
         status: 'STUBBED_UI',
         tier: 'SECONDARY',
         nextStep: 'Integrate PDF generation library and digital signature service.'
+    },
+    'policy-propagation': {
+        id: 'policy-propagation',
+        variant: 'POLICY_PROPAGATION',
+        name: 'Policy Propagation Engine',
+        operationalFunction: 'Synchronizes the current commander posture across the theater so every downstream station sees the same weights, guardrails, and publication constraints.',
+        persona: 'Air Defense Commander / Orchestrator',
+        decisionImproved: 'Strategic Alignment & Resource Allocation',
+        rationale: 'Decoupling policy from execution leads to orphan intercepts that waste strategic reserves. Propagation ensures vertical coherence.',
+        status: 'OPERATIONAL',
+        tier: 'MVP',
+        nextStep: 'Broadcast the live commander posture to tactical stations and recalculate every engagement priority.',
+        acknowledgeLabel: 'ACKNOWLEDGE SNAPSHOT'
+    },
+    'commander-intent-commitment': {
+        id: 'commander-intent-commitment',
+        variant: 'INTENT_COMMITMENT',
+        name: 'Commander Intent Commitment',
+        operationalFunction: 'Publishes the currently selected Course of Action as a live intent token that tactical stations can inherit without losing the commander context.',
+        persona: 'Air Defense Commander',
+        decisionImproved: 'Tactical Execution Under Uncertainty',
+        rationale: 'Tactical operators need bound constraints, not just raw targets. Publishing intent provides the why behind the engagement limits.',
+        status: 'OPERATIONAL',
+        tier: 'MVP',
+        nextStep: 'Tactical Console is now reactively aware of this published intent.',
+        acknowledgeLabel: 'ACKNOWLEDGE INTENT'
     },
     'system-config': {
         id: 'system-config',
@@ -91,6 +119,7 @@ export class CapabilityOrchestrator {
     },
     'robustness-lab-handoff': {
         id: 'robustness-lab-handoff',
+        variant: 'LAB_HANDOFF',
         name: 'Stochastic Handoff Pipeline',
         operationalFunction: 'Transfers a specific track’s uncertainty vector into the Robustness Lab for 10,000-run Monte Carlo simulation to verify if current policy is brittle to this track signature.',
         persona: 'Analysis Officer',
@@ -136,7 +165,7 @@ export class CapabilityOrchestrator {
   };
 
   showFeature(info: PlannedCapabilityInfo | string) {
-    if (typeof info === 'string') {
+        if (typeof info === 'string') {
         const registered = this.REGISTRY[info];
         if (registered) {
             this._activeFeature.set(registered);

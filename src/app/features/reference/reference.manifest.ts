@@ -82,8 +82,8 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
       },
     ],
     related: ['01-product-overview', '03-information-architecture', '11-known-gaps-roadmap'],
-  }),
-  makeDoc({
+    }),
+    makeDoc({
     slug: '01-product-overview',
     order: 1,
     title: 'Product Overview',
@@ -140,7 +140,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
       { label: 'Capability layer switch', path: 'src/app/shared/ui/capability-layer-switch.ts', note: 'Public capability remapping control in the command bar.' },
       { label: 'Capability layer store', path: 'src/app/core/state/capability-layer.store.ts', note: 'Cross-domain track remapping and audit logging.' },
       { label: 'C2 resilience lab', path: 'src/app/features/c2-resilience-lab.ts', note: 'Route-level resilience view backed by the decision fabric store.' },
-      { label: 'Knowledge graph', path: 'src/app/features/knowledge-graph.ts', note: 'Route-level KGSA view behind the feature flag gate.' },
+      { label: 'Knowledge graph', path: 'src/app/features/knowledge-graph.ts', note: 'Route-level KGSA and platform-map surface.' },
       { label: 'Counterfactual lab', path: 'src/app/features/counterfactual-lab.ts', note: 'Policy perturbation lab with an external ML endpoint dependency.' },
       { label: 'Counterfactual lab store', path: 'src/app/core/ml/counterfactual-lab.store.ts', note: 'Local state for trajectory, trust, and perturbations.' },
       { label: 'Sensor feed store', path: 'src/app/core/state/sensor-feed.store.ts', note: 'Live/mock/replay theater feed adapter.' },
@@ -165,7 +165,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
         summary: 'Several features are present but still rely on local heuristics, seed data, or back-end fallbacks.',
         bullets: [
           'Public capability layer is implemented as a live remapping switch over synthetic tracks and public-source cards.',
-          'Knowledge graph situation awareness is gated and seeded.',
+          'Knowledge graph situation awareness is now a first-class platform map with seed-backed data where the repo still needs it.',
           'Robustness lab and counterfactual flows are useful but not fully productionized.',
           'Counterfactual lab currently calls an ML endpoint, and the repo-root `api/ml` and `scripts/ml` trees provide inference, RunPod orchestration, training, and cleanup code.',
           'C2 resilience is a heuristic prototype that computes a score and collapse horizon from track and policy state.',
@@ -330,7 +330,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
       { label: 'KGSA model', path: 'src/app/shared/domain/kgsa.ts', note: 'Knowledge graph schema and seed data.' },
       { label: 'Logistics ontology', path: 'src/app/shared/domain/logistics-ontology.ts', note: 'Supply and corridor model.' },
       { label: 'C2 resilience lab', path: 'src/app/features/c2-resilience-lab.ts', note: 'Consumer of the decision fabric twin.' },
-      { label: 'Knowledge graph route', path: 'src/app/features/knowledge-graph.ts', note: 'Consumer of the KGSA graph model.' },
+      { label: 'Knowledge graph route', path: 'src/app/features/knowledge-graph.ts', note: 'Consumer of the KGSA graph model and platform manifest.' },
     ],
     sections: [
       {
@@ -350,7 +350,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
           'Decision fabric resilience and friction pulses.',
           'Knowledge graph nodes, edges, hypotheses, and weak signals.',
           'The C2 resilience lab turns the decision fabric twin into a route-level operational display.',
-          'The knowledge graph route turns the in-memory KGSA seed data into an analyst-facing graph view.',
+          'The knowledge graph route turns the in-memory KGSA seed data and platform manifest into an analyst-facing graph view.',
         ],
       },
       {

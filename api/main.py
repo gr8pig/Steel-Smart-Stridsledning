@@ -23,6 +23,8 @@ from api.solver import is_reachable, p_kill, solve_coas
 from api.lab import run_monte_carlo
 from api.rationale import generate_coa_rationale, generate_lab_rationale
 from api.ws_manager import manager
+from api.decision_fabric import decision_fabric_state
+from api.replay import replay_registry
 from api.ml.models import (
     DeepSimJobMetadata,
     PredictedTrajectory,
@@ -37,7 +39,12 @@ from api.models import (
     BaseTwinModel,
     CampaignSnapshot,
     COASolveResult,
+    DecisionFabricTwin,
+    EngageRequest,
+    EngagementResult,
     LabRunResult,
+    PolicyUpdateRequest,
+    PolicyUpdateResponse,
     PolicyTwinModel,
     ReadinessProjectionPoint,
     RationaleResult,
@@ -139,6 +146,8 @@ def _scenario_digest(context: SimulationContext) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     seed()
+    decision_fabric_state.reset()
+    replay_registry.reset()
     task = asyncio.create_task(_theater_tick_loop())
     yield
     task.cancel()
@@ -221,30 +230,56 @@ async def get_policy():
     return _policy_dict()
 
 
-@app.post("/api/twins/policy", response_model=PolicyTwinModel)
+@app.get("/api/twins/decision-fabric", response_model=DecisionFabricTwin)
+async def get_decision_fabric():
+    return decision_fabric_state.build_twin(campaign_twin)
+
+
+@app.post("/api/twins/policy", response_model=PolicyUpdateResponse)
 async def update_policy(body: dict):
-    weights = body.get("policyWeights") or body.get("policy_weights", {})
+    request = PolicyUpdateRequest.model_validate(body or {})
+    replayed_response = replay_registry.get("policy", request.client_action_id)
+    if replayed_response is not None:
+        return replayed_response
+
+    weights = (
+        request.policy_weights.model_dump(by_alias=True)
+        if request.policy_weights is not None
+        else {}
+    )
     if weights:
         campaign_twin.update_policy_weights(
             weights.get("safety", campaign_twin.policy.safety_weight),
             weights.get("sustainability", campaign_twin.policy.sustainability_weight),
             weights.get("resilience", campaign_twin.policy.resilience_weight),
         )
-    guardrails = body.get("guardrails", {})
+    guardrails = request.guardrails.model_dump(by_alias=True) if request.guardrails else {}
     if guardrails:
         p = campaign_twin.policy
         p.civilian_protected       = guardrails.get("civilianProtected", p.civilian_protected)
         p.reserve_interceptor_floor= guardrails.get("reserveInterceptorFloor", p.reserve_interceptor_floor)
         p.min_readiness_threshold  = guardrails.get("minReadinessThreshold", p.min_readiness_threshold)
         p.engagement_authority     = guardrails.get("engagementAuthority", p.engagement_authority)
-    return _policy_dict()
+    response = {
+        **_policy_dict(),
+        "accepted": True,
+        "replayed": False,
+        "appliedAt": datetime.now(timezone.utc).isoformat(),
+        "clientActionId": request.client_action_id,
+    }
+    return replay_registry.record("policy", request.client_action_id, response)
 
 
-@app.post("/api/twins/engage")
+@app.post("/api/twins/engage", response_model=EngagementResult)
 async def engage_track(body: dict):
-    track_id     = body.get("trackId") or body.get("track_id")
-    base_id      = body.get("baseId")  or body.get("base_id")
-    effector_type= body.get("effectorType") or body.get("effector_type")
+    request = EngageRequest.model_validate(body or {})
+    replayed_response = replay_registry.get("engage", request.client_action_id)
+    if replayed_response is not None:
+        return replayed_response
+
+    track_id = request.track_id
+    base_id = request.base_id
+    effector_type = request.effector_type
 
     if not all([track_id, base_id, effector_type]):
         raise HTTPException(400, "trackId, baseId, effectorType required")
@@ -271,7 +306,7 @@ async def engage_track(body: dict):
     if not success:
         raise HTTPException(422, "Engagement failed: track not found, base not found, or no inventory")
     campaign_twin.queue_engagement_resolution(track_id, pk=pk)
-    return {
+    response = {
         "success": True,
         "trackId": track_id,
         "newStatus": "ENGAGED",
@@ -281,7 +316,12 @@ async def engage_track(body: dict):
             "interceptorMid":   base.interceptor_mid   if base else 0,
             "interceptorLong":  base.interceptor_long  if base else 0,
         } if base else {},
+        "accepted": True,
+        "replayed": False,
+        "appliedAt": datetime.now(timezone.utc).isoformat(),
+        "clientActionId": request.client_action_id,
     }
+    return replay_registry.record("engage", request.client_action_id, response)
 
 
 @app.get("/api/twins/readiness/projection", response_model=list[ReadinessProjectionPoint])
@@ -303,6 +343,8 @@ async def readiness_projection(hours: Annotated[str | None, Query()] = None):
 async def reset_campaign():
     campaign_twin.reset()
     seed()
+    decision_fabric_state.reset()
+    replay_registry.reset()
     if manager.active_connections:
         await manager.broadcast(campaign_twin.snapshot())
     return {
@@ -372,6 +414,7 @@ async def lab_run(body: dict):
         track_degradation=track_deg,
         n_runs=min(n_runs, 1000),
     )
+    decision_fabric_state.set_latest_failure_probability(result.get("failureProbability"))
     return result
 
 

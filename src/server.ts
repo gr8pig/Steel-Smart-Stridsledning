@@ -25,6 +25,29 @@ if (!process.env['APP_LOCK_PASSWORD']) {
 const LOCK_PASSWORD = process.env['APP_LOCK_PASSWORD'] ?? 'dev-only-unlock';
 const LOCK_TOKEN_TTL_SECONDS = Number(process.env['APP_LOCK_TOKEN_TTL_SECONDS'] ?? 60 * 60);
 const LOCK_COOKIE_NAME = 'bdt_access';
+const FASTAPI_BASE_URL = process.env['FASTAPI_BASE_URL'] ?? 'http://127.0.0.1:8000';
+const FASTAPI_WS_URL = (() => {
+  const url = new URL(FASTAPI_BASE_URL);
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+  return url;
+})();
+const PROXIED_API_PATHS = [
+  /^\/api\/twins\/campaign$/,
+  /^\/api\/twins\/bases$/,
+  /^\/api\/twins\/threats$/,
+  /^\/api\/twins\/policy$/,
+  /^\/api\/twins\/engage$/,
+  /^\/api\/twins\/readiness\/projection$/,
+  /^\/api\/twins\/reset$/,
+  /^\/api\/twins\/inject-tracks$/,
+  /^\/api\/twins\/decision-fabric$/,
+  /^\/api\/coa\/solve$/,
+  /^\/api\/lab\/run$/,
+  /^\/api\/ml\/predict$/,
+  /^\/api\/ml\/deep-sim$/,
+  /^\/api\/rationale\/coa$/,
+  /^\/api\/rationale\/lab-result$/,
+];
 
 // ── Mock theater state ────────────────────────────────────────────────────────
 
@@ -63,6 +86,58 @@ function isPublicPath(pathname: string): boolean {
     pathname === '/unlock' ||
     pathname === '/logout'
   );
+}
+
+function shouldProxyApiPath(pathname: string): boolean {
+  return PROXIED_API_PATHS.some(pattern => pattern.test(pathname));
+}
+
+async function proxyApiRequest(req: express.Request, res: express.Response): Promise<void> {
+  const targetUrl = new URL(req.originalUrl, FASTAPI_BASE_URL);
+  const requestHeaders = new Headers();
+
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (value === undefined) continue;
+    if (Array.isArray(value)) {
+      for (const item of value) requestHeaders.append(key, item);
+      continue;
+    }
+    requestHeaders.set(key, value);
+  }
+
+  requestHeaders.set('host', targetUrl.host);
+
+  const hasBody = req.method !== 'GET' && req.method !== 'HEAD';
+  const body = hasBody && req.body !== undefined
+    ? JSON.stringify(req.body)
+    : undefined;
+  if (body && !requestHeaders.has('content-type')) {
+    requestHeaders.set('content-type', 'application/json');
+  }
+
+  try {
+    const upstream = await fetch(targetUrl, {
+      method: req.method,
+      headers: requestHeaders,
+      body,
+    });
+
+    res.status(upstream.status);
+    upstream.headers.forEach((value, key) => {
+      if (key.toLowerCase() === 'transfer-encoding') return;
+      res.setHeader(key, value);
+    });
+
+    const payload = Buffer.from(await upstream.arrayBuffer());
+    res.send(payload);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : 'unknown upstream error';
+    res.status(502).json({
+      error: 'FastAPI upstream unavailable',
+      detail,
+      upstream: FASTAPI_BASE_URL,
+    });
+  }
 }
 
 function parseCookies(header: string | undefined): Record<string, string> {
@@ -738,6 +813,16 @@ app.use((req, res, next) => {
   res.status(401).json({ error: 'Authentication required' });
 });
 
+app.use('/api', (req, res, next) => {
+  const pathname = new URL(req.originalUrl, 'http://steel.local').pathname;
+  if (!shouldProxyApiPath(pathname)) {
+    next();
+    return;
+  }
+
+  void proxyApiRequest(req, res);
+});
+
 app.get('/api/twins/campaign', (_req, res) => {
   res.json({
     bases: BASES,
@@ -1118,20 +1203,54 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
     }
   });
 
-  wss.on('connection', (ws: WebSocket) => {
-    wsClients.add(ws);
-    // Send full snapshot immediately on connect
-    ws.send(JSON.stringify(buildSnapshot('FULL_SNAPSHOT')));
-
-    ws.on('message', () => {
-      // Client ping — no-op; ticks drive the feed
+  wss.on('connection', (clientWs: WebSocket) => {
+    const upstreamUrl = new URL('/ws/theater', FASTAPI_WS_URL);
+    const upstreamWs = new WebSocket(upstreamUrl, {
+      headers: {
+        'x-forwarded-host': FASTAPI_WS_URL.host,
+      },
     });
 
-    ws.on('close', () => wsClients.delete(ws));
-    ws.on('error', () => wsClients.delete(ws));
+    const closeBoth = (code?: number, reason?: string) => {
+      if (clientWs.readyState === WebSocket.OPEN || clientWs.readyState === WebSocket.CONNECTING) {
+        clientWs.close(code, reason);
+      }
+      if (upstreamWs.readyState === WebSocket.OPEN || upstreamWs.readyState === WebSocket.CONNECTING) {
+        upstreamWs.close(code, reason);
+      }
+    };
+
+    upstreamWs.on('message', data => {
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.send(data);
+      }
+    });
+
+    clientWs.on('message', data => {
+      if (upstreamWs.readyState === WebSocket.OPEN) {
+        upstreamWs.send(data);
+      }
+    });
+
+    upstreamWs.on('close', (code, reason) => closeBoth(code, reason.toString()));
+    clientWs.on('close', (code, reason) => closeBoth(code, reason.toString()));
+
+    upstreamWs.on('error', () => {
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.send(JSON.stringify({
+          type: 'DELTA',
+          simTime: 0,
+          threats: [],
+          bases: [],
+          phase: 'upstream-unavailable',
+        }));
+      }
+      closeBoth(1011, 'FastAPI theater feed unavailable');
+    });
+    clientWs.on('error', () => closeBoth(1011, 'Client websocket error'));
   });
 
-  // Theater tick: advances sim time and broadcasts deltas every 2 s
+  // Local mock theater remains available only for legacy local handlers.
   setInterval(tick, 2000);
 
   httpServer.listen(port, () => {

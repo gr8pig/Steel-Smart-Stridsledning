@@ -1,0 +1,15 @@
+@layer base {
+  body {
+    touch-action: manipulation;
+  }
+
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}

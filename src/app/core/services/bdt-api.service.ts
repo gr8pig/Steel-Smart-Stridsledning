@@ -2,6 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LogisticsSnapshot } from '../../shared/domain/logistics-ontology';
+import {
+  CounterfactualPrediction,
+  CounterfactualSimulationRequest,
+  DeepSimJobMetadata,
+} from '../ml/counterfactual-lab.models';
 
 export interface LogisticsContext {
   supplyHealth: number;
@@ -59,6 +64,12 @@ export interface LabRunConfig {
   nRuns?: number;
 }
 
+export interface ActionReplayMetadata {
+  clientActionId?: string;
+  deviceId?: string;
+  queuedAt?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BdtApiService {
   private http = inject(HttpClient);
@@ -88,8 +99,18 @@ export class BdtApiService {
     return this.http.post(`${this.base}/twins/policy`, { policyWeights: weights });
   }
 
-  engageTrack(trackId: string, baseId: string, effectorType: string): Observable<any> {
-    return this.http.post(`${this.base}/twins/engage`, { trackId, baseId, effectorType });
+  engageTrack(
+    trackId: string,
+    baseId: string,
+    effectorType: string,
+    replay?: ActionReplayMetadata
+  ): Observable<any> {
+    return this.http.post(`${this.base}/twins/engage`, {
+      trackId,
+      baseId,
+      effectorType,
+      ...(replay ?? {}),
+    });
   }
 
   injectTracks(count: number, type: 'FEINT' | 'KINETIC' | 'MIXED' | 'DRONE'): Observable<any> {
@@ -116,6 +137,16 @@ export class BdtApiService {
       trackDegradation: config.trackDegradation,
       nRuns:           config.nRuns ?? 500,
     });
+  }
+
+  // ── Counterfactual lab ────────────────────────────────────────────────────
+
+  predictCounterfactual(request: CounterfactualSimulationRequest): Observable<CounterfactualPrediction> {
+    return this.http.post<CounterfactualPrediction>(`${this.base}/ml/predict`, request);
+  }
+
+  triggerDeepSim(request: CounterfactualSimulationRequest): Observable<DeepSimJobMetadata> {
+    return this.http.post<DeepSimJobMetadata>(`${this.base}/ml/deep-sim`, request);
   }
 
   // ── Logistics ───────────────────────────────────────────────────────────────

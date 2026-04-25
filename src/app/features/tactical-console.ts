@@ -12,6 +12,8 @@ import { CapabilityOrchestrator } from '../core/services/capability-orchestrator
 import { AuditLogger, AuditEvent } from '../core/services/audit-logger';
 import { BdtApiService } from '../core/services/bdt-api.service';
 import { SensorFeedStore } from '../core/state/sensor-feed.store';
+import { DecisionFabricStore } from '../core/state/decision-fabric.store';
+import { OperationalDirectiveQueueService } from '../core/services/operational-directive-queue.service';
 import { ThreatTwin, COATwin, MapFeature } from '../shared/domain/models';
 import { SupplyNode, SupplyCorridor } from '../shared/domain/logistics-ontology';
 
@@ -19,12 +21,24 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
 import { CapabilityLayerStore } from '../core/state/capability-layer.store';
 import { SafetyBanner } from '../shared/ui/safety-banner';
 
+interface DegradedHeatCell {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  zone: 'NO-CONFIDENCE' | 'CAUTION' | 'INVESTIGATE';
+  opacity: number;
+  score: number;
+  queued: boolean;
+}
+
 @Component({
   selector: 'app-tactical-console',
   standalone: true,
   imports: [CommonModule, MatIconModule, SafetyBanner],
   template: `
-    <div class="h-full w-full flex overflow-hidden relative">
+    <div class="tactical-shell h-full w-full flex overflow-hidden relative">
       <app-safety-banner />
 
       <!-- HITL Manual Confirmation Modal -->
@@ -69,7 +83,7 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
 
       <!-- Deployment Status Overlay -->
       @if (orchestration.publishedIntent(); as intent) {
-          <div class="absolute top-18 left-90 z-50 px-4 py-2 bg-boreal-blue/20 backdrop-blur-xl border border-boreal-blue/40 rounded shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div class="tactical-intent-toast absolute top-18 left-90 z-50 px-4 py-2 bg-boreal-blue/20 backdrop-blur-xl border border-boreal-blue/40 rounded shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
               <mat-icon class="text-boreal-blue animate-pulse">published_with_changes</mat-icon>
               <div class="flex flex-col">
                   <span class="text-[9px] font-mono text-boreal-text-muted uppercase tracking-widest">New Intent Published</span>
@@ -82,10 +96,19 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
       }
       
       <!-- Left Threat Queue -->
-      <div class="w-85 border-r border-boreal-border bg-boreal-panel flex flex-col z-20 shadow-2xl">
+      <div class="tactical-panel tactical-panel--queue w-85 border-r border-boreal-border bg-boreal-panel flex flex-col z-20 shadow-2xl">
         <div class="panel-header uppercase tracking-widest text-[10px] text-boreal-text-muted flex items-center justify-between">
             <span>Threat Queue</span>
-            <span class="bg-boreal-red/10 text-boreal-red px-1 rounded">{{capabilityStore.remappedTracks().length}} TOTAL</span>
+            <div class="flex items-center gap-1.5">
+              <span class="px-1 rounded border text-[8px] font-black"
+                [class.border-boreal-blue/40]="tactical.sync().source === 'AUTHORITATIVE'"
+                [class.text-boreal-blue]="tactical.sync().source === 'AUTHORITATIVE'"
+                [class.border-boreal-amber/40]="tactical.sync().source !== 'AUTHORITATIVE'"
+                [class.text-boreal-amber]="tactical.sync().source !== 'AUTHORITATIVE'">
+                {{ tactical.sync().source }}
+              </span>
+              <span class="bg-boreal-red/10 text-boreal-red px-1 rounded">{{capabilityStore.remappedTracks().length}} TOTAL</span>
+            </div>
         </div>
         
         <div class="flex-grow overflow-y-auto select-none">
@@ -144,7 +167,7 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
       </div>
 
       <!-- Center Map Area -->
-      <div class="flex-grow bg-boreal-canvas relative overflow-hidden flex flex-col">
+      <div class="tactical-map flex-grow bg-boreal-canvas relative overflow-hidden flex flex-col">
          <!-- Radial Grid -->
          <div class="absolute inset-0 opacity-5 pointer-events-none">
             <div class="absolute w-full h-full" [style.background-image]="'radial-gradient(var(--boreal-blue) 1px, transparent 1px)'" style="background-size: 80px 80px;"></div>
@@ -209,8 +232,28 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
             </div>
          </div>
 
+         @if (degradedMapMode()) {
+            <div class="absolute left-4 top-32 z-40 max-w-sm rounded border border-boreal-amber/40 bg-boreal-panel/92 px-4 py-3 shadow-2xl backdrop-blur-md">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <div class="text-[9px] font-black uppercase tracking-[0.22em] text-boreal-amber">Degraded Tactical View</div>
+                        <div class="mt-1 text-[10px] leading-relaxed text-boreal-text-secondary">
+                            Precise tracks are suppressed offline. Heat cells show actionability from cached terrain, last-known adversary vectors, and queued directives.
+                        </div>
+                    </div>
+                    <mat-icon class="!w-4 !h-4 !text-sm text-boreal-amber">wifi_off</mat-icon>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-widest">
+                    <span class="rounded border border-boreal-blue/30 bg-boreal-blue/10 px-2 py-1 text-boreal-blue">TACTICAL {{ tactical.sync().source }}</span>
+                    <span class="rounded border border-boreal-amber/30 bg-boreal-amber/10 px-2 py-1 text-boreal-amber">DECISION {{ decisionFabric.sync().source }}</span>
+                    <span class="rounded border border-boreal-border bg-boreal-canvas/60 px-2 py-1 text-boreal-text-muted">LAST SYNC {{ lastSyncLabel() }}</span>
+                    <span class="rounded border border-boreal-red/30 bg-boreal-red/10 px-2 py-1 text-boreal-red">QUEUE {{ directiveQueue.pendingCount() }}</span>
+                </div>
+            </div>
+         }
+
          <!-- Status Strip -->
-         <div class="absolute bottom-28 left-4 right-4 z-40 h-8 flex items-center justify-between gap-4 pointer-events-none">
+         <div class="tactical-status-strip absolute bottom-28 left-4 right-4 z-40 h-8 flex items-center justify-between gap-4 pointer-events-none">
             <div class="flex items-center gap-2 bg-boreal-panel/90 backdrop-blur-md border border-boreal-border rounded px-3 py-1 shadow-xl pointer-events-auto">
                <div class="flex items-center gap-1.5 border-r border-boreal-border pr-3">
                   <span class="w-1.5 h-1.5 rounded-full bg-boreal-blue animate-pulse"></span>
@@ -219,15 +262,25 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
                <div class="flex items-center gap-2">
                   <span class="text-[8px] font-mono text-boreal-text-muted uppercase">Zoom: {{zoomLevel().toFixed(2)}}x</span>
                   <span class="text-[8px] font-mono text-boreal-text-muted uppercase">Tracks: {{tactical.activeThreats().length}}</span>
+                  <span class="text-[8px] font-mono text-boreal-text-muted uppercase">Src: {{tactical.sync().source}}</span>
+                  <span class="text-[8px] font-mono text-boreal-text-muted uppercase">Queue: {{directiveQueue.pendingCount()}}</span>
                </div>
             </div>
             
-            @if (tactical.selectedTrack(); as track) {
+            @if (!degradedMapMode() && tactical.selectedTrack(); as track) {
                 <div class="flex items-center gap-3 bg-boreal-red/10 backdrop-blur-md border border-boreal-red/30 rounded px-4 py-1 shadow-xl animate-in slide-in-from-bottom-2 duration-300 pointer-events-auto">
                    <mat-icon class="text-boreal-red !w-4 !h-4 !text-[14px]">priority_high</mat-icon>
                    <div class="flex flex-col">
                       <span class="text-[8px] font-black text-boreal-red uppercase tracking-widest leading-tight">Intercept Priority</span>
                       <span class="text-[10px] font-mono text-boreal-text-primary font-bold leading-tight">{{ track.id }} ({{ track.class }}) - T: {{ track.timeToTarget }}s</span>
+                   </div>
+                </div>
+            } @else if (degradedMapMode()) {
+                <div class="flex items-center gap-3 bg-boreal-amber/10 backdrop-blur-md border border-boreal-amber/30 rounded px-4 py-1 shadow-xl pointer-events-auto">
+                   <mat-icon class="text-boreal-amber !w-4 !h-4 !text-[14px]">blur_on</mat-icon>
+                   <div class="flex flex-col">
+                      <span class="text-[8px] font-black text-boreal-amber uppercase tracking-widest leading-tight">Offline Actionability Surface</span>
+                      <span class="text-[10px] font-mono text-boreal-text-primary font-bold leading-tight">Investigate and caution zones replace precise tracks until link restoration.</span>
                    </div>
                 </div>
             }
@@ -299,7 +352,7 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
                     }
 
                     <!-- Engagement Geometry Layer -->
-                    @if (layers.isLayerVisible('engagement_vectors')) {
+                    @if (layers.isLayerVisible('engagement_vectors') && !degradedMapMode()) {
                         <g class="pointer-events-none">
                             @for (track of tactical.tracks(); track track.id) {
                                 @if (getEngagementPath(track); as path) {
@@ -326,7 +379,7 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
                     }
 
                     <!-- IFZ Polygons Layer: instantaneous fire zone around each threat -->
-                    @if (layers.isLayerVisible('ifz_polygons')) {
+                    @if (layers.isLayerVisible('ifz_polygons') && !degradedMapMode()) {
                         <g class="pointer-events-none">
                             @for (track of ifzTracks(); track track.id) {
                                 <circle
@@ -502,8 +555,26 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
                         }
                     }
 
+                    @if (degradedMapMode()) {
+                        <g class="pointer-events-none">
+                            @for (cell of degradedHeatCells(); track cell.id) {
+                                <rect
+                                    [attr.x]="cell.x"
+                                    [attr.y]="cell.y"
+                                    [attr.width]="cell.width"
+                                    [attr.height]="cell.height"
+                                    [attr.fill]="degradedCellColor(cell.zone)"
+                                    [attr.fill-opacity]="cell.opacity"
+                                    [attr.stroke]="cell.queued ? 'var(--boreal-blue)' : degradedCellColor(cell.zone)"
+                                    [attr.stroke-opacity]="cell.queued ? 0.32 : 0.12"
+                                    stroke-width="1.1"
+                                />
+                            }
+                        </g>
+                    }
+
                     <!-- Threat Track Layer -->
-                    @if (layers.isLayerVisible('threat_tracks')) {
+                    @if (layers.isLayerVisible('threat_tracks') && !degradedMapMode()) {
                         @for (track of capabilityStore.remappedTracks(); track track.id) {
                             <g 
                                 [attr.transform]="getTrackTransform(track)" 
@@ -742,7 +813,7 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
       </div>
 
       <!-- Right Recommendation Stack -->
-      <div class="w-85 border-l border-boreal-border bg-boreal-panel flex flex-col overflow-y-auto z-20 shadow-[-20px_0_40px_var(--boreal-shadow)]">
+      <div class="tactical-panel tactical-panel--recommendations w-85 border-l border-boreal-border bg-boreal-panel flex flex-col overflow-y-auto z-20 shadow-[-20px_0_40px_var(--boreal-shadow)]">
         <div class="panel-header uppercase tracking-widest text-[10px] text-boreal-text-muted">Recommendations</div>
         
         <div class="flex-grow p-4 flex flex-col gap-4">
@@ -933,6 +1004,61 @@ import { SafetyBanner } from '../shared/ui/safety-banner';
     :host { display: block; height: 100%; }
     .mat-icon { font-size: 16px; width: 16px; height: 16px; }
     .w-85 { width: 340px; }
+    .tactical-panel { min-width: 0; }
+
+    @media (max-width: 1200px) {
+      .w-85 { width: 300px; }
+    }
+
+    @media (max-width: 960px) {
+      :host { height: auto; }
+
+      .tactical-shell {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .tactical-panel--queue,
+      .tactical-panel--recommendations {
+        width: 100%;
+        min-width: 0;
+        max-height: 34rem;
+      }
+
+      .tactical-panel--queue {
+        order: 1;
+        border-right: 0;
+        border-bottom: 1px solid var(--boreal-border);
+      }
+
+      .tactical-map {
+        order: 2;
+        min-height: 60vh;
+      }
+
+      .tactical-panel--recommendations {
+        order: 3;
+        border-left: 0;
+        border-top: 1px solid var(--boreal-border);
+        box-shadow: 0 -20px 40px var(--boreal-shadow);
+      }
+
+      .tactical-intent-toast {
+        top: 1rem !important;
+        left: 1rem !important;
+        right: 1rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .tactical-status-strip {
+        bottom: 1rem;
+        height: auto;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+      }
+    }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -949,6 +1075,8 @@ export class TacticalConsole {
     layers     = inject(MapLayerStore);
     logistics  = inject(LogisticsStore);
     sensorFeed = inject(SensorFeedStore);
+    decisionFabric = inject(DecisionFabricStore);
+    directiveQueue = inject(OperationalDirectiveQueueService);
 
     mapFeatures = ENGAGEMENT_MAP_FEATURES;
 
@@ -971,6 +1099,80 @@ export class TacticalConsole {
       { value: 'ENGAGED_ONLY' as const, label: 'Engaged' },
       { value: 'ALL_ACTIVE' as const,   label: 'All Active' },
     ];
+
+    degradedMapMode = computed(() =>
+      this.sensorFeed.connectionStatus() === 'DISCONNECTED' && this.tactical.tracks().length > 0
+    );
+
+    lastSyncLabel = computed(() => {
+      const timestamp = this.tactical.sync().lastSyncedAt ?? this.decisionFabric.sync().lastSyncedAt;
+      if (!timestamp) return 'Never synced';
+      return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    });
+
+    degradedHeatCells = computed<DegradedHeatCell[]>(() => {
+      if (!this.degradedMapMode()) return [];
+
+      const tracks = this.tactical.tracks();
+      const pendingTrackIds = this.directiveQueue.pendingTrackIds();
+      const terrain = this.mapFeatures.filter(
+        feature => feature.recordType === 'terrain' && feature.coordinates?.length
+      );
+      const cols = 14;
+      const rows = 10;
+      const cellWidth = this.viewboxWidth / cols;
+      const cellHeight = this.viewboxHeight / rows;
+      const cells: DegradedHeatCell[] = [];
+
+      for (let col = 0; col < cols; col++) {
+        for (let row = 0; row < rows; row++) {
+          const centerX = (col + 0.5) * cellWidth;
+          const centerY = (row + 0.5) * cellHeight;
+          const onTerrain = terrain.some(feature => this.pointInPolygon(centerX, centerY, feature.coordinates ?? []));
+          if (!onTerrain) continue;
+
+          let score = 0;
+          let queued = false;
+          for (const track of tracks) {
+            const dx = centerX - track.geometry.x;
+            const dy = centerY - track.geometry.y;
+            const distance = Math.hypot(dx, dy);
+            const distanceWeight = Math.max(0, 1 - distance / 620);
+            if (distanceWeight <= 0) continue;
+
+            const headingRadians = (track.geometry.heading * Math.PI) / 180;
+            const headingVectorX = Math.cos(headingRadians);
+            const headingVectorY = Math.sin(headingRadians);
+            const normalizedDistance = distance === 0 ? 1 : distance;
+            const forwardBias = Math.max(0.35, ((dx / normalizedDistance) * headingVectorX) + ((dy / normalizedDistance) * headingVectorY));
+            const intentWeight = this.intentWeight(track);
+            const confidenceWeight = Math.max(0.3, track.confidence);
+            const urgencyWeight = Math.max(0.25, 1 - (track.timeToTarget / 420));
+            const queueWeight = pendingTrackIds.has(track.id) ? 1.2 : 1;
+
+            if (pendingTrackIds.has(track.id)) queued = true;
+            score += distanceWeight * forwardBias * intentWeight * confidenceWeight * urgencyWeight * queueWeight;
+          }
+
+          const cappedScore = Math.min(1, score);
+          const zone = cappedScore >= 0.5 ? 'INVESTIGATE' : (cappedScore >= 0.22 ? 'CAUTION' : 'NO-CONFIDENCE');
+          const opacity = zone === 'INVESTIGATE' ? 0.38 : (zone === 'CAUTION' ? 0.2 : 0.08);
+          cells.push({
+            id: `cell-${col}-${row}`,
+            x: col * cellWidth,
+            y: row * cellHeight,
+            width: cellWidth,
+            height: cellHeight,
+            zone,
+            opacity,
+            score: cappedScore,
+            queued,
+          });
+        }
+      }
+
+      return cells;
+    });
 
     // Tracks to render IFZ circles for, based on current display mode
     ifzTracks = computed(() => {
@@ -1196,17 +1398,30 @@ export class TacticalConsole {
     private _doAcceptRecommendation(rec: NonNullable<ReturnType<TacticalConsole['recommendation']>>) {
         const authority  = this.policy.activePolicy()?.guardrails.engagementAuthority ?? 'SEMI';
         const modeLabel  = authority === 'AUTO' ? 'Auto-authorized (HNLT)' : 'Operator-authorized';
+        const assignment = this.policy.selectedCOA()?.assignments.find(a => a.threatId === rec.trackId);
+        const isOffline = this.sensorFeed.connectionStatus() === 'DISCONNECTED';
         this.tactical.updateEngagement(
             rec.trackId,
             'ACCEPTED',
-            `${modeLabel}: ${rec.title}. Optimal node: ${rec.baseName}.`
+            isOffline
+              ? `${modeLabel}: ${rec.title}. Directive queued offline pending link restoration.`
+              : `${modeLabel}: ${rec.title}. Optimal node: ${rec.baseName}.`,
+            { deferLocalResolution: isOffline }
         );
-        const assignment = this.policy.selectedCOA()?.assignments.find(a => a.threatId === rec.trackId);
         if (assignment) {
-            this.api.engageTrack(rec.trackId, assignment.baseId, assignment.effectorType).subscribe({
-                next: () => this.tactical.markEngaged(rec.trackId),
-                error: () => {},
-            });
+            if (isOffline) {
+                this.directiveQueue.enqueueEngagement({
+                    trackId: rec.trackId,
+                    baseId: assignment.baseId,
+                    effectorType: assignment.effectorType,
+                    rationale: rec.rationale,
+                });
+            } else {
+                this.api.engageTrack(rec.trackId, assignment.baseId, assignment.effectorType).subscribe({
+                    next: () => this.tactical.markEngaged(rec.trackId),
+                    error: () => {},
+                });
+            }
         }
     }
 
@@ -1224,6 +1439,25 @@ export class TacticalConsole {
             case 'PROBE':      return 'var(--boreal-blue)';
             case 'DECOY':      return 'var(--color-zinc-500, #71717a)';
             default:           return 'var(--boreal-text-muted)';
+        }
+    }
+
+    degradedCellColor(zone: DegradedHeatCell['zone']): string {
+        switch (zone) {
+            case 'INVESTIGATE': return 'var(--boreal-red)';
+            case 'CAUTION': return 'var(--boreal-amber)';
+            default: return 'var(--boreal-text-muted)';
+        }
+    }
+
+    intentWeight(track: ThreatTwin): number {
+        switch (track.intent) {
+            case 'STRIKE': return 1;
+            case 'SATURATION': return 0.88;
+            case 'FEINT': return 0.62;
+            case 'PROBE': return 0.48;
+            case 'DECOY': return 0.28;
+            default: return 0.4;
         }
     }
 
@@ -1362,5 +1596,17 @@ export class TacticalConsole {
         if (feature.subtype === 'air_base' || feature.subtype === 'capital') return true;
         if (zoom > 2) return true;
         return false;
+    }
+
+    pointInPolygon(x: number, y: number, polygon: [number, number][]): boolean {
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const [xi, yi] = polygon[i];
+            const [xj, yj] = polygon[j];
+            const intersects = ((yi > y) !== (yj > y))
+                && (x < (((xj - xi) * (y - yi)) / ((yj - yi) || 1e-6)) + xi);
+            if (intersects) inside = !inside;
+        }
+        return inside;
     }
 }

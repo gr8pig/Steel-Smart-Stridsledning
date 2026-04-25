@@ -15,10 +15,10 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../shared/domain
   standalone: true,
   imports: [CommonModule, MatIconModule],
   template: `
-    <div class="h-full w-full flex overflow-hidden">
+    <div class="logistics-shell h-full w-full flex overflow-hidden">
 
       <!-- Left Panel: Supply Node Status -->
-      <div class="w-80 border-r border-boreal-border bg-boreal-panel flex flex-col z-20 shadow-2xl">
+      <div class="logistics-panel logistics-panel--left w-80 border-r border-boreal-border bg-boreal-panel flex flex-col z-20 shadow-2xl">
         <div class="panel-header uppercase tracking-widest text-[10px] text-boreal-text-muted flex items-center justify-between">
           <span>Supply Nodes</span>
           <span class="px-1.5 py-0.5 rounded text-[8px] font-black"
@@ -99,7 +99,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../shared/domain
       </div>
 
       <!-- Center: Logistics Map -->
-      <div class="flex-grow bg-boreal-canvas relative overflow-hidden flex flex-col">
+      <div class="logistics-map flex-grow bg-boreal-canvas relative overflow-hidden flex flex-col">
         <!-- Header strip -->
         <div class="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-2 bg-boreal-panel/70 backdrop-blur border-b border-boreal-border">
           <div class="flex items-center gap-3">
@@ -236,7 +236,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../shared/domain
       </div>
 
       <!-- Right Panel: Corridors + Reinforcements + Recommendation -->
-      <div class="w-80 border-l border-boreal-border bg-boreal-panel flex flex-col overflow-y-auto z-20 shadow-[-20px_0_40px_var(--boreal-shadow)]">
+      <div class="logistics-panel logistics-panel--right w-80 border-l border-boreal-border bg-boreal-panel flex flex-col overflow-y-auto z-20 shadow-[-20px_0_40px_var(--boreal-shadow)]">
 
         <!-- Corridors section -->
         <div class="panel-header uppercase tracking-widest text-[10px] text-boreal-text-muted">Supply Corridors</div>
@@ -354,7 +354,50 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../shared/domain
       </div>
     </div>
   `,
-  styles: [`:host { display: block; height: 100%; } .mat-icon { font-size: 14px; width: 14px; height: 14px; }`],
+  styles: [`
+    :host { display: block; height: 100%; }
+    .mat-icon { font-size: 14px; width: 14px; height: 14px; }
+    .w-80 { width: 320px; }
+    .logistics-panel { min-width: 0; }
+
+    @media (max-width: 1200px) {
+      .w-80 { width: 280px; }
+    }
+
+    @media (max-width: 960px) {
+      :host { height: auto; }
+
+      .logistics-shell {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .logistics-panel--left,
+      .logistics-panel--right {
+        width: 100%;
+        min-width: 0;
+        max-height: 30rem;
+      }
+
+      .logistics-panel--left {
+        order: 1;
+        border-right: 0;
+        border-bottom: 1px solid var(--boreal-border);
+      }
+
+      .logistics-map {
+        order: 2;
+        min-height: 58vh;
+      }
+
+      .logistics-panel--right {
+        order: 3;
+        border-left: 0;
+        border-top: 1px solid var(--boreal-border);
+        box-shadow: 0 -20px 40px var(--boreal-shadow);
+      }
+    }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LogisticsConsole {

@@ -1,13 +1,22 @@
-<div class="flex h-screen w-screen overflow-hidden bg-boreal-canvas text-boreal-text-primary">
+<div class="relative flex min-h-dvh w-full flex-col overflow-x-hidden bg-boreal-canvas text-boreal-text-primary lg:h-dvh lg:flex-row lg:overflow-hidden">
+  @if (shell.compact() && shell.navOpen()) {
+    <button
+      type="button"
+      class="fixed inset-0 z-30 cursor-default bg-boreal-canvas/60 backdrop-blur-[1px] lg:hidden"
+      (click)="shell.closeNav()"
+      aria-label="Close navigation drawer"
+    ></button>
+  }
+
   <!-- Sidebar Nav Rail -->
   <app-nav-rail></app-nav-rail>
 
-  <div class="flex flex-col flex-grow min-w-0">
+  <div class="flex min-w-0 flex-1 flex-col">
     <!-- Top Command Bar -->
     <app-command-bar></app-command-bar>
 
     <!-- Main Content Area -->
-    <main class="flex-grow overflow-hidden relative">
+    <main class="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
       <router-outlet />
     </main>
   </div>
