@@ -25,6 +25,9 @@ export interface CounterfactualAsset {
   label: string;
   unitType: string;
   side: AssetSide;
+  armament?: 'KINETIC_STRIKE' | 'ELECTRONIC_WARFARE' | 'ISR_SURVEILLANCE' | 'AIR_SUPERIORITY' | 'HYBRID_DECEPTION';
+  heading?: number;
+  originCountry?: 'SWEDEN' | 'NATO' | 'RUSSIA' | 'OTHER';
   readiness: number;
   speed: number;
   waypointComplexity: number;

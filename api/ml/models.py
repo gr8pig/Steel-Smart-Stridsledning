@@ -4,11 +4,11 @@ from typing import Any, List, Literal
 
 from pydantic import Field
 
-from ..models import BDTModel
+from ..models import SSSModel, ArmamentLoadout, OriginCountry
 from .types import PolicyDeltas
 
 
-class TheaterStateVector(BDTModel):
+class TheaterStateVector(SSSModel):
     """
     A compressed representation of the theater state at a specific point in time,
     including any 'latent perturbations' applied for counterfactual analysis.
@@ -25,7 +25,7 @@ class TheaterStateVector(BDTModel):
     track_velocity_spread: float | None = None
 
 
-class SimulationAsset(BDTModel):
+class SimulationAsset(SSSModel):
     """
     A unit or asset participating in the counterfactual simulation.
 
@@ -38,6 +38,11 @@ class SimulationAsset(BDTModel):
     label: str
     unit_type: str
     side: Literal["BLUE", "RED", "NEUTRAL"] = "BLUE"
+    platform: str | None = None
+    armaments: list[str] = Field(default_factory=list)
+    armament: ArmamentLoadout | None = None
+    heading: float | None = Field(None, ge=0.0, le=360.0)
+    origin_country: OriginCountry | None = None
     readiness: float = 0.5
     speed: float = 0.5
     waypoint_complexity: float = 0.5
@@ -50,7 +55,7 @@ class SimulationAsset(BDTModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-class SimulationContext(BDTModel):
+class SimulationContext(SSSModel):
     """
     Full simulation request used by the counterfactual lab.
     """
@@ -64,7 +69,7 @@ class SimulationContext(BDTModel):
     n_runs: int = 1000
 
 
-class MetricTrajectory(BDTModel):
+class MetricTrajectory(SSSModel):
     name: str
     unit: str = "score"
     p10: list[float]
@@ -72,7 +77,7 @@ class MetricTrajectory(BDTModel):
     p90: list[float]
 
 
-class EnsembleMemberTrace(BDTModel):
+class EnsembleMemberTrace(SSSModel):
     id: str
     label: str
     values: list[float]
@@ -80,14 +85,14 @@ class EnsembleMemberTrace(BDTModel):
     variance: float
 
 
-class FeatureContribution(BDTModel):
+class FeatureContribution(SSSModel):
     name: str
     category: str
     value: float
     impact: float
 
 
-class AssetImpact(BDTModel):
+class AssetImpact(SSSModel):
     asset_id: str
     label: str
     unit_type: str
@@ -103,14 +108,14 @@ class AssetImpact(BDTModel):
     summary: str
 
 
-class DeepSimHint(BDTModel):
+class DeepSimHint(SSSModel):
     required: bool
     reason: str
     recommended_runs: int
     provider: str = "runpod"
 
 
-class DeepSimJobMetadata(BDTModel):
+class DeepSimJobMetadata(SSSModel):
     status: Literal["triggered", "queued", "failed"] = "triggered"
     job_id: str
     provider: str = "runpod"
@@ -124,7 +129,7 @@ class DeepSimJobMetadata(BDTModel):
     created_at: str | None = None
 
 
-class PredictedTrajectory(BDTModel):
+class PredictedTrajectory(SSSModel):
     """
     Represents a predicted outcome path over a time horizon, including
     confidence quantiles for robustness analysis.

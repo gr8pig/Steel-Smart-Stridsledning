@@ -4,7 +4,7 @@ from pydantic.alias_generators import to_camel
 from typing import Literal, Optional
 
 
-class BDTModel(BaseModel):
+class SSSModel(BaseModel):
     model_config = ConfigDict(
         alias_generator=to_camel,
         populate_by_name=True,
@@ -14,19 +14,19 @@ class BDTModel(BaseModel):
 
 # ── Shared sub-models ────────────────────────────────────────────────────────
 
-class MissileInventory(BDTModel):
+class MissileInventory(SSSModel):
     interceptor_short: int
     interceptor_mid: int
     interceptor_long: int
 
 
-class PolicyWeights(BDTModel):
+class PolicyWeights(SSSModel):
     safety: float
     sustainability: float
     resilience: float
 
 
-class Guardrails(BDTModel):
+class Guardrails(SSSModel):
     civilian_protected: bool
     reserve_interceptor_floor: int
     min_readiness_threshold: float
@@ -34,14 +34,14 @@ class Guardrails(BDTModel):
     engagement_authority: Literal["AUTO", "SEMI", "MANUAL"]
 
 
-class Assignment(BDTModel):
+class Assignment(SSSModel):
     threat_id: str
     base_id: str
     effector_type: str
     pk: float
 
 
-class ProjectedOutcome(BDTModel):
+class ProjectedOutcome(SSSModel):
     intercepts: int
     leakage: int
     cost: int
@@ -51,15 +51,17 @@ class ProjectedOutcome(BDTModel):
     confidence: float
 
 
-class IntentDistribution(BDTModel):
+class IntentDistribution(SSSModel):
     probe: float
     feint: float
     strike: float
     saturation: float
     decoy: float
+    strategic_strike: Optional[float] = 0.0
+    tactical_cap: Optional[float] = 0.0
 
 
-class ThreatGeometry(BDTModel):
+class ThreatGeometry(SSSModel):
     x: float
     y: float
     heading: float
@@ -68,7 +70,7 @@ class ThreatGeometry(BDTModel):
 
 # ── Primary twin models (match TypeScript interfaces exactly) ─────────────────
 
-class BaseTwinModel(BDTModel):
+class BaseTwinModel(SSSModel):
     id: str
     name: str
     role: str
@@ -87,17 +89,32 @@ class BaseTwinModel(BDTModel):
     target_floor: Optional[float] = None
 
 
-class ThreatTwinModel(BDTModel):
+ArmamentLoadout = Literal[
+    "KINETIC_STRIKE",
+    "ELECTRONIC_WARFARE",
+    "ISR_SURVEILLANCE",
+    "AIR_SUPERIORITY",
+    "HYBRID_DECEPTION",
+]
+
+OriginCountry = Literal["SWEDEN", "NATO", "RUSSIA", "OTHER"]
+
+class ThreatTwinModel(SSSModel):
     id: str
     threat_class: Literal["DRONE", "MISSILE", "AIRCRAFT", "UNKNOWN"] = Field(
         validation_alias=AliasChoices("class", "threatClass", "threat_class"),
         serialization_alias="class",
     )
-    intent: Literal["PROBE", "FEINT", "STRIKE", "SATURATION", "DECOY"]
+    platform: Optional[str] = None
+    armaments: Optional[list[str]] = None
+    armament: Optional[ArmamentLoadout] = None
+    intent: Literal["PROBE", "FEINT", "STRIKE", "SATURATION", "DECOY", "STRATEGIC_STRIKE", "TACTICAL_CAP"]
     confidence: float
     time_to_target: float
     target_id: str
     geometry: ThreatGeometry
+    heading: Optional[float] = Field(None, ge=0.0, le=360.0)
+    origin_country: Optional[OriginCountry] = None
     status: Literal["IDENTIFIED", "TRACKING", "ENGAGED", "NEUTRALIZED", "LEAKED"]
     uncertainty_source: Optional[str] = None
     intent_distribution: Optional[IntentDistribution] = None
@@ -106,7 +123,7 @@ class ThreatTwinModel(BDTModel):
     jamming_probability: Optional[float] = None
 
 
-class PolicyTwinModel(BDTModel):
+class PolicyTwinModel(SSSModel):
     id: str
     name: str
     weights: PolicyWeights
@@ -114,7 +131,7 @@ class PolicyTwinModel(BDTModel):
     guardrails: Guardrails
 
 
-class DecisionFabricTwin(BDTModel):
+class DecisionFabricTwin(SSSModel):
     id: str
     sim_time: float
     c2_resilience_score: float
@@ -128,7 +145,7 @@ class DecisionFabricTwin(BDTModel):
     timestamp: str
 
 
-class COATwinModel(BDTModel):
+class COATwinModel(SSSModel):
     id: str
     name: str
     type: Literal["MAX_PROTECTION", "BALANCED", "DEEP_SUSTAINABILITY", "CUSTOM"]
@@ -139,7 +156,7 @@ class COATwinModel(BDTModel):
 
 # ── API request / response schemas ───────────────────────────────────────────
 
-class PolicyUpdateRequest(BDTModel):
+class PolicyUpdateRequest(SSSModel):
     policy_weights: Optional[PolicyWeights] = None
     guardrails: Optional[Guardrails] = None
     client_action_id: Optional[str] = None
@@ -154,12 +171,12 @@ class PolicyUpdateResponse(PolicyTwinModel):
     client_action_id: Optional[str] = None
 
 
-class COASolveRequest(BDTModel):
+class COASolveRequest(SSSModel):
     policy_weights: PolicyWeights
     guardrails: Optional[Guardrails] = None
 
 
-class COASolveResult(BDTModel):
+class COASolveResult(SSSModel):
     coas: list[COATwinModel]
     pareto_frontier_size: int
     solve_time_ms: float
@@ -167,7 +184,7 @@ class COASolveResult(BDTModel):
     reachable_assignments: int
 
 
-class EngageRequest(BDTModel):
+class EngageRequest(SSSModel):
     track_id: str
     base_id: str
     effector_type: str
@@ -176,7 +193,7 @@ class EngageRequest(BDTModel):
     queued_at: Optional[str] = None
 
 
-class EngagementResult(BDTModel):
+class EngagementResult(SSSModel):
     success: bool
     track_id: str
     new_status: str
@@ -188,7 +205,7 @@ class EngagementResult(BDTModel):
     client_action_id: Optional[str] = None
 
 
-class ReadinessProjectionPoint(BDTModel):
+class ReadinessProjectionPoint(SSSModel):
     base_id: str
     base_name: str
     readiness_now: float
@@ -207,14 +224,14 @@ class ReadinessProjectionPoint(BDTModel):
     life_expectancy_hours: float
 
 
-class Distribution(BDTModel):
+class Distribution(SSSModel):
     mean: float
     std: float
     p10: float
     p90: float
 
 
-class MOEDistributions(BDTModel):
+class MOEDistributions(SSSModel):
     intercept_fraction: Distribution
     readiness_6h: Distribution = Field(
         validation_alias=AliasChoices("readiness6h", "readiness6H", "readiness_6h"),
@@ -224,7 +241,7 @@ class MOEDistributions(BDTModel):
     asymmetry_ratio: Distribution
 
 
-class LabRunRequest(BDTModel):
+class LabRunRequest(SSSModel):
     coa_id: str
     red_model: Literal["DECEPTIVE", "SATURATION", "KINETIC"]
     jammer_severity: int  # 1-3
@@ -232,7 +249,7 @@ class LabRunRequest(BDTModel):
     n_runs: int = 500
 
 
-class LabRunResult(BDTModel):
+class LabRunResult(SSSModel):
     robustness_score: float
     legacy_comparison_score: float
     fragility_point: str
@@ -244,25 +261,25 @@ class LabRunResult(BDTModel):
     correction_recommendation: str
 
 
-class RationaleRequest(BDTModel):
+class RationaleRequest(SSSModel):
     coa_id: str
 
 
-class RationaleResult(BDTModel):
+class RationaleResult(SSSModel):
     rationale_text: str
     generated_at: str
 
 
-class LabRationaleRequest(BDTModel):
+class LabRationaleRequest(SSSModel):
     run_result: LabRunResult
 
 
-class InjectTracksRequest(BDTModel):
+class InjectTracksRequest(SSSModel):
     count: int
     type: Literal["FEINT", "KINETIC", "MIXED", "DRONE"]
 
 
-class CampaignSnapshot(BDTModel):
+class CampaignSnapshot(SSSModel):
     bases: list[BaseTwinModel]
     threats: list[ThreatTwinModel]
     policy: PolicyTwinModel
@@ -271,7 +288,7 @@ class CampaignSnapshot(BDTModel):
     phase: str
 
 
-class TheaterDelta(BDTModel):
+class TheaterDelta(SSSModel):
     type: Literal["FULL_SNAPSHOT", "DELTA"]
     sim_time: float
     threats: list[ThreatTwinModel]

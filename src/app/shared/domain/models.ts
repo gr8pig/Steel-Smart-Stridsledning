@@ -21,10 +21,20 @@ export interface BaseTwin {
   targetFloor?: number;
 }
 
+export type PlatformType = 'S_400' | 'PATRIOT' | 'GRIPEN' | 'SU_35' | 'F_35' | 'GENERIC_DRONE' | 'GENERIC_MISSILE' | 'UNKNOWN';
+export type ArmamentType = 'LONG_RANGE_AAM' | 'SHORT_RANGE_AAM' | 'BOMB' | 'CRUISE_MISSILE' | 'SAM_LONG_RANGE' | 'SAM_SHORT_RANGE' | 'NONE';
+export type ArmamentLoadout = 'KINETIC_STRIKE' | 'ELECTRONIC_WARFARE' | 'ISR_SURVEILLANCE' | 'AIR_SUPERIORITY' | 'HYBRID_DECEPTION';
+export type OriginCountry = 'SWEDEN' | 'NATO' | 'RUSSIA' | 'OTHER';
+
 export interface ThreatTwin {
   id: string;
   class: 'DRONE' | 'MISSILE' | 'AIRCRAFT' | 'UNKNOWN';
-  intent: 'PROBE' | 'FEINT' | 'STRIKE' | 'SATURATION' | 'DECOY';
+  platform?: PlatformType;
+  armaments?: ArmamentType[];
+  armament?: ArmamentLoadout;
+  heading?: number;
+  originCountry?: OriginCountry;
+  intent: 'PROBE' | 'FEINT' | 'STRIKE' | 'SATURATION' | 'DECOY' | 'STRATEGIC_STRIKE' | 'TACTICAL_CAP';
   confidence: number;
   timeToTarget: number; // seconds
   targetId: string;
