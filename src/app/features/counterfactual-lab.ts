@@ -1,220 +1,220 @@
-import {ChangeDetectionStrategy, Component, computed, inject, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {MatIconModule} from '@angular/material/icon';
-import {RouterLink} from '@angular/router';
-import {PolicyStore} from '../core/state/policy.store';
-import {ScenarioStore} from '../core/state/scenario.store';
-import {OrchestrationStore} from '../core/state/orchestration.store';
-
-type BranchId = 'baseline' | 'no-jam' | 'reserve-hold' | 'early-shift';
-
-interface BranchProfile {
-  id: BranchId;
-  label: string;
-  summary: string;
-  readiness: number;
-  risk: number;
-  confidence: number;
-  note: string;
-  tone: 'blue' | 'green' | 'amber';
-}
-
-const BRANCH_PROFILES: Record<BranchId, BranchProfile> = {
-  baseline: {
-    id: 'baseline',
-    label: 'Baseline',
-    summary: 'Current policy, current sensor state, and the live scenario path.',
-    readiness: 62,
-    risk: 41,
-    confidence: 88,
-    note: 'Reference branch for comparison.',
-    tone: 'blue'
-  },
-  'no-jam': {
-    id: 'no-jam',
-    label: 'No Jamming',
-    summary: 'Assumes a clean spectrum. C2 traffic stays coherent and the command loop remains crisp.',
-    readiness: 77,
-    risk: 24,
-    confidence: 91,
-    note: 'Improved telemetry and faster authorization cycles.',
-    tone: 'green'
-  },
-  'reserve-hold': {
-    id: 'reserve-hold',
-    label: 'Reserve Hold',
-    summary: 'Protects sustainment depth and delays commitment until the next wave is clearer.',
-    readiness: 69,
-    risk: 17,
-    confidence: 84,
-    note: 'Lower immediate burn, higher future endurance.',
-    tone: 'amber'
-  },
-  'early-shift': {
-    id: 'early-shift',
-    label: 'Early Shift',
-    summary: 'Moves forces earlier, trading short-term resilience for higher early effect.',
-    readiness: 54,
-    risk: 56,
-    confidence: 79,
-    note: 'High tempo, higher depletion.',
-    tone: 'blue'
-  }
-};
+import { Component, inject, effect } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { CounterfactualLabStore } from '../core/ml/counterfactual-lab.store';
+import { FrontierViewComponent } from '../shared/ui/frontier-view';
+import { BdtApiService } from '../core/services/bdt-api.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-counterfactual-lab',
   standalone: true,
-  imports: [CommonModule, MatIconModule, RouterLink],
+  imports: [CommonModule, FrontierViewComponent],
   template: `
-    <div class="h-full w-full overflow-y-auto bg-boreal-canvas p-6 text-boreal-text-primary">
-      <header class="mb-6 flex flex-col gap-3 border-b border-boreal-border pb-4 xl:flex-row xl:items-end xl:justify-between">
-        <div class="space-y-1">
-          <div class="flex items-center gap-3">
-            <h1 class="text-3xl font-light tracking-[0.2em] uppercase">Counterfactual Lab</h1>
-            <span class="rounded-sm border border-boreal-amber/30 bg-boreal-amber/10 px-2 py-1 text-[8px] font-black uppercase tracking-[0.2em] text-boreal-amber">WHAT-IF</span>
-          </div>
-          <p class="text-[10px] font-mono uppercase tracking-widest italic text-boreal-text-muted">
-            Compare the current branch against alternate assumptions, timings, and policy shifts.
-          </p>
+    <div class="page-container h-full flex flex-col p-6 gap-6 bg-boreal-canvas animate-in fade-in duration-500">
+      <!-- Header -->
+      <header class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-black text-boreal-text-primary tracking-tighter uppercase italic">Counterfactual Command Lab</h1>
+          <p class="text-xs text-boreal-text-muted font-mono tracking-widest">Synthetic Intelligence Fabric / Latent Policy Exploration</p>
         </div>
-
-        <div class="flex items-center gap-3">
-          <div class="rounded-sm border border-boreal-border bg-boreal-panel-muted/20 px-3 py-2">
-            <div class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Authority</div>
-            <div class="text-[11px] font-bold uppercase text-boreal-text-primary">{{ policy.activePolicy()?.guardrails?.engagementAuthority || 'AUTO' }}</div>
+        
+        <div class="flex items-center gap-4">
+          <div class="flex flex-col items-end">
+            <span class="text-[8px] font-black text-boreal-text-muted uppercase tracking-[0.2em]">Ensemble Trust</span>
+            <div class="h-1.5 w-32 bg-boreal-border/30 rounded-full mt-1 overflow-hidden">
+              <div class="h-full bg-boreal-blue transition-all duration-500" 
+                   [style.width.%]="store.trustLevel() * 100"
+                   [class.bg-yellow-500]="store.trustLevel() < 0.7 && store.trustLevel() >= 0.5"
+                   [class.bg-red-500]="store.trustLevel() < 0.5"></div>
+            </div>
           </div>
-          <a
-            routerLink="/reference"
-            class="rounded-sm border border-boreal-border px-3 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:border-boreal-amber/30 transition-all"
-          >
-            Back to Atlas
-          </a>
+          
+          <button (click)="triggerDeepSim()" 
+                  [disabled]="store.isSimulating()"
+                  class="px-4 py-2 bg-boreal-blue/10 border border-boreal-blue/40 hover:bg-boreal-blue/20 text-boreal-blue text-[10px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+            {{ store.isSimulating() ? 'Worker Active...' : 'Trigger Deep Sim' }}
+          </button>
         </div>
       </header>
 
-      <div class="grid min-h-0 grid-cols-12 gap-4">
-        <section class="design-card col-span-12 lg:col-span-3 !p-0 overflow-hidden">
-          <div class="panel-header uppercase tracking-widest text-[9px] text-boreal-text-muted bg-boreal-panel-muted/20">Branch Selector</div>
-          <div class="space-y-2 p-4">
-            @for (branch of branches; track branch.id) {
-              <button
-                (click)="selectedBranch.set(branch.id)"
-                class="w-full rounded-sm border p-3 text-left transition-all"
-                [class.border-boreal-blue/40]="selectedBranch() === branch.id"
-                [class.bg-boreal-blue/10]="selectedBranch() === branch.id"
-                [class.border-boreal-border]="selectedBranch() !== branch.id"
-                [class.bg-boreal-panel-muted/20]="selectedBranch() !== branch.id"
-              >
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-[11px] font-bold uppercase tracking-tight text-boreal-text-primary">{{ branch.label }}</span>
-                  <span class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">{{ branch.confidence }}%</span>
-                </div>
-                <p class="mt-2 text-[10px] leading-relaxed text-boreal-text-muted">{{ branch.summary }}</p>
-              </button>
-            }
-          </div>
-        </section>
-
-        <section class="design-card col-span-12 lg:col-span-6 !p-0 overflow-hidden">
-          <div class="panel-header uppercase tracking-widest text-[9px] text-boreal-text-muted bg-boreal-panel-muted/20">Branch Comparison</div>
-          <div class="grid min-h-[420px] gap-px bg-boreal-border lg:grid-cols-2">
-            <div class="bg-boreal-panel p-5">
-              <div class="flex items-center justify-between">
-                <span class="text-[9px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Baseline</span>
-                <mat-icon class="!text-[11px] text-boreal-blue">radio_button_checked</mat-icon>
+      <div class="flex-grow grid grid-cols-12 gap-6 min-h-0">
+        <!-- Sidebar Controls -->
+        <div class="col-span-3 flex flex-col gap-4">
+          <div class="bg-boreal-panel/40 border border-boreal-border p-4 rounded flex flex-col gap-6">
+            <h2 class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.25em]">Latent Perturbations</h2>
+            
+            <div class="flex flex-col gap-2">
+              <div class="flex justify-between text-[10px] font-mono">
+                <span class="text-boreal-text-muted uppercase">Safety Weight Δ</span>
+                <span class="text-boreal-blue font-bold">{{ store.activePolicyDeltas().safety | number:'1.2-2' }}</span>
               </div>
-              <div class="mt-4 space-y-3">
-                <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-4">
-                  <div class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Selected COA</div>
-                  <div class="mt-1 text-lg font-bold uppercase text-boreal-text-primary">{{ policy.selectedCOA()?.name || policy.recommendedCOA().name }}</div>
-                </div>
-                <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-4">
-                  <div class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Scenario Phase</div>
-                  <div class="mt-1 text-lg font-bold uppercase text-boreal-text-primary">{{ scenario.currentPhase()?.name || 'UNKNOWN' }}</div>
-                </div>
-                <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-4">
-                  <div class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Published Intent</div>
-                  <div class="mt-1 text-lg font-bold uppercase text-boreal-text-primary">{{ orchestration.publishedIntent() ? 'COMMITTED' : 'PROPOSED' }}</div>
-                </div>
-              </div>
+              <input type="range" min="0" max="1" step="0.05" 
+                     [value]="store.activePolicyDeltas().safety"
+                     (input)="onDeltaChange('safety', $event)"
+                     class="w-full h-1 bg-boreal-border rounded-lg appearance-none cursor-pointer accent-boreal-blue">
             </div>
 
-            <div class="bg-boreal-panel p-5">
-              <div class="flex items-center justify-between">
-                <span class="text-[9px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Counterfactual</span>
-                <mat-icon class="!text-[11px] text-boreal-amber">swap_horiz</mat-icon>
+            <div class="flex flex-col gap-2">
+              <div class="flex justify-between text-[10px] font-mono">
+                <span class="text-boreal-text-muted uppercase">Sustainability Δ</span>
+                <span class="text-boreal-blue font-bold">{{ store.activePolicyDeltas().sustainability | number:'1.2-2' }}</span>
               </div>
-              <div class="mt-4 space-y-3">
-                <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-4">
-                  <div class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Selected Branch</div>
-                  <div class="mt-1 text-lg font-bold uppercase text-boreal-text-primary">{{ branch().label }}</div>
-                  <p class="mt-2 text-[10px] leading-relaxed text-boreal-text-secondary">{{ branch().note }}</p>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                  <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
-                    <div class="text-[7px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Readiness</div>
-                    <div class="mt-1 text-2xl font-mono font-black text-boreal-text-primary">{{ branch().readiness }}%</div>
-                  </div>
-                  <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
-                    <div class="text-[7px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Risk</div>
-                    <div class="mt-1 text-2xl font-mono font-black text-boreal-text-primary">{{ branch().risk }}%</div>
-                  </div>
-                  <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
-                    <div class="text-[7px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Confidence</div>
-                    <div class="mt-1 text-2xl font-mono font-black text-boreal-text-primary">{{ branch().confidence }}%</div>
-                  </div>
-                  <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
-                    <div class="text-[7px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Direction</div>
-                    <div class="mt-1 text-2xl font-mono font-black text-boreal-text-primary">{{ branch().tone.toUpperCase() }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="design-card col-span-12 lg:col-span-3 !p-0 overflow-hidden">
-          <div class="panel-header uppercase tracking-widest text-[9px] text-boreal-text-muted bg-boreal-panel-muted/20">Delta Summary</div>
-          <div class="space-y-4 p-4">
-            <div class="rounded-sm border border-boreal-border bg-boreal-panel-muted/20 p-4">
-              <div class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Branch Effect</div>
-              <div class="mt-2 text-[12px] font-bold uppercase text-boreal-text-primary">{{ branch().summary }}</div>
+              <input type="range" min="0" max="1" step="0.05" 
+                     [value]="store.activePolicyDeltas().sustainability"
+                     (input)="onDeltaChange('sustainability', $event)"
+                     class="w-full h-1 bg-boreal-border rounded-lg appearance-none cursor-pointer accent-boreal-blue">
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-              <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
-                <div class="text-[7px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Readiness Delta</div>
-                <div class="mt-1 text-xl font-mono font-black text-boreal-green">+{{ branch().readiness - 62 }}%</div>
-              </div>
-              <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
-                <div class="text-[7px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Risk Delta</div>
-                <div class="mt-1 text-xl font-mono font-black text-boreal-red">-{{ 41 - branch().risk }}%</div>
-              </div>
-            </div>
-
-            <div class="rounded-sm border border-boreal-border bg-boreal-panel-muted/20 p-4">
-              <div class="flex items-center gap-2">
-                <span class="h-2 w-2 rounded-full bg-boreal-amber animate-pulse"></span>
-                <span class="text-[9px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Interpretation</span>
-              </div>
-              <p class="mt-2 text-[10px] leading-relaxed text-boreal-text-secondary">
-                Counterfactuals let the operator compare timing, reserve posture, and comms assumptions before the choice is committed into the live policy state.
+            <div class="mt-4 pt-4 border-t border-boreal-border/30">
+              <p class="text-[9px] leading-relaxed text-boreal-text-muted italic">
+                Adjust sliders to perturb the live theater policy. The ensemble predicts outcome trajectories across the Pareto frontier in real-time.
               </p>
             </div>
           </div>
-        </section>
+
+          <!-- Predicted MOEs -->
+          <div class="bg-boreal-panel/40 border border-boreal-border p-4 rounded flex-grow">
+            <h2 class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.25em] mb-4">Predicted Outcomes (T+30m)</h2>
+            
+            <div class="grid gap-4">
+              @for (moe of moes; track moe.label) {
+                <div class="flex flex-col">
+                  <span class="text-[7px] font-black text-boreal-text-muted uppercase tracking-widest">{{ moe.label }}</span>
+                  <div class="flex items-baseline gap-2 mt-0.5">
+                    <span class="text-lg font-black text-boreal-text-primary">{{ moe.value | number:'1.2-2' }}</span>
+                    @if (moe.trend !== 0) {
+                      <span [class]="moe.trend > 0 ? 'text-emerald-500' : 'text-rose-500'" class="text-[9px] font-mono">
+                        {{ moe.trend > 0 ? '▲' : '▼' }}{{ Math.abs(moe.trend) }}%
+                      </span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Visualization -->
+        <div class="col-span-9 flex flex-col gap-6">
+          <div class="flex-grow">
+            <app-frontier-view 
+              [currentTrajectory]="store.currentTrajectory()"
+              [policyDeltas]="store.activePolicyDeltas()"></app-frontier-view>
+          </div>
+          
+          <!-- Temporal Projection -->
+          <div class="h-48 bg-boreal-panel/20 border border-boreal-border p-4 rounded">
+            <h2 class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.25em] mb-4">Robustness Projection Timeline</h2>
+            <!-- Mini-chart placeholder for trajectory -->
+            <div class="flex items-end gap-1 h-24 w-full">
+              @for (val of store.currentTrajectory()?.p50; track $index) {
+                <div class="flex-grow bg-boreal-blue/40 border-t border-boreal-blue group relative"
+                     [style.height.%]="val * 100">
+                  <div class="absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:block bg-boreal-panel border border-boreal-border px-1 text-[7px] font-mono whitespace-nowrap z-10">
+                    T+{{ $index * 5 }}m: {{ val * 100 | number:'1.0-0' }}%
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="flex justify-between mt-2 text-[7px] font-mono text-boreal-text-muted">
+              <span>NOW</span>
+              <span>T+5M</span>
+              <span>T+10M</span>
+              <span>T+15M</span>
+              <span>T+20M</span>
+              <span>T+30M</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styles: [`
+    :host { display: block; height: 100%; }
+    input[type=range]::-webkit-slider-thumb {
+      height: 12px;
+      width: 12px;
+      border-radius: 2px;
+      background: var(--boreal-blue);
+      cursor: pointer;
+      -webkit-appearance: none;
+      box-shadow: 0 0 10px rgba(0, 163, 255, 0.4);
+    }
+  `]
 })
 export class CounterfactualLab {
-  readonly policy = inject(PolicyStore);
-  readonly scenario = inject(ScenarioStore);
-  readonly orchestration = inject(OrchestrationStore);
-  readonly selectedBranch = signal<BranchId>('baseline');
+  readonly store = inject(CounterfactualLabStore);
+  private readonly api = inject(BdtApiService);
+  readonly Math = Math;
 
-  readonly branches = Object.values(BRANCH_PROFILES);
-  readonly branch = computed(() => BRANCH_PROFILES[this.selectedBranch()]);
+  moes = [
+    { label: 'Robustness Index', value: 0.88, trend: +4 },
+    { label: 'Readiness Floor', value: 0.72, trend: -2 },
+    { label: 'Asymmetry Ratio', value: 3.4, trend: +12 },
+  ];
+
+  constructor() {
+    // Initial fetch
+    this.runInference();
+
+    // Re-run inference when deltas change
+    effect(() => {
+      this.store.activePolicyDeltas();
+      this.runInference();
+    }, { allowSignalWrites: true });
+  }
+
+  onDeltaChange(key: 'safety' | 'sustainability', event: Event) {
+    const value = parseFloat((event.target as HTMLInputElement).value);
+    this.store.updateDeltas({ ...this.store.activePolicyDeltas(), [key]: value });
+  }
+
+  async runInference() {
+    try {
+      // In a real app, we'd use a dedicated endpoint or extend BdtApiService
+      // For integration, we'll call the new /api/ml/predict endpoint
+      const response = await fetch('http://localhost:8000/api/ml/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(this.store.activePolicyDeltas())
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        this.store.setTrajectory(data);
+        
+        // Update MOEs based on T+30m projection
+        if (data.p50 && data.p50.length > 0) {
+            const lastVal = data.p50[data.p50.length - 1];
+            this.moes[0].value = lastVal;
+            this.moes[0].trend = Math.round((lastVal - data.p50[0]) * 100);
+        }
+      }
+    } catch (e) {
+      console.error('ML Inference failed', e);
+    }
+  }
+
+  async triggerDeepSim() {
+    this.store.setSimulating(true);
+    try {
+        const response = await fetch('http://localhost:8000/api/ml/deep-sim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                deltas: this.store.activePolicyDeltas(),
+                nRuns: 1000
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Deep Sim triggered:', data.jobId);
+            // In a real flow, we'd poll for completion or use a websocket notification
+            setTimeout(() => this.store.setSimulating(false), 5000); // UI simulation
+        }
+    } catch (e) {
+        this.store.setSimulating(false);
+    }
+  }
 }
