@@ -483,32 +483,32 @@ function renderLockPage(message = ''): string {
     <div class="hero">
       <div>
         <div class="lock-mark">◌</div>
-        <div class="eyebrow">Restricted Access</div>
-        <h1 class="title">Steel</h1>
-        <p class="subtitle">A locked command surface for theater simulation, policy tuning, and live scenario review. Unlock with the access password to enter the operational view.</p>
+        <div class="eyebrow">Team Steel</div>
+        <h1 class="title">Saab Smart Stridsledning</h1>
+        <p class="subtitle">Hackathon Hackathon Command Support Fabric. Powered by BDT.</p>
         <div class="meta-row">
-          <span class="chip"><b>1h</b> access token</span>
-          <span class="chip"><b>HttpOnly</b> cookie</span>
-          <span class="chip"><b>Sweden</b> deploy ready</span>
+          <span class="chip"><b>1h</b> access window</span>
+          <span class="chip"><b>Production-Ready</b> surface</span>
+          <span class="chip"><b>Command-Fabric</b> ready</span>
         </div>
       </div>
       <div class="status">
-        <span class="status-label">Session model</span>
-        <p>The token is issued server-side, expires automatically, and gates the app shell, API routes, and WebSocket feed.</p>
+        <span class="status-label">Operational Security</span>
+        <p>This is a tactical decision surface. Unauthorized access is audited.</p>
       </div>
     </div>
     <div class="form-panel">
-      <div class="eyebrow">Unlock Console</div>
+      <div class="eyebrow">Unlock Command Surface</div>
       ${notice}
       <form method="post" action="/unlock">
-        <input type="password" name="password" placeholder="Access password" autocomplete="current-password" autofocus />
-        <button type="submit">Unlock session</button>
+        <input type="password" name="password" placeholder="ENTER ACCESS KEY" autocomplete="current-password" autofocus />
+        <button type="submit">AUTHENTICATE</button>
       </form>
-      <div class="hint">This page is intentionally minimal. No browser-side secrets, no additional clutter.</div>
-      <div class="tiny">After unlocking, the same token is used for the SSR app, the API, and the theater WebSocket connection.</div>
+      <div class="hint">The command fabric is locked pending authentication.</div>
+      <div class="tiny">Access token is issued server-side and applies to the SSR app, API, and WebSocket feed.</div>
       <div class="footer">
-        <span>Steel command surface</span>
-        <span>One-hour access window</span>
+        <span>Steel | Saab Smart Stridsledning</span>
+        <span>Powered by BDT</span>
       </div>
     </div>
   </section>
