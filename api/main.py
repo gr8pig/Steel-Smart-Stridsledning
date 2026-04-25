@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 
 from typing import Annotated
 
-from scipy.spatial import ConvexHull
+from scipy.spatial import ConvexHull, QhullError
 import numpy as np
 
 from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect, HTTPException
@@ -66,7 +66,14 @@ class MockModel:
 ensemble_inference = EnsembleInference(models=[MockModel() for _ in range(5)])
 runpod_orchestrator = RunPodOrchestrator()
 
-def _calculate_spatial_density(threats) -> float:
+def _calculate_spatial_density(threats: list) -> float:
+    """
+    Calculates the spatial density of a list of threats.
+    
+    Uses the volume of the convex hull of the threats' coordinates.
+    Falls back to a linear calculation if there are fewer than 3 threats
+    or if the points are collinear (raising a QhullError).
+    """
     if len(threats) < 3:
         return float(len(threats)) / 10.0 # Fallback
     points = np.array([[t.x, t.y] for t in threats])
@@ -74,7 +81,7 @@ def _calculate_spatial_density(threats) -> float:
         hull = ConvexHull(points)
         area = hull.volume if hull.volume > 0 else 1.0
         return len(threats) / area
-    except Exception:
+    except QhullError:
         return float(len(threats)) / 10.0
 
 def vectorize_theater_state(policy_deltas: PolicyDeltas = None) -> TheaterStateVector:

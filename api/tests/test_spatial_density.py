@@ -9,3 +9,20 @@ def test_spatial_density():
     tracks = [mock_threat1, mock_threat2, mock_threat3]
     density = _calculate_spatial_density(tracks)
     assert density > 0.0
+
+def test_spatial_density_less_than_3_threats():
+    mock_threat1 = Mock(); mock_threat1.x = 10; mock_threat1.y = 10
+    mock_threat2 = Mock(); mock_threat2.x = 12; mock_threat2.y = 12
+    tracks = [mock_threat1, mock_threat2]
+    density = _calculate_spatial_density(tracks)
+    # Fallback is len(threats) / 10.0 = 2 / 10.0 = 0.2
+    assert density == 0.2
+
+def test_spatial_density_collinear_points():
+    mock_threat1 = Mock(); mock_threat1.x = 10; mock_threat1.y = 10
+    mock_threat2 = Mock(); mock_threat2.x = 11; mock_threat2.y = 11
+    mock_threat3 = Mock(); mock_threat3.x = 12; mock_threat3.y = 12
+    tracks = [mock_threat1, mock_threat2, mock_threat3]
+    density = _calculate_spatial_density(tracks)
+    # Collinear points raise QhullError, fallback is len(threats) / 10.0 = 3 / 10.0 = 0.3
+    assert density == 0.3
