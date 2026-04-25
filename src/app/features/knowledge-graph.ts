@@ -9,6 +9,7 @@ import {
   PLATFORM_NODE_CATEGORIES,
 } from '../core/models/platform-knowledge-graph.data';
 import {
+  KnowledgeGraphViewMode,
   NodeCategory,
   PlatformArea,
   TechNode,
@@ -32,7 +33,7 @@ import {
 
         <div class="flex items-center gap-2">
           <label class="hidden items-center gap-2 rounded-sm border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400 md:flex">
-            <span>Search</span>
+            <mat-icon class="text-[14px] w-[14px] h-[14px]">search</mat-icon>
             <input
               type="text"
               class="w-60 bg-transparent text-[10px] uppercase tracking-[0.16em] text-slate-200 outline-none placeholder:text-slate-500"
@@ -46,203 +47,189 @@ import {
             class="rounded-sm border border-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-300 transition-colors hover:border-white/20 hover:bg-white/5"
             (click)="resetFilters()"
           >
-            Reset
+            Reset Camera & Filters
           </button>
         </div>
       </header>
 
-      <section class="flex min-h-0 flex-1 overflow-hidden relative">
-        <!-- Main 3D Viewer -->
-        <div class="relative min-w-0 flex-1 overflow-hidden">
-          <app-knowledge-graph-viewer></app-knowledge-graph-viewer>
-
-          <!-- Floating HUD Filters -->
-          <div class="absolute left-6 top-6 z-20 flex flex-col gap-4 pointer-events-none">
-            <div class="flex flex-wrap gap-2 pointer-events-auto max-w-2xl">
-              @for (category of categories; track category) {
-                <button
-                  type="button"
-                  class="rounded-sm border px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.22em] transition-colors"
-                  [class.border-sky-400]="store.activeCategories().includes(category)"
-                  [class.bg-sky-400/10]="store.activeCategories().includes(category)"
-                  [class.text-sky-200]="store.activeCategories().includes(category)"
-                  [class.border-white/10]="!store.activeCategories().includes(category)"
-                  [class.text-slate-400]="!store.activeCategories().includes(category)"
-                  (click)="toggleCategory(category)"
-                >
-                  {{ category }}
-                </button>
-              }
-            </div>
-
-            <div class="flex flex-wrap gap-2 pointer-events-auto max-w-2xl">
-              @for (area of areas; track area) {
-                <button
-                  type="button"
-                  class="rounded-sm border px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.22em] transition-colors"
-                  [class.border-emerald-400]="store.activeAreas().includes(area)"
-                  [class.bg-emerald-400/10]="store.activeAreas().includes(area)"
-                  [class.text-emerald-200]="store.activeAreas().includes(area)"
-                  [class.border-white/10]="!store.activeAreas().includes(area)"
-                  [class.text-slate-400]="!store.activeAreas().includes(area)"
-                  (click)="toggleArea(area)"
-                >
-                  {{ area }}
-                </button>
-              }
-            </div>
+      <section class="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row relative">
+        <div class="relative min-w-0 flex-1 h-full w-full bg-black">
+          <app-knowledge-graph-viewer 
+             [nodes]="visibleNodes()"
+             [edges]="visibleEdges()"
+             [selectedNodeId]="store.selectedNodeId()"
+             (nodeSelected)="store.selectNode($event)">
+          </app-knowledge-graph-viewer>
+          
+          <div class="absolute left-4 top-4 z-20 flex max-w-[70%] flex-wrap gap-2 pointer-events-none">
+            @for (category of categories; track category) {
+              <button
+                type="button"
+                class="rounded-sm border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] transition-colors pointer-events-auto"
+                [class.border-sky-400]="store.activeCategories().includes(category)"
+                [class.bg-sky-400/10]="store.activeCategories().includes(category)"
+                [class.text-sky-200]="store.activeCategories().includes(category)"
+                [class.border-white/10]="!store.activeCategories().includes(category)"
+                [class.text-slate-400]="!store.activeCategories().includes(category)"
+                (click)="toggleCategory(category)"
+              >
+                {{ category }}
+              </button>
+            }
           </div>
 
-          <!-- Bottom HUD Stats -->
-          <div class="absolute bottom-6 left-6 z-20 flex items-center gap-4 text-[9px] font-mono uppercase tracking-[0.25em] text-slate-500 pointer-events-none">
-            <div class="flex flex-col gap-1">
-               <span class="text-white/40">Entities</span>
-               <span class="text-sky-300 font-bold">{{ store.filteredNodes().length }} / {{ store.nodes().length }}</span>
-            </div>
-            <div class="h-6 w-px bg-white/10"></div>
-            <div class="flex flex-col gap-1">
-               <span class="text-white/40">Active_Filter</span>
-               <span class="text-emerald-300 font-bold">{{ hasFilters() ? 'ON' : 'OFF' }}</span>
-            </div>
+          <div class="absolute right-4 top-4 z-20 flex max-w-[30%] flex-wrap justify-end gap-2 pointer-events-none">
+            @for (area of areas; track area) {
+              <button
+                type="button"
+                class="rounded-sm border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] transition-colors pointer-events-auto"
+                [class.border-sky-400]="store.activeAreas().includes(area)"
+                [class.bg-sky-400/10]="store.activeAreas().includes(area)"
+                [class.text-sky-200]="store.activeAreas().includes(area)"
+                [class.border-white/10]="!store.activeAreas().includes(area)"
+                [class.text-slate-400]="!store.activeAreas().includes(area)"
+                (click)="toggleArea(area)"
+              >
+                {{ area }}
+              </button>
+            }
           </div>
         </div>
 
-        <!-- Details Sidebar Overlay -->
+        <!-- Detail Drawer Overlay -->
         @if (selectedNode(); as node) {
-          <aside class="absolute top-0 right-0 bottom-0 w-[450px] bg-[#080b11]/95 border-l border-white/10 backdrop-blur z-40 flex flex-col shadow-2xl animate-in slide-in-from-right overflow-hidden">
-            <div class="border-b border-white/10 px-8 py-8 shrink-0">
-              <div class="flex justify-between items-start">
-                <div class="min-w-0">
-                  <div class="text-[8px] font-black uppercase tracking-[0.4em] text-sky-400/70">Structural_Metadata</div>
-                  <h2 class="mt-2 text-3xl font-light uppercase tracking-tighter text-white truncate">{{ node.label }}</h2>
+        <aside class="absolute top-0 right-0 bottom-0 z-40 flex w-full flex-col border-l border-white/10 bg-[#080b11]/95 backdrop-blur-md md:w-[450px] shadow-2xl transform transition-transform duration-300 ease-out translate-x-0">
+            <div class="flex h-full min-h-0 flex-col overflow-hidden">
+              <div class="border-b border-white/10 px-6 py-6 flex justify-between items-start">
+                <div>
+                    <div class="text-[9px] font-black uppercase tracking-[0.32em] text-sky-300/80">Node Details</div>
+                    <h2 class="mt-2 text-2xl font-semibold tracking-tight text-white">{{ node.label }}</h2>
                 </div>
-                <button (click)="clearSelection()" class="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-500">
-                  <mat-icon class="text-sm">close</mat-icon>
+                <button (click)="clearSelection()" class="text-slate-400 hover:text-white">
+                    <mat-icon>close</mat-icon>
                 </button>
               </div>
-              <p class="mt-4 text-[12px] leading-relaxed text-slate-300 font-light">{{ node.description }}</p>
-            </div>
-
-            <div class="flex-1 overflow-y-auto custom-scrollbar px-8 py-6 space-y-8">
-              <!-- Grid Status -->
-              <div class="grid grid-cols-2 gap-4">
-                <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                  <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-500 mb-1">Status</div>
-                  <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-200">{{ node.status }}</div>
-                </div>
-                <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                  <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-500 mb-1">Platform_Area</div>
-                  <div class="text-[10px] font-bold uppercase tracking-[0.2em]" [style.color]="areaText(node.area)">{{ node.area }}</div>
-                </div>
+              <div class="px-6 py-2">
+                 <p class="text-[12px] leading-relaxed text-slate-300">{{ node.description }}</p>
               </div>
 
-              <!-- Content Cards -->
-              <div class="space-y-4">
-                @if (node.what) {
-                  <div class="rounded-sm border border-white/5 bg-white/2 p-5">
-                    <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-500 mb-2">Technical_Purpose</div>
-                    <p class="text-[11px] leading-relaxed text-slate-200">{{ node.what }}</p>
+              <div class="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-3">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Status</div>
+                    <div class="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">{{ node.status }}</div>
                   </div>
-                }
-                @if (node.why) {
-                  <div class="rounded-sm border border-white/5 bg-white/2 p-5">
-                    <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-500 mb-2">Architectural_Rationale</div>
-                    <p class="text-[11px] leading-relaxed text-slate-300 italic">{{ node.why }}</p>
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-3">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Area</div>
+                    <div class="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-sky-300">{{ node.area }}</div>
                   </div>
-                }
-              </div>
-
-              <!-- Technical Specification -->
-              <div class="rounded-sm border border-white/10 bg-white/2 p-5 space-y-6">
-                <div class="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400">Computational_Interface</div>
-                
-                <div class="grid grid-cols-2 gap-6">
-                   <div>
-                      <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-3 text-sky-400/50">Inputs</div>
-                      <div class="flex flex-wrap gap-2">
-                        @for (input of node.technicalSpecs.inputs; track input) {
-                          <span class="text-[9px] font-mono text-sky-200 border-b border-sky-500/20 pb-0.5">{{ input }}</span>
-                        }
-                      </div>
-                   </div>
-                   <div>
-                      <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-3 text-emerald-400/50">Outputs</div>
-                      <div class="flex flex-wrap gap-2">
-                        @for (output of node.technicalSpecs.outputs; track output) {
-                          <span class="text-[9px] font-mono text-emerald-200 border-b border-emerald-500/20 pb-0.5">{{ output }}</span>
-                        }
-                      </div>
-                   </div>
                 </div>
 
-                @if (node.technicalSpecs.logic) {
-                  <div class="pt-4 border-t border-white/5">
-                    <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-2">Process_Logic</div>
-                    <p class="text-[10px] text-slate-400 leading-relaxed">{{ node.technicalSpecs.logic }}</p>
+                <div class="mt-4 space-y-4">
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-4">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">What</div>
+                    <p class="mt-2 text-[12px] leading-relaxed text-slate-200">{{ node.what }}</p>
                   </div>
-                }
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-4">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Why</div>
+                    <p class="mt-2 text-[12px] leading-relaxed text-slate-200">{{ node.why }}</p>
+                  </div>
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-4">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Who</div>
+                    <p class="mt-2 text-[12px] leading-relaxed text-slate-200">{{ node.who }}</p>
+                  </div>
+                </div>
 
-                @if (node.technicalSpecs.math) {
-                  <div class="pt-4 border-t border-white/5">
-                    <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-2">Mathematical_Grounding</div>
-                    <p class="text-[10px] font-mono text-amber-500/80 whitespace-pre-wrap">{{ node.technicalSpecs.math }}</p>
-                  </div>
-                }
-                
-                @if (node.technicalSpecs.doctrine) {
-                  <div class="pt-4 border-t border-white/5">
-                    <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-600 mb-2">Doctrinal_Mapping</div>
-                    <p class="text-[10px] text-slate-300 italic">"{{ node.technicalSpecs.doctrine }}"</p>
-                  </div>
-                }
-              </div>
-
-              <!-- Source Anchors -->
-              <div class="rounded-sm border border-white/5 bg-white/2 p-5">
-                <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-500 mb-3">Repository_Seams</div>
-                <div class="flex flex-col gap-2">
-                  <code class="text-[9px] text-sky-300 break-all p-2 bg-black/40 border border-white/5 rounded-sm">{{ node.sourcePath }}</code>
+                <div class="mt-4 rounded-sm border border-white/10 bg-white/5 p-4">
+                  <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Where</div>
+                  <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.where }}</p>
                   @if (node.route) {
-                    <a [routerLink]="node.route" class="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-sky-400 hover:text-sky-300 transition-colors">
-                       Navigate_To_Surface <mat-icon class="text-[12px]">open_in_new</mat-icon>
+                    <a
+                      [routerLink]="node.route"
+                      class="mt-3 inline-flex rounded-sm border border-sky-400/30 bg-sky-400/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.24em] text-sky-200 transition-colors hover:bg-sky-400/15"
+                    >
+                      Open Route
                     </a>
                   }
                 </div>
-              </div>
 
-              <!-- Related Neighborhood -->
-              <div class="pb-8">
-                <div class="text-[7px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4">Topology_Neighborhood</div>
-                <div class="flex flex-wrap gap-2">
-                  @for (related of relatedNodes(); track related.id) {
-                    <button (click)="selectNode(related)" class="px-3 py-1.5 rounded-sm border border-white/5 bg-white/3 text-[9px] uppercase tracking-widest text-slate-400 hover:border-sky-500/40 hover:text-sky-200 transition-all">
-                      {{ related.label }}
-                    </button>
-                  }
+                <div class="mt-4 rounded-sm border border-white/10 bg-white/5 p-4">
+                  <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Source</div>
+                  <code class="mt-2 block break-all text-[10px] text-sky-200">{{ node.sourcePath ?? 'No explicit source path' }}</code>
+                </div>
+
+                <div class="mt-4 rounded-sm border border-white/10 bg-white/5 p-4">
+                  <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Technical Spec</div>
+                  <div class="mt-3 grid gap-3">
+                    <div>
+                      <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Inputs</div>
+                      <div class="mt-2 flex flex-wrap gap-2">
+                        @for (input of node.technicalSpecs.inputs; track input) {
+                          <span class="rounded-sm border border-sky-400/20 bg-sky-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-sky-200">{{ input }}</span>
+                        }
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Outputs</div>
+                      <div class="mt-2 flex flex-wrap gap-2">
+                        @for (output of node.technicalSpecs.outputs; track output) {
+                          <span class="rounded-sm border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-200">{{ output }}</span>
+                        }
+                      </div>
+                    </div>
+                    @if (node.technicalSpecs.logic) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Logic</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.logic }}</p>
+                      </div>
+                    }
+                    @if (node.technicalSpecs.math) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Math</div>
+                        <p class="mt-2 whitespace-pre-line font-mono text-[10px] leading-relaxed text-slate-300">{{ node.technicalSpecs.math }}</p>
+                      </div>
+                    }
+                    @if (node.technicalSpecs.doctrine) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Doctrine</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.doctrine }}</p>
+                      </div>
+                    }
+                    @if (node.technicalSpecs.verif) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Verification</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.verif }}</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="mt-4 rounded-sm border border-white/10 bg-white/5 p-4 mb-8">
+                  <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Related Nodes</div>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    @for (related of relatedNodes(); track related.id) {
+                      <button
+                        type="button"
+                        class="rounded-sm border border-white/10 bg-black/20 px-2 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-slate-200 transition-colors hover:border-sky-400/30 hover:bg-sky-400/10"
+                        (click)="selectNode(related)"
+                      >
+                        {{ related.label }}
+                      </button>
+                    }
+                  </div>
                 </div>
               </div>
             </div>
-
-            <!-- Footer Action -->
-            <div class="p-8 border-t border-white/10 bg-black/20 shrink-0">
-               <button (click)="clearSelection()" class="w-full py-4 border border-sky-500/30 bg-sky-500/5 text-[10px] font-black uppercase tracking-[0.3em] text-sky-200 hover:bg-sky-500/10 transition-all active:scale-[0.98]">
-                  Reset_View_Target
-               </button>
-            </div>
-          </aside>
+        </aside>
         }
       </section>
     </div>
   `,
   styles: [`
-    :host { display: block; height: 100%; width: 100%; }
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-    .animate-in { animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; filter: blur(10px); }
-      to { transform: translateX(0); opacity: 1; filter: blur(0); }
+    :host {
+      display: block;
+      height: 100%;
+      width: 100%;
     }
   `],
 })
@@ -256,6 +243,48 @@ export class KnowledgeGraph {
     const id = this.store.selectedNodeId();
     if (!id) return null;
     return this.store.nodes().find(node => node.id === id) ?? null;
+  });
+
+  visibleNodeIds = computed(() => {
+    const query = this.store.searchQuery().trim().toLowerCase();
+    const categories = this.store.activeCategories();
+    const areas = this.store.activeAreas();
+    const nodes = this.store.nodes();
+
+    return new Set(
+      nodes
+        .filter((node) => {
+          const haystack = [
+            node.id,
+            node.label,
+            node.description,
+            node.what,
+            node.why,
+            node.where,
+            node.who,
+            node.route ?? '',
+            node.sourcePath ?? '',
+            node.technicalSpecs.inputs.join(' '),
+            node.technicalSpecs.outputs.join(' '),
+            node.technicalSpecs.logic ?? '',
+            node.technicalSpecs.math ?? '',
+            node.technicalSpecs.doctrine ?? '',
+            node.technicalSpecs.verif ?? '',
+          ].join(' ').toLowerCase();
+
+          const matchesQuery = !query || haystack.includes(query);
+          const matchesCategory = categories.length === 0 || categories.includes(node.category);
+          const matchesArea = areas.length === 0 || (node.area ? areas.includes(node.area) : true);
+
+          return matchesQuery && matchesCategory && matchesArea;
+        })
+        .map(node => node.id),
+    );
+  });
+
+  visibleNodes = computed(() => {
+    const ids = this.visibleNodeIds();
+    return this.store.nodes().filter(node => ids.has(node.id));
   });
 
   relatedNodeIds = computed(() => {
@@ -278,6 +307,59 @@ export class KnowledgeGraph {
   relatedNodes = computed(() => {
     const ids = this.relatedNodeIds();
     return this.store.nodes().filter(node => ids.has(node.id));
+  });
+
+  visibleEdges = computed<any[]>(() => {
+    const nodes = this.store.nodes();
+    const nodesById = new Map(nodes.map(node => [node.id, node] as const));
+    const visibleIds = this.visibleNodeIds();
+    const selected = this.selectedNode();
+    const hasFilters = this.hasFilters();
+    const edges: any[] = [];
+
+    for (const source of nodes) {
+      for (const targetId of source.connectedTo) {
+        const target = nodesById.get(targetId);
+        if (!target) continue;
+
+        const sourceVisible = visibleIds.has(source.id);
+        const targetVisible = visibleIds.has(target.id);
+        const relationShown = !!selected && (source.id === selected.id || target.id === selected.id);
+        const visible = relationShown || !hasFilters || (sourceVisible && targetVisible);
+
+        if (!visible) continue;
+
+        edges.push({
+          id: `${source.id}__${target.id}`,
+          source: source.id,
+          target: target.id,
+          type: 'LOGICAL' // default for structural edges
+        });
+      }
+      
+      if(source.flows) {
+          for(const flow of source.flows) {
+            const target = nodesById.get(flow.target);
+            if (!target) continue;
+    
+            const sourceVisible = visibleIds.has(source.id);
+            const targetVisible = visibleIds.has(target.id);
+            const relationShown = !!selected && (source.id === selected.id || target.id === selected.id);
+            const visible = relationShown || !hasFilters || (sourceVisible && targetVisible);
+    
+            if (!visible) continue;
+    
+            edges.push({
+              id: flow.id,
+              source: flow.source,
+              target: flow.target,
+              type: flow.type
+            });
+          }
+      }
+    }
+
+    return edges;
   });
 
   hasFilters = computed(() =>
@@ -304,17 +386,7 @@ export class KnowledgeGraph {
 
   resetFilters() {
     this.store.resetFilters();
-  }
-
-  areaText(area?: PlatformArea): string {
-    switch (area) {
-      case 'runtime': return '#7dd3fc';
-      case 'backend': return '#c4b5fd';
-      case 'docs': return '#6ee7b7';
-      case 'research': return '#fbbf24';
-      case 'scaffold': return '#cbd5e1';
-      default: return '#cbd5e1';
-    }
+    this.store.selectNode(null);
   }
 
   onSearch(value: string) {
