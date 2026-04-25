@@ -57,12 +57,15 @@ import { CapabilityLayerSwitch } from './capability-layer-switch';
 
         <!-- Fabric Health Indicator -->
         <a 
-          routerLink="/reference/c2-resilience-lab"
+          routerLink="/c2-resilience"
           class="flex items-center gap-2 px-3 h-9 bg-boreal-panel-muted border border-boreal-border rounded-sm hover:border-boreal-blue/40 transition-all group no-underline cursor-pointer"
         >
           <div class="flex flex-col items-end">
             <span class="text-[7px] font-mono text-boreal-text-muted uppercase tracking-widest leading-none mb-0.5">Fabric Health</span>
-            <span class="text-[9px] font-black uppercase tracking-tighter transition-colors group-hover:text-boreal-blue leading-none" [class]="getFabricStatusClass()">{{fabric.status()}}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-mono font-bold text-boreal-text-primary leading-none">{{(fabric.resilienceScore() * 100).toFixed(0)}}%</span>
+              <span class="text-[9px] font-black uppercase tracking-tighter transition-colors group-hover:text-boreal-blue leading-none" [class]="getFabricStatusClass()">{{fabric.status()}}</span>
+            </div>
           </div>
           <div class="w-1 h-4 rounded-full" [class]="getFabricBarClass()"></div>
         </a>
@@ -75,7 +78,7 @@ import { CapabilityLayerSwitch } from './capability-layer-switch';
             Reference
           </a>
           <a
-            routerLink="/reference/counterfactual-lab"
+            routerLink="/counterfactual-lab"
             class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all"
           >
             What-If

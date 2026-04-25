@@ -32,8 +32,7 @@ export const routes: Routes = [
   },
   {
     path: 'counterfactual-lab',
-    redirectTo: 'reference/counterfactual-lab',
-    pathMatch: 'full'
+    loadComponent: () => import('./features/counterfactual-lab').then(m => m.CounterfactualLab)
   },
   {
     path: 'governance',
@@ -53,13 +52,12 @@ export const routes: Routes = [
   },
   {
     path: 'c2-resilience-lab',
-    redirectTo: 'reference/c2-resilience-lab',
+    redirectTo: 'c2-resilience',
     pathMatch: 'full'
   },
   {
     path: 'c2-resilience',
-    redirectTo: 'reference/c2-resilience-lab',
-    pathMatch: 'full'
+    loadComponent: () => import('./features/c2-resilience-lab').then(m => m.C2ResilienceLab)
   },
   {
     path: 'knowledge-graph',
