@@ -213,7 +213,7 @@ export class CounterfactualLab {
             // In a real flow, we'd poll for completion or use a websocket notification
             setTimeout(() => this.store.setSimulating(false), 5000); // UI simulation
         }
-    } catch (e) {
+    } catch {
         this.store.setSimulating(false);
     }
   }

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { KnowledgeGraphViewerComponent } from '../shared/ui/knowledge-graph-viewer/knowledge-graph-viewer.component';
 import { KnowledgeGraphStore } from '../core/state/knowledge-graph.store';
@@ -25,7 +25,7 @@ import { KnowledgeGraphStore } from '../core/state/knowledge-graph.store';
            <h2 class="text-boreal-text-primary font-bold uppercase tracking-widest mb-4">Node Details</h2>
            <p class="text-xs text-boreal-blue font-mono mb-4">{{ store.selectedNodeId() }} selected.</p>
            
-           @if (getSelectedNode(); as node) {
+           @if (selectedNode(); as node) {
              <div class="space-y-4">
                 <div>
                    <h3 class="text-[9px] uppercase tracking-widest text-boreal-text-muted mb-1">Description</h3>
@@ -55,9 +55,9 @@ import { KnowledgeGraphStore } from '../core/state/knowledge-graph.store';
 export class KnowledgeGraph {
   store = inject(KnowledgeGraphStore);
 
-  getSelectedNode() {
+  selectedNode = computed(() => {
     const id = this.store.selectedNodeId();
     if (!id) return null;
     return this.store.nodes().find(n => n.id === id) || null;
-  }
+  });
 }

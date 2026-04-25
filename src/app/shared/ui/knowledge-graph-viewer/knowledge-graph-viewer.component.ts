@@ -7,6 +7,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { TechNode } from '../../../core/models/knowledge-graph.types';
 import { KnowledgeGraphStore } from '../../../core/state/knowledge-graph.store';
+import gsap from 'gsap';
 
 @Component({
   selector: 'app-knowledge-graph-viewer',
@@ -18,7 +19,7 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
   @ViewChild('container', { static: true }) containerRef!: ElementRef<HTMLDivElement>;
   
   nodes = input<TechNode[]>([]);
-  nodeObjects: Map<string, THREE.Group> = new Map();
+  nodeObjects = new Map<string, THREE.Group>();
   store = inject(KnowledgeGraphStore);
 
   scene!: THREE.Scene;
@@ -27,15 +28,24 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
   labelRenderer!: CSS2DRenderer;
   composer!: EffectComposer;
   controls!: OrbitControls;
-  animationFrameId: number = 0;
+  animationFrameId = 0;
   resizeObserver!: ResizeObserver;
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
 
+  // Shared Materials to prevent memory leaks
+  private matCore = new THREE.MeshStandardMaterial({ color: 0x5ca7ff, emissive: 0x5ca7ff, emissiveIntensity: 0.5 });
+  private matDec = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.8 });
+  private matLog = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 0.6 });
+  private matInt = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0xa855f7, emissiveIntensity: 0.6 });
+  private matGov = new THREE.MeshStandardMaterial({ color: 0x64748b, emissive: 0x64748b, emissiveIntensity: 0.4 });
+  private matDef = new THREE.MeshStandardMaterial({ color: 0x9ab0c8, emissive: 0x9ab0c8, emissiveIntensity: 0.2 });
+  private edgeMaterial = new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.3 });
+
+  private edgesGroup: THREE.Group = new THREE.Group();
+
   constructor() {
     effect(() => { 
-      // We must wait until the scene is initialized. 
-      // A simple check is if this.scene exists.
       if (this.scene) {
         this.buildNodes(this.nodes()); 
       }
@@ -51,7 +61,13 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     cancelAnimationFrame(this.animationFrameId);
     this.resizeObserver.disconnect();
+    
+    // Thorough memory disposal
     this.renderer.dispose();
+    this.composer.dispose();
+    if (this.labelRenderer && this.labelRenderer.domElement) {
+      this.labelRenderer.domElement.remove();
+    }
   }
 
   initScene() {
@@ -59,6 +75,7 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
     
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x050b12);
+    this.scene.add(this.edgesGroup);
 
     this.camera = new THREE.PerspectiveCamera(45, el.clientWidth / el.clientHeight, 1, 10000);
     this.camera.position.set(0, 500, 1000);
@@ -91,12 +108,16 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(ambientLight);
 
+    // Interaction Listeners
+    this.renderer.domElement.addEventListener('pointermove', this.onMouseMove.bind(this));
+    this.renderer.domElement.addEventListener('click', this.onClick.bind(this));
+
     this.buildNodes(this.nodes());
   }
 
   setupResizeObserver() {
     this.resizeObserver = new ResizeObserver(entries => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         const { width, height } = entry.contentRect;
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
@@ -115,17 +136,66 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
     this.labelRenderer.render(this.scene, this.camera);
   }
 
+  onMouseMove(event: MouseEvent) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+    
+    let hoveredId: string | null = null;
+    for (const hit of intersects) {
+      let obj: THREE.Object3D | null = hit.object;
+      while (obj && !obj.userData['id']) obj = obj.parent;
+      if (obj) {
+        hoveredId = obj.userData['id'];
+        break;
+      }
+    }
+    this.store.hoverNode(hoveredId);
+  }
+
+  onClick() {
+    const hovered = this.store.hoveredNodeId();
+    if (hovered) {
+      this.store.selectNode(hovered);
+      const targetGroup = this.nodeObjects.get(hovered);
+      if (targetGroup) {
+        gsap.to(this.controls.target, {
+          x: targetGroup.position.x,
+          y: targetGroup.position.y,
+          z: targetGroup.position.z,
+          duration: 1.5,
+          ease: "power3.inOut"
+        });
+      }
+    } else {
+      this.store.selectNode(null);
+    }
+  }
+
   buildNodes(nodes: TechNode[]) {
-    // Clear existing
+    // Clear and dispose existing nodes
     this.nodeObjects.forEach(group => {
-      // Basic cleanup (in a real app, we'd dispose geometries/materials too)
+      group.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry.dispose();
+        }
+        if (child instanceof CSS2DObject) {
+          child.element.remove();
+        }
+      });
       this.scene.remove(group);
     });
     this.nodeObjects.clear();
 
-    const matCore = new THREE.MeshStandardMaterial({ color: 0x5ca7ff, emissive: 0x5ca7ff, emissiveIntensity: 0.5 });
-    const matDec = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.8 });
-    const matDef = new THREE.MeshStandardMaterial({ color: 0x9ab0c8, emissive: 0x9ab0c8, emissiveIntensity: 0.2 });
+    // Clear and dispose edges
+    while (this.edgesGroup.children.length > 0) {
+      const child = this.edgesGroup.children[0] as THREE.Line;
+      child.geometry.dispose();
+      this.edgesGroup.remove(child);
+    }
 
     nodes.forEach(node => {
       const group = new THREE.Group();
@@ -134,13 +204,17 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
 
       let mesh: THREE.Mesh;
       if (node.category === 'CORE') {
-        mesh = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), matCore);
+        mesh = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), this.matCore);
       } else if (node.category === 'DECISION') {
-        mesh = new THREE.Mesh(new THREE.OctahedronGeometry(15), matDec);
+        mesh = new THREE.Mesh(new THREE.OctahedronGeometry(15), this.matDec);
       } else if (node.category === 'LOGISTICS') {
-        mesh = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 10, 32), matDef);
+        mesh = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 10, 32), this.matLog);
+      } else if (node.category === 'INTELLIGENCE') {
+        mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(15), this.matInt);
+      } else if (node.category === 'GOVERNANCE') {
+        mesh = new THREE.Mesh(new THREE.TorusGeometry(10, 5, 16, 100), this.matGov);
       } else {
-        mesh = new THREE.Mesh(new THREE.SphereGeometry(10), matDef);
+        mesh = new THREE.Mesh(new THREE.SphereGeometry(10), this.matDef);
       }
       group.add(mesh);
 
@@ -154,6 +228,23 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
 
       this.scene.add(group);
       this.nodeObjects.set(node.id, group);
+    });
+
+    // Build Edges
+    nodes.forEach(node => {
+      if (node.flows) {
+        node.flows.forEach(flow => {
+          const targetNode = nodes.find(n => n.id === flow.target);
+          if (targetNode) {
+            const points = [];
+            points.push(new THREE.Vector3(node.x, node.y, node.z));
+            points.push(new THREE.Vector3(targetNode.x, targetNode.y, targetNode.z));
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const line = new THREE.Line(geometry, this.edgeMaterial);
+            this.edgesGroup.add(line);
+          }
+        });
+      }
     });
   }
 }
