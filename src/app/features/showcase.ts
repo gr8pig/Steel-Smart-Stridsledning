@@ -11,65 +11,68 @@ import { KnowledgeGraphViewerComponent } from '../shared/ui/knowledge-graph-view
 const CONSOLE_SEQUENCES: string[][] = [
   // Slide 0 – Hook
   [
-    '> Hackathon brief: luftbevakning under tidspress',
-    '> Användare: luftbevakare / flygstridsledare / befäl',
-    '> Problem: nästa våg måste fortfarande kunna mötas',
-    '> Metod: policy + robusthet + ontologi',
-    '> Steel visar den mest intressanta delen av helheten',
+    '> Hackathon brief: bygg ett ledningssystem för framtidens luftförsvar',
+    '> Användare: luftbevakare / flygstridsledare / command authority',
+    '> Kärnfråga: hur möter vi hotet nu utan att tömma nästa våg?',
+    '> Steel svarar med policy, validation och ontology',
+    '> Presentationen visar den mest intressanta delen av helheten',
   ],
   // Slide 1 – Operator flow
   [
-    '> Samlar sensordata från flera källor',
-    '> Fusionerar RAP: en gemensam lägesbild',
-    '> Intent och hot klassificeras under friktion',
-    '> Väljer bas, last och effektor enligt policy',
-    '> Skyddar readiness för nästa våg',
+    '> Ingest: radar, track, intent och logistik läses in i samma theater state',
+    '> Fusion: RAP byggs och spår prioriteras efter hot, fart och riktning',
+    '> Attack: flera inkommande objekt måste mötas i rätt ordning',
+    '> Intercept: systemet räknar när vi ska slå till och när vi ska hålla igen',
+    '> Supply lines: beslutet måste tas tidigt innan korridoren bryts',
+    '> Output: operatören ser vad som händer nu och vad som måste sparas till sen',
   ],
   // Slide 2 – Policy-driven COA
   [
     '> POST /api/coa/solve  [200 OK | 108ms]',
-    '> Commander posture uppdaterad',
-    '> Reserve floor låst för wave-2-beredskap',
-    '> Pareto-front visar tre giltiga COA:er',
-    '> COA-BAL bevarar djup utan att tappa effekt',
-    '> Legacy regelverk engagerar i detekteringsordning',
+    '> Input: commander posture, reserve floor och hotbild',
+    '> COA-MAX väljer snabbast effekt nu men äter av djupet',
+    '> COA-BAL balanserar effekt nu mot beredskap för nästa våg',
+    '> COA-DST maximerar uthållighet och prioriterar reserve first',
+    '> Output: ett val som är lätt att motivera och lätt att följa upp',
   ],
   // Slide 3 – Robustness validation
   [
-    '> Monte Carlo: 10 000 körningar',
-    '> Counterfactual handoff till labbet',
-    '> Deception och saturation injiceras i modellen',
-    '> Command friction ger collapse horizon',
-    '> Beslutet låses först när robustheten håller',
+    '> Decision tree: varje nod frågar vad som händer om antagandet ändras',
+    '> ML inferens: varje gren får en sannolikhet och ett förväntat utfall',
+    '> Monte Carlo: tusentals körningar stressar risk, friktion och osäkerhet',
+    '> Counterfactual handoff: samma beslut testas med andra initialvillkor',
+    '> Collapse horizon: när grenen blir för skör får den inte låsas',
   ],
   // Slide 4 – Ontology and unification
   [
     '> Single source of truth för theater state',
     '> Policy, readiness, logistics och labs läser samma modell',
-    '> FastAPI fungerar som backend-autoritet',
-    '> Shared domain models binder ytorna samman',
-    '> Truth-first, inte feature-islands',
+    '> FastAPI är backend-autoritet för state och beslut',
+    '> Shared domain models håller betydelsen stabil mellan ytor',
+    '> Truth-first betyder att samma data används, inte kopieras',
   ],
   // Slide 5 – Ontology summary
   [
-    '> MECE-ontologi laddad: 5 domäner',
-    '> Beslutsstöd, lägesbild, logistik, HMI, infrastruktur',
-    '> Varje domän har ett eget ansvar men samma källa',
-    '> Ontologin gör systemet operativt begripligt',
+    '> Ontologi laddad: 5 domäner',
+    '> Beslutsstöd, lägesbild, logistik, operatörsytor och infrastruktur',
+    '> Varje domän beskriver samma verklighet men med eget ansvar',
+    '> Utan ontologi får samma ord olika betydelse i olika ytor',
+    '> Med ontologi kan staten delas utan att logiken går sönder',
   ],
   // Slide 6 – Unification effects
   [
     '> Governance, logistics och field console delar samma state',
     '> C2 resilience och threat inspector läser samma semantik',
     '> Demo director och scenario injection följer samma kontrakt',
+    '> Knowledge graph binder ihop policy, readiness och operations',
     '> Sovereign deployment kan ske utan att byta betydelse',
   ],
   // Slide 7 – Closing
   [
-    '> Användarmål, påverkan och oundvikliga aktiviteter är täckta',
-    '> Banbrytande struktur: policy + robusthet + ontologi',
-    '> Visa den intressantaste delen, inte hela plattformen',
-    '> Steel matchar kickoffens scope och bedömningsfrågor',
+    '> Svar på frågan: bygg ett prototypiskt ledningssystem för luftförsvar',
+    '> Visa användarmål, påverkan och de oundvikliga aktiviteterna',
+    '> Visa varför policy, validation och ontology måste hänga ihop',
+    '> Visa den mest intressanta delen av en komplett lösning',
   ],
 ];
 
@@ -91,6 +94,12 @@ interface UnificationEffect {
   id: string;
   title: string;
   body: string;
+}
+
+interface SlidePreviewCopy {
+  lead: string;
+  detail: string;
+  bullets: string[];
 }
 
 const OPERATOR_STEPS: NarrativeCard[] = [
@@ -123,27 +132,33 @@ const OPERATOR_STEPS: NarrativeCard[] = [
 const VALIDATION_STEPS: NarrativeCard[] = [
   {
     id: 'val-1',
-    tag: 'MC',
-    title: 'Monte Carlo',
-    body: 'Stresstesta COA:n mot tusentals variationer i hot, friktion och beredskap.',
+    tag: 'DT',
+    title: 'Decision tree',
+    body: 'Vi bryter ner frågan i grenar så att varje antagande blir explicit och kan följas.',
   },
   {
     id: 'val-2',
-    tag: 'CF',
-    title: 'Counterfactual handoff',
-    body: 'Skicka samma beslut till labbet och se vad som händer om antagandena vrids.',
+    tag: 'ML',
+    title: 'ML inference',
+    body: 'Varje gren får en uppskattad sannolikhet och ett förväntat utfall från modellen.',
   },
   {
     id: 'val-3',
-    tag: 'FR',
-    title: 'Command friction',
-    body: 'Mät var kedjan bryts, inte bara hur bra den ser ut i ett idealfall.',
+    tag: 'MC',
+    title: 'Monte Carlo',
+    body: 'Tusentals körningar stressar osäkerhet, saturation och command friction.',
   },
   {
     id: 'val-4',
+    tag: 'CF',
+    title: 'Counterfactual lab',
+    body: 'Samma beslut testas med andra ingångsvärden för att se vad som faktiskt ändras.',
+  },
+  {
+    id: 'val-5',
     tag: 'CH',
     title: 'Collapse horizon',
-    body: 'Se när uthålligheten faller under den nivå som krävs för nästa våg.',
+    body: 'Vi visar när en gren blir för skör för att låsas som operativ rekommendation.',
   },
 ];
 
@@ -241,6 +256,49 @@ const UNIFICATION_EFFECTS: UnificationEffect[] = [
   },
 ];
 
+const SLIDE_PREVIEW_COPY: SlidePreviewCopy[] = [
+  {
+    lead: 'Vad sliden visar',
+    detail: 'Målet, användaren och den verksamhetskritiska frågan i en enda vy.',
+    bullets: ['Vem som leder beslutet', 'Varför nästa våg avgör', 'Vad Steel försöker bevisa'],
+  },
+  {
+    lead: 'Operatörens flöde',
+    detail: 'En minutlång scenariodemo där kartan växlar mellan angrepp, interception och supply lines.',
+    bullets: ['Klicka spår och objekt', 'Spola tiden framåt', 'Se när ett beslut måste tas'],
+  },
+  {
+    lead: 'Policy-driven COA',
+    detail: 'Tre alternativ jämförs enkelt: snabbast effekt, balanserad reserve och djup uthållighet.',
+    bullets: ['Vad varje COA betyder', 'Hur valet görs', 'Varför BAL ofta är rätt'],
+  },
+  {
+    lead: 'Kontrafaktisk validering',
+    detail: 'Beslutet stressas med decision trees, ML-inferens och Monte Carlo innan det får låsas.',
+    bullets: ['Vad händer om antagandet ändras', 'Vilken gren är skör', 'När robustheten faller'],
+  },
+  {
+    lead: 'Delad theatre state',
+    detail: 'Samma state måste kunna driva policy, readiness, logistics, governance och labs utan dubbeltydigheter.',
+    bullets: ['Varför en källa behövs', 'Vad ontologi löser', 'Hur samma data återanvänds'],
+  },
+  {
+    lead: 'Ontologi i praktiken',
+    detail: 'Fem domäner beskriver samma operativa verklighet med olika ansvar, inte fem separata system.',
+    bullets: ['Beslutsstöd', 'Lägesbild', 'Uthållighet', 'Operatörsytor', 'Infrastruktur'],
+  },
+  {
+    lead: 'Knowledge graph',
+    detail: 'Grafen binder samman ytorna så att man kan följa ett system från policy till demo och tillbaka.',
+    bullets: ['Hur delarna hänger ihop', 'Vilka ytor som blir möjliga', 'Varför unification är nyckeln'],
+  },
+  {
+    lead: 'Svar på frågan',
+    detail: 'Steel visar den mest intressanta delen av en komplett lösning, precis det kickoffen bad om.',
+    bullets: ['Användarmål', 'Verksamhetskritisk påverkan', 'Oundvikliga aktiviteter + bättre stöd'],
+  },
+];
+
 // ─── Slide definitions ────────────────────────────────────────────────────────
 
 interface SlideConfig {
@@ -255,49 +313,49 @@ const SLIDES: SlideConfig[] = [
     id: 'welcome',
     eyebrow: 'Boreal Decision Twin',
     title: 'STEEL',
-    subtitle: 'Steel visar hur nästa våg kan mötas utan att bränna uthållighet för den som kommer efter',
+    subtitle: 'Ett ledningssystem för framtidens luftförsvar måste vinna nu och samtidigt bevara förmåga för nästa våg',
   },
   {
     id: 'map',
     eyebrow: 'Operatörens flöde',
-    title: 'Fyra steg som alltid måste fungera',
-    subtitle: 'Klicka på objekten och spola tiden för att se hur lägesbild, intent och beredskap skiftar',
+    title: 'Attack, interception och supply lines',
+    subtitle: 'Starta demo-flödet och klicka på objekten för att se hur lägesbild, beredskap och viktiga beslut skiftar',
   },
   {
     id: 'ai',
     eyebrow: 'Novel metodik 1',
-    title: 'Policy-driven COA',
-    subtitle: 'Commander posture, reserve floor och wave-2 readiness styr valet bättre än regelbaserad eldledning',
+    title: 'Tre COA-alternativ',
+    subtitle: 'Enkel skillnad mellan snabb effekt nu, balanserad reserve och djup uthållighet',
   },
   {
     id: 'board',
     eyebrow: 'Novel metodik 2',
     title: 'Kontrafaktisk validering',
-    subtitle: 'Vi låser inte beslut förrän de har stressats mot osäkerhet, deception, saturation och friction',
+    subtitle: 'Beslutet testas med decision trees, ML-inferens och Monte Carlo innan det får låsas',
   },
   {
     id: 'ml',
     eyebrow: 'Novel metodik 3',
-    title: 'Delad theater state',
-    subtitle: 'Samma data måste bära policy, readiness, logistik, governance och labs för att helheten ska hålla',
+    title: 'Delad theatre state',
+    subtitle: 'Samma state måste bära policy, readiness, logistik, governance och labs för att allt ska kunna hänga ihop',
   },
   {
     id: 'governance',
     eyebrow: 'Ontologi',
-    title: 'Fem domäner, en modell',
-    subtitle: 'Ontologin är den minsta operativa modell som räcker för att samordna hela systemet',
+    title: 'Fem domäner, ett språk',
+    subtitle: 'Ontologin behövs för att samma data ska betyda samma sak i alla ytor',
   },
   {
     id: 'kg',
     eyebrow: 'Unification',
     title: 'Möjliggjorda ytor',
-    subtitle: 'Kunskapsgrafen visar vad som blir möjligt när alla ytor läser samma state och semantik',
+    subtitle: 'Knowledge grafen visar hur samma state öppnar fler ytor utan att skapa nya sanningar',
   },
   {
     id: 'summary',
     eyebrow: 'Slutsats',
-    title: 'Det här matchar hackathonet',
-    subtitle: 'Vi visar den mest intressanta delen av en större lösning, precis inom scope för kickoffen',
+    title: 'Svaret på hackathonfrågan',
+    subtitle: 'Steel visar den mest intressanta delen av en komplett lösning, precis som kickoffen bad om',
   },
 ];
 
@@ -306,11 +364,18 @@ const SLIDES: SlideConfig[] = [
 interface MapTrack { id: string; x: number; y: number; tx: number; ty: number; type: 'missile' | 'ship' | 'air'; }
 interface AnimatedTrack extends MapTrack { cx: number; cy: number; }
 interface DemoCue { scenarioIndex: number; trackId: string; }
+interface TrackFact { label: string; value: string; }
+interface ScenarioStory {
+  title: string;
+  lead: string;
+  detail: string;
+  decision: string;
+}
 
 const DEMO_CUES: DemoCue[] = [
   { scenarioIndex: 0, trackId: 'N1' },
   { scenarioIndex: 1, trackId: 'M2' },
-  { scenarioIndex: 2, trackId: 'C4' },
+  { scenarioIndex: 2, trackId: 'S2' },
   { scenarioIndex: 0, trackId: 'N3' },
 ];
 
@@ -333,20 +398,40 @@ const MAP_SCENARIOS: MapTrack[][] = [
     { id: 'M4', x: 1050, y: 1120, tx: 1150, ty: 220, type: 'missile' },
     { id: 'M5', x: 1300, y: 1090, tx: 1400, ty: 180, type: 'missile' },
   ],
-  // Scenario 3 – Combined arms
+  // Scenario 3 – Supply lines and decision pressure
   [
-    { id: 'C1', x: 400, y: 1000, tx: 380, ty: 450, type: 'ship' },
-    { id: 'C2', x: 900, y: 950, tx: 850, ty: 420, type: 'ship' },
-    { id: 'C3', x: 600, y: 1080, tx: 580, ty: 200, type: 'missile' },
-    { id: 'C4', x: 1100, y: 850, tx: 1050, ty: 340, type: 'air' },
-    { id: 'C5', x: 1350, y: 900, tx: 1300, ty: 250, type: 'air' },
+    { id: 'S1', x: 280, y: 1090, tx: 470, ty: 430, type: 'ship' },
+    { id: 'S2', x: 720, y: 1040, tx: 760, ty: 390, type: 'ship' },
+    { id: 'S3', x: 1230, y: 1090, tx: 1030, ty: 420, type: 'missile' },
+    { id: 'S4', x: 1420, y: 860, tx: 1190, ty: 360, type: 'air' },
   ],
 ];
 
 const SCENARIO_LABELS = [
-  'Scenario 1: Marinträssning',
-  'Scenario 2: Missilsalva',
-  'Scenario 3: Kombinerat anfall',
+  'Scenario 1: Angrepp över sundet',
+  'Scenario 2: Interception av salvo',
+  'Scenario 3: Supply lines och beslut',
+];
+
+const SCENARIO_STORIES: ScenarioStory[] = [
+  {
+    title: 'Marinträssning',
+    lead: 'Huvudhotet rör sig mot sundet med flera ytfarkoster samtidigt.',
+    detail: 'Operatören måste skilja på den spårbild som ska stoppas nu och det som ska lämnas kvar för att skydda nästa våg.',
+    decision: 'Vilka spår prioriteras först utan att tömma reserven?',
+  },
+  {
+    title: 'Missilsalva',
+    lead: 'En snabbrörlig salvo kräver interception innan hotet splittras över flera mål.',
+    detail: 'Systemet måste välja mellan snabb avfyring, bevarad beredskap och fortsatt kontroll av inbound-tracket.',
+    decision: 'När är det rätt att intercepta, och när måste man hålla igen?',
+  },
+  {
+    title: 'Supply lines',
+    lead: 'Ett viktigt logistikflöde måste hållas öppet samtidigt som en högvärdig länk hotas.',
+    detail: 'Data om last, corridor, resume-rate och runway pressure gör att ett beslut måste tas tidigt, inte efter att linjen brutits.',
+    decision: 'Skydda supply line nu, eller bevara stridsförmåga för ett bättre läge senare?',
+  },
 ];
 
 // ─── COA data for slide 3 ─────────────────────────────────────────────────────
@@ -356,6 +441,37 @@ const COAS = [
   { id: 'COA-BAL', label: 'Balans med reserve', intercept: 81, readiness: 61, robustness: 0.79, color: '#5ca7ff', selected: true },
   { id: 'COA-DST', label: 'Djup uthållighet', intercept: 71, readiness: 91, robustness: 0.91, color: '#7ce0be' },
 ];
+
+const COA_GUIDE = [
+  {
+    id: 'guide-max',
+    title: 'COA-MAX',
+    meaning: 'Slå hårdast nu.',
+    when: 'Välj den när hotet är akut och dagens effekt väger tyngst.',
+    tradeoff: 'Du förbrukar reserve snabbare och lämnar mindre för nästa våg.',
+  },
+  {
+    id: 'guide-bal',
+    title: 'COA-BAL',
+    meaning: 'Balans mellan nu och sen.',
+    when: 'Välj den när du både måste stoppa hotet och bevara en rimlig reserv.',
+    tradeoff: 'Det är den säkraste mittpunkten när commander posture är osäker.',
+  },
+  {
+    id: 'guide-dst',
+    title: 'COA-DST',
+    meaning: 'Skydda uthålligheten först.',
+    when: 'Välj den när nästa våg är viktigare än maximal kortsiktig effekt.',
+    tradeoff: 'Du accepterar lägre omedelbar effekt för att säkra lång uthållighet.',
+  },
+  {
+    id: 'guide-flow',
+    title: 'Hur valet uppstår',
+    meaning: 'Policy väger hot, posture och reserve floor.',
+    when: 'Systemet score:ar alternativen och väljer det som bäst matchar missionen.',
+    tradeoff: 'Operatören får ett tydligt svar plus motivering, inte bara ett tal.',
+  },
+] as const;
 
 // ─── Terrain helpers ──────────────────────────────────────────────────────────
 
@@ -450,6 +566,12 @@ const BASES_NORTH = [
           <h2 class="slide-title">{{ slides[1].title }}</h2>
           <p class="slide-sub">{{ slides[1].subtitle }}</p>
 
+          <div class="scenario-story">
+            <div class="scenario-story-kicker">{{ currentScenarioStory().lead }}</div>
+            <div class="scenario-story-detail">{{ currentScenarioStory().detail }}</div>
+            <div class="scenario-story-decision">Beslutspunkt: {{ currentScenarioStory().decision }}</div>
+          </div>
+
           <div class="board-features">
             @for (step of operatorSteps; track step.id) {
               <div class="board-feat">
@@ -503,6 +625,14 @@ const BASES_NORTH = [
                 <div class="feat-sub">{{ trackSummary(selectedTrack) }}</div>
                 <div class="feat-sub">{{ scenarioLabels[mapScenario()] }}</div>
               </div>
+            </div>
+            <div class="track-facts">
+              @for (fact of trackFacts(selectedTrack); track fact.label) {
+                <div class="track-fact">
+                  <span class="track-fact-label">{{ fact.label }}</span>
+                  <span class="track-fact-value">{{ fact.value }}</span>
+                </div>
+              }
             </div>
           }
 
@@ -636,6 +766,17 @@ const BASES_NORTH = [
       <h2 class="slide-title">{{ slides[2].title }}</h2>
       <p class="slide-sub">{{ slides[2].subtitle }}</p>
 
+      <div class="coa-primer-grid">
+        @for (item of coaGuide; track item.id) {
+          <div class="coa-primer-card" [class.coa-primer-active]="selectedCoaId() === item.title">
+            <div class="coa-primer-title">{{ item.title }}</div>
+            <div class="coa-primer-meaning">{{ item.meaning }}</div>
+            <div class="coa-primer-when">{{ item.when }}</div>
+            <div class="coa-primer-tradeoff">{{ item.tradeoff }}</div>
+          </div>
+        }
+      </div>
+
       <div class="ai-grid">
         <!-- Pareto scatter (SVG mini) -->
         <div class="ai-pareto-card">
@@ -705,12 +846,13 @@ const BASES_NORTH = [
         <div class="ai-rationale">
           <div class="card-label">Policy tradeoff</div>
           <p class="rationale-text">
-            COA-BAL väljs eftersom den bevarar 61% beredskap över nästa våg utan att tappa den effekt som behövs nu. Legacy eldledning som engagerar i detekteringsordning bränner interceptor-djupet för tidigt; Steel låter commander posture och reserve floor styra valet så att wave-2-beredskap finns kvar.
+            COA-MAX ger mest effekt nu, COA-BAL ger bäst balans och COA-DST skyddar mest uthållighet. Steel räknar först commander posture och reserve floor, scorer alternativen och väljer det som bäst passar missionen.
           </p>
           <div class="rationale-meta">
             <span class="r-tag">Commander posture</span>
             <span class="r-tag">Reserve floor</span>
             <span class="r-tag">Wave 2</span>
+            <span class="r-tag">Score → choose</span>
           </div>
         </div>
       </div>
@@ -725,6 +867,16 @@ const BASES_NORTH = [
           <div class="slide-eyebrow">{{ slides[3].eyebrow }}</div>
           <h2 class="slide-title">{{ slides[3].title }}</h2>
           <p class="slide-sub">{{ slides[3].subtitle }}</p>
+
+          <div class="validation-chain">
+            <span class="validation-chip">Decision tree</span>
+            <span class="validation-arrow">→</span>
+            <span class="validation-chip">ML inference</span>
+            <span class="validation-arrow">→</span>
+            <span class="validation-chip">Monte Carlo</span>
+            <span class="validation-arrow">→</span>
+            <span class="validation-chip">Counterfactual lab</span>
+          </div>
 
           <div class="board-features">
             @for (step of validationSteps; track step.id; let i = $index) {
@@ -795,6 +947,11 @@ const BASES_NORTH = [
       <div class="slide-eyebrow">{{ slides[4].eyebrow }}</div>
       <h2 class="slide-title">{{ slides[4].title }}</h2>
       <p class="slide-sub">{{ slides[4].subtitle }}</p>
+
+      <div class="state-explain">
+        <div class="state-explain-head">Varför delad state behövs</div>
+        <div class="state-explain-body">Utan ett gemensamt theatre state får policy, readiness, logistics och governance egna versioner av sanningen. Med en gemensam modell kan alla ytor läsa samma sak och fatta beslut på samma grund.</div>
+      </div>
 
       <div class="ml-grid">
         <!-- Single source of truth -->
@@ -944,9 +1101,12 @@ const BASES_NORTH = [
           </div>
           <div class="gov-factors">
             @for (domain of ontologyDomains; track domain.id; let i = $index) {
-              <div class="gov-factor">
-                <span class="gf-label">{{ domain.title }}</span>
-                <div class="gf-bar"><div class="gf-fill" [style.width]="ontologyFocusIndex() === i ? '100%' : '72%'" [style.background]="ontologyFocusIndex() === i ? '#5ca7ff' : domain.id === 'domain-3' ? '#7ce0be' : '#9b8cff'"></div></div>
+              <div class="gov-factor" [class.gov-factor-active]="ontologyFocusIndex() === i">
+                <div class="gf-top">
+                  <span class="gf-label">{{ domain.title }}</span>
+                  <span class="gf-summary">{{ domain.summary }}</span>
+                </div>
+                <div class="gf-why">{{ domain.why }}</div>
               </div>
             }
           </div>
@@ -979,13 +1139,14 @@ const BASES_NORTH = [
           <div class="kg-section">
             <div class="kg-section-header kg-power-header">
               <span class="kg-section-dot" style="background:#34d399"></span>
-              VISAT I DEMO
+              SYSTEM I GRAFEN
             </div>
             <div class="kg-section-items">
-              <div class="kg-item">Taktisk karta · lägesbild under press</div>
-              <div class="kg-item">AI COA-lösare · policy weights och reserve floor</div>
-              <div class="kg-item">Ritbordet · kontext, inte huvudbudskap</div>
-              <div class="kg-item">HITL och governance · samma beslutskedja</div>
+              <div class="kg-item">01 Theater state · samma ingång för alla beslut</div>
+              <div class="kg-item">02 COA solver · policy weights och reserve floor</div>
+              <div class="kg-item">03 Counterfactual lab · decision tree och ML inferens</div>
+              <div class="kg-item">04 Governance & audit · samma beslutskedja</div>
+              <div class="kg-item">05 Field console · operatören ser samma semantik</div>
             </div>
           </div>
 
@@ -1028,20 +1189,20 @@ const BASES_NORTH = [
 
       <div class="summary-grid">
         <div class="sum-card">
-          <div class="sum-num blue">Användare</div>
-          <div class="sum-label">Luftbevakare, flygstridsledare och command authority</div>
+          <div class="sum-num blue">Användarmål</div>
+          <div class="sum-label">Fatta rätt beslut under tidspress och bevara nästa våg</div>
         </div>
         <div class="sum-card">
           <div class="sum-num green">Påverkan</div>
-          <div class="sum-label">Verksamhetskritiskt eftersom nästa våg avgör utfallet</div>
+          <div class="sum-label">Verksamhetskritiskt eftersom fel beslut förbrukar förmåga för tidigt</div>
         </div>
         <div class="sum-card">
-          <div class="sum-num purple">Metod</div>
-          <div class="sum-label">Policy, robusthet och ontologi i samma theater state</div>
+          <div class="sum-num purple">Oundvikliga aktiviteter</div>
+          <div class="sum-label">Samla, fusionera, välja, validera och skydda uthållighet</div>
         </div>
         <div class="sum-card">
-          <div class="sum-num amber">Scope</div>
-          <div class="sum-label">Den mest intressanta delen av en större helhet, enligt kickoffen</div>
+          <div class="sum-num amber">Lösningsstruktur</div>
+          <div class="sum-label">Policy-driven COA, kontrafaktisk validation och ontologi i ett state</div>
         </div>
       </div>
 
@@ -1055,6 +1216,10 @@ const BASES_NORTH = [
         }
       </div>
 
+      <div class="summary-answer">
+        Steel visar en prototyp av ett ledningssystem som hjälper användaren att möta hot nu, bevara förmåga för nästa våg och få ett tydligt, validerat svar på vad som ska göras härnäst.
+      </div>
+
       <div class="summary-cta">
         <a routerLink="/" class="cta-btn">Öppna systemet <span class="cta-arrow">→</span></a>
         <span class="cta-note">Kräver åtkomstnyckel</span>
@@ -1065,8 +1230,17 @@ const BASES_NORTH = [
     @if (!slideDemoStarted()[currentSlide()]) {
       <button class="demo-overlay" type="button" (click)="startCurrentSlideDemo($event)">
         <span class="demo-overlay-kicker">Klicka en gång för att starta demo</span>
+        <span class="demo-overlay-lead">{{ slidePreviewCopy[currentSlide()].lead }}</span>
         <span class="demo-overlay-title">{{ slides[currentSlide()].title }}</span>
-        <span class="demo-overlay-sub">Förloppet körs automatiskt efter start. Därefter kan du klicka på objekten och scruba tiden.</span>
+        <span class="demo-overlay-sub">{{ slidePreviewCopy[currentSlide()].detail }}</span>
+        <div class="demo-overlay-bullets">
+          @for (bullet of slidePreviewCopy[currentSlide()].bullets; track bullet) {
+            <div class="demo-overlay-bullet">
+              <span class="demo-overlay-bullet-dot"></span>
+              <span>{{ bullet }}</span>
+            </div>
+          }
+        </div>
       </button>
     }
 
@@ -1088,7 +1262,7 @@ const BASES_NORTH = [
     <div class="console-body">
       <div class="console-meta">
         <span>SLIDE DEMO MODE</span>
-        <span>Click once to start, then interact with the slide</span>
+        <span>Ingest → score → decide → expose</span>
       </div>
       @if (visibleConsoleLines().length === 0) {
         <div class="console-line console-state">
@@ -1263,6 +1437,22 @@ const BASES_NORTH = [
       border: 1px solid var(--s-border); background: rgba(3,7,12,0.8);
     }
     .map-svg { display: block; width: 100%; height: 100%; }
+    .scenario-story {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 12px 14px; border-radius: 8px;
+      border: 1px solid rgba(92,167,255,0.18);
+      background: rgba(92,167,255,0.04);
+    }
+    .scenario-story-kicker {
+      font-size: 11px; font-weight: 800; color: var(--s-text); line-height: 1.45;
+    }
+    .scenario-story-detail {
+      font-size: 12px; line-height: 1.6; color: var(--s-muted);
+    }
+    .scenario-story-decision {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.16em;
+      color: var(--s-blue); font-weight: 900;
+    }
     .scenario-tabs { display: flex; flex-direction: column; gap: 4px; }
     .s-tab {
       display: flex; align-items: center; gap: 8px; padding: 8px 12px;
@@ -1328,6 +1518,27 @@ const BASES_NORTH = [
       accent-color: var(--s-blue);
       background: transparent;
     }
+    .track-facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .track-fact {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--s-border);
+      background: rgba(255,255,255,0.02);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .track-fact-label {
+      font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
+      color: var(--s-muted);
+    }
+    .track-fact-value {
+      font-size: 12px; color: var(--s-text); line-height: 1.4;
+    }
 
     /* ── AI slide ───────────────────────────────────────────────────── */
     .slide-ai { overflow-y: auto; }
@@ -1335,6 +1546,16 @@ const BASES_NORTH = [
     .ai-pareto-card { grid-row: 1; padding: 16px; border: 1px solid var(--s-border); border-radius: 8px; background: rgba(255,255,255,0.02); }
     .coa-list { grid-row: 1; display: flex; flex-direction: column; gap: 8px; }
     .ai-rationale { grid-column: 1 / -1; padding: 16px; border: 1px solid rgba(92,167,255,0.15); border-radius: 8px; background: rgba(92,167,255,0.04); }
+    .coa-primer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+    .coa-primer-card {
+      padding: 12px; border: 1px solid var(--s-border); border-radius: 8px;
+      background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 4px;
+    }
+    .coa-primer-active { border-color: rgba(92,167,255,0.35); background: rgba(92,167,255,0.06); }
+    .coa-primer-title { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em; color: var(--s-blue); }
+    .coa-primer-meaning { font-size: 12px; font-weight: 700; color: var(--s-text); }
+    .coa-primer-when { font-size: 11px; color: var(--s-muted); line-height: 1.5; }
+    .coa-primer-tradeoff { font-size: 10px; color: var(--s-green); line-height: 1.5; }
     .card-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: var(--s-muted); margin-bottom: 10px; }
     .pareto-svg { width: 100%; height: 200px; }
     .pulse-ring { animation: pulseRing 2s ease-in-out infinite; }
@@ -1372,6 +1593,17 @@ const BASES_NORTH = [
     .board-feat { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border: 1px solid var(--s-border); border-radius: 6px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s; }
     .board-feat:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
     .board-feat-active { border-color: rgba(92,167,255,0.35); background: rgba(92,167,255,0.08); }
+    .validation-chain {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(92,167,255,0.16);
+      background: rgba(92,167,255,0.04); margin-bottom: 14px;
+    }
+    .validation-chip {
+      font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
+      color: var(--s-text); padding: 4px 8px; border: 1px solid rgba(92,167,255,0.18); border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+    }
+    .validation-arrow { color: var(--s-blue); font-size: 12px; font-weight: 900; }
     .feat-icon { font-size: 16px; color: var(--s-blue); width: 20px; flex-shrink: 0; }
     .feat-title { font-size: 12px; font-weight: 700; color: var(--s-text); }
     .feat-sub { font-size: 10px; color: var(--s-muted); margin-top: 2px; }
@@ -1395,6 +1627,18 @@ const BASES_NORTH = [
     .ml-lic.apache { background: rgba(92,167,255,0.15); color: var(--s-blue); }
     .ml-lic.mit { background: rgba(124,224,190,0.15); color: var(--s-green); }
     .ml-card-note { font-size: 11px; color: var(--s-muted); margin: 0; }
+    .state-explain {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(92,167,255,0.16);
+      background: rgba(92,167,255,0.04); margin-top: 10px;
+    }
+    .state-explain-head {
+      font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em;
+      color: var(--s-blue);
+    }
+    .state-explain-body {
+      font-size: 12px; line-height: 1.6; color: var(--s-muted);
+    }
     .ml-flag-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
     .ml-flag-item { display: flex; align-items: center; gap: 10px; }
     .ml-flag {
@@ -1439,10 +1683,12 @@ const BASES_NORTH = [
     .gov-gauge-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: var(--s-muted); }
     .gauge-svg { width: 240px; height: 180px; }
     .gov-factors { width: 100%; display: flex; flex-direction: column; gap: 8px; }
-    .gov-factor { display: flex; flex-direction: column; gap: 4px; }
-    .gf-label { font-size: 10px; color: var(--s-muted); }
-    .gf-bar { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
-    .gf-fill { height: 100%; border-radius: 2px; }
+    .gov-factor { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--s-border); background: rgba(255,255,255,0.02); }
+    .gov-factor-active { border-color: rgba(92,167,255,0.25); background: rgba(92,167,255,0.05); }
+    .gf-top { display: flex; flex-direction: column; gap: 3px; }
+    .gf-label { font-size: 10px; color: var(--s-muted); text-transform: uppercase; letter-spacing: 0.14em; }
+    .gf-summary { font-size: 11px; color: var(--s-text); }
+    .gf-why { font-size: 11px; color: var(--s-muted); line-height: 1.5; }
 
     /* ── Summary slide ───────────────────────────────────────────────── */
     .slide-summary { display: flex; flex-direction: column; gap: 24px; }
@@ -1459,6 +1705,10 @@ const BASES_NORTH = [
     .pillar-icon { font-size: 18px; color: var(--s-blue); }
     .pillar-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
     .pillar-desc { font-size: 10px; color: var(--s-muted); line-height: 1.5; }
+    .summary-answer {
+      padding: 14px 16px; border-radius: 8px; border: 1px solid rgba(92,167,255,0.16);
+      background: rgba(92,167,255,0.04); color: var(--s-text); line-height: 1.7; font-size: 12px;
+    }
     .summary-cta { display: flex; align-items: center; gap: 16px; }
     .cta-btn {
       display: inline-flex; align-items: center; gap: 8px;
@@ -1611,11 +1861,28 @@ const BASES_NORTH = [
     .demo-overlay-kicker {
       font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.24em; color: var(--s-blue);
     }
+    .demo-overlay-lead {
+      font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.18em;
+      color: var(--s-muted);
+    }
     .demo-overlay-title {
-      font-size: clamp(24px, 3vw, 42px); font-weight: 300; letter-spacing: -0.03em;
+      font-size: clamp(28px, 4vw, 60px); font-weight: 300; letter-spacing: -0.04em;
     }
     .demo-overlay-sub {
-      max-width: 42rem; font-size: 13px; line-height: 1.6; color: var(--s-muted);
+      max-width: 54rem; font-size: 15px; line-height: 1.6; color: var(--s-muted);
+    }
+    .demo-overlay-bullets {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+      width: min(100%, 720px); margin-top: 6px;
+    }
+    .demo-overlay-bullet {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(148,189,255,0.14);
+      background: rgba(255,255,255,0.03); font-size: 11px; line-height: 1.45; color: var(--s-text);
+    }
+    .demo-overlay-bullet-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--s-blue);
+      margin-top: 5px; flex-shrink: 0;
     }
   `],
 })
@@ -1626,11 +1893,14 @@ export class Showcase implements OnInit, OnDestroy {
   readonly terrain = TERRAIN;
   readonly basesNorth = BASES_NORTH;
   readonly coas = COAS;
+  readonly coaGuide = COA_GUIDE;
   readonly operatorSteps = OPERATOR_STEPS;
   readonly validationSteps = VALIDATION_STEPS;
   readonly novelMethods = NOVEL_METHODS;
   readonly ontologyDomains = ONTOLOGY_DOMAINS;
   readonly unificationEffects = UNIFICATION_EFFECTS;
+  readonly slidePreviewCopy = SLIDE_PREVIEW_COPY;
+  readonly scenarioStories = SCENARIO_STORIES;
 
   currentSlide = signal(0);
   mapScenario = signal(0);
@@ -1678,6 +1948,7 @@ export class Showcase implements OnInit, OnDestroy {
   selectedScenarioTrack = computed(() =>
     this.animatedTracks().find(track => track.id === this.selectedScenarioTrackId()) ?? null
   );
+  currentScenarioStory = computed(() => this.scenarioStories[this.mapScenario()] ?? this.scenarioStories[0]);
 
   intercepting = computed(() => this.trackPhase() === 'intercept');
 
@@ -1841,6 +2112,12 @@ export class Showcase implements OnInit, OnDestroy {
   }
 
   trackSummary(track: AnimatedTrack): string {
+    if (this.mapScenario() === 2) {
+      if (track.id === 'S1') return 'Supply line som måste hålla öppet för att support ska nå fram i tid.';
+      if (track.id === 'S2') return 'Eskort och skydd för korridoren, där reserve floor vägs mot räckvidd.';
+      if (track.id === 'S3') return 'Hotet som gör att ett beslut måste tas innan korridoren bryts.';
+      return 'Luftburen del av samma logistik- och hotbild.';
+    }
     if (track.type === 'missile') {
       return 'Inkommande salvo som kräver snabb prioritering och skyddad beredskap.';
     }
@@ -1848,6 +2125,33 @@ export class Showcase implements OnInit, OnDestroy {
       return 'Luftburen aktör som påverkar intent och prioritet i lägesbilden.';
     }
     return 'Ytobjekt som påverkar sjö- och luftläget i samma theater state.';
+  }
+
+  trackFacts(track: AnimatedTrack): TrackFact[] {
+    const secondsLeft = Math.max(6, Math.round((1 - this.trackProgress()) * 52));
+    const scenario = this.mapScenario();
+    if (scenario === 2) {
+      return [
+        { label: 'Roll', value: track.id === 'S1' ? 'Supply line' : track.id === 'S2' ? 'Escort' : track.id === 'S3' ? 'Threat' : 'Air cover' },
+        { label: 'Tid', value: `${secondsLeft}s` },
+        { label: 'Beslut', value: track.id === 'S3' ? 'Intercept now' : 'Protect corridor' },
+        { label: 'Konsekvens', value: track.id === 'S1' ? 'Support reaches base' : track.id === 'S3' ? 'Corridor breaks' : 'Reserve is consumed' },
+      ];
+    }
+    if (scenario === 1) {
+      return [
+        { label: 'Roll', value: track.type === 'missile' ? 'Inbound threat' : 'Support track' },
+        { label: 'Tid', value: `${secondsLeft}s` },
+        { label: 'Beslut', value: this.intercepting() ? 'Intercept' : 'Track and wait' },
+        { label: 'Risk', value: track.type === 'missile' ? 'High' : 'Medium' },
+      ];
+    }
+    return [
+      { label: 'Roll', value: track.type === 'ship' ? 'Surface track' : 'Air track' },
+      { label: 'Tid', value: `${secondsLeft}s` },
+      { label: 'Beslut', value: this.intercepting() ? 'Commit interceptors' : 'Hold reserve' },
+      { label: 'Risk', value: track.type === 'air' ? 'Fast-changing' : 'Persistent' },
+    ];
   }
 
   goTo(index: number): void {
