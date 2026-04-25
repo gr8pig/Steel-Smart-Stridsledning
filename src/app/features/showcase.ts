@@ -374,8 +374,8 @@ const SLIDE_PREVIEW_COPY: SlidePreviewCopy[] = [
   },
   {
     lead: 'Operatörens flöde',
-    detail: 'En minutlång scenariodemo där kartan växlar mellan angrepp, interception och supply lines.',
-    bullets: ['Klicka spår och objekt', 'Spola tiden framåt', 'Se när ett beslut måste tas'],
+    detail: 'En minutlång scenariodemo där kartan växlar mellan angrepp, interception och supply lines, och recommendation-fliken ändrar vilket förlopp som spelas.',
+    bullets: ['Klicka spår och objekt', 'Växla rekommendationer', 'Se när ett beslut måste tas'],
   },
   {
     lead: 'Policy-driven COA',
@@ -399,13 +399,13 @@ const SLIDE_PREVIEW_COPY: SlidePreviewCopy[] = [
   },
   {
     lead: 'Knowledge graph',
-    detail: 'Grafen binder samman ytorna så att man kan följa ett system från policy till demo och tillbaka.',
-    bullets: ['Hur delarna hänger ihop', 'Vilka ytor som blir möjliga', 'Varför unification är nyckeln'],
+    detail: 'Grafen binder samman ytorna så att man kan följa ett system från policy till demo och tillbaka, nod för nod.',
+    bullets: ['Hur nätverket spelas igenom', 'Vilka ytor som blir möjliga', 'Varför unification är nyckeln'],
   },
   {
     lead: 'Svar på frågan',
-    detail: 'Steel visar den mest intressanta delen av en komplett lösning, precis det kickoffen bad om.',
-    bullets: ['Användarmål', 'Verksamhetskritisk påverkan', 'Oundvikliga aktiviteter + bättre stöd'],
+    detail: 'Hackathonet bad inte om ett helt system, men ontologin visar varför ett smart C2-system går att bygga: causal intent, konkreta förslag och lägre kognitiv belastning.',
+    bullets: ['Varför inte hela systemet', 'Vad ontologin möjliggör', 'Hur C2-belastningen sänks'],
   },
 ];
 
@@ -465,7 +465,7 @@ const SLIDES: SlideConfig[] = [
     id: 'summary',
     eyebrow: 'Slutsats',
     title: 'Svaret på hackathonfrågan',
-    subtitle: 'Steel visar den mest intressanta delen av en komplett lösning, precis som kickoffen bad om',
+    subtitle: 'Hackathonet bad inte om ett helt system, utan om den del som gör smart stridsledning möjlig: ontologin som ger causal intent och tydliga förslag',
   },
 ];
 
@@ -480,6 +480,22 @@ interface ScenarioStory {
   lead: string;
   detail: string;
   decision: string;
+}
+interface ScenarioRecommendation {
+  id: string;
+  title: string;
+  summary: string;
+  scenarioIndex: number;
+  trackId: string;
+  decision: string;
+  impact: string;
+}
+interface KnowledgePathNode {
+  id: string;
+  title: string;
+  summary: string;
+  detail: string;
+  unlocks: string;
 }
 
 const DEMO_CUES: DemoCue[] = [
@@ -541,6 +557,74 @@ const SCENARIO_STORIES: ScenarioStory[] = [
     lead: 'Ett viktigt logistikflöde måste hållas öppet samtidigt som en högvärdig länk hotas.',
     detail: 'Data om last, corridor, resume-rate och runway pressure gör att ett beslut måste tas tidigt, inte efter att linjen brutits.',
     decision: 'Skydda supply line nu, eller bevara stridsförmåga för ett bättre läge senare?',
+  },
+];
+
+const SCENARIO_RECOMMENDATIONS: ScenarioRecommendation[] = [
+  {
+    id: 'rec-attack',
+    title: 'Interceptera ledarspåret',
+    summary: 'Snabb interception när huvudhotet bär förmågan i första vågen.',
+    scenarioIndex: 0,
+    trackId: 'N1',
+    decision: 'Commit the interceptors',
+    impact: 'Kartan visar hur ett tidigt val skyddar reserven för nästa våg.',
+  },
+  {
+    id: 'rec-salvo',
+    title: 'Stoppa salvo nu',
+    summary: 'Prioritera interceptor-fönstret innan salvo splittras över flera mål.',
+    scenarioIndex: 1,
+    trackId: 'M2',
+    decision: 'Fire before the window closes',
+    impact: 'Simuleringen växlar till intercept-fas och visar kostnaden för att vänta.',
+  },
+  {
+    id: 'rec-supply',
+    title: 'Skydda korridoren',
+    summary: 'Bevara supply lines när corridor pressure närmar sig tröskeln.',
+    scenarioIndex: 2,
+    trackId: 'S2',
+    decision: 'Protect the corridor',
+    impact: 'Beslutspunkten flyttar framåt när logistikdata ingår i beräkningen.',
+  },
+];
+
+const KG_PATH_NODES: KnowledgePathNode[] = [
+  {
+    id: 'kg-state',
+    title: 'Theatre state',
+    summary: 'Samma ingång för alla beslut.',
+    detail: 'All data samlas i en gemensam state så att policy, readiness, logistics och governance ser samma läge.',
+    unlocks: 'Gör att varje yta läser samma sanning.',
+  },
+  {
+    id: 'kg-coa',
+    title: 'COA solver',
+    summary: 'Policy weights och reserve floor.',
+    detail: 'Beslutet score:as mot effekt nu, uthållighet och commander posture innan ett COA får bli rekommendation.',
+    unlocks: 'Gör att samma state kan bli ett tydligt val.',
+  },
+  {
+    id: 'kg-lab',
+    title: 'Counterfactual lab',
+    summary: 'Decision trees och ML inferens.',
+    detail: 'Inference stressas mot alternativa träd, osäkerhet och friktion så att beslutet går att lita på före commit.',
+    unlocks: 'Gör att samma modell kan validera sig själv.',
+  },
+  {
+    id: 'kg-gov',
+    title: 'Governance & audit',
+    summary: 'En kedja, ett svar.',
+    detail: 'Audit-logg, policy trace och auktoritet följer exakt samma beslutskedja som operatören ser på skärmen.',
+    unlocks: 'Gör att samma beslut kan granskas i efterhand.',
+  },
+  {
+    id: 'kg-field',
+    title: 'Field console',
+    summary: 'Operatören ser samma semantik.',
+    detail: 'Frontend får samma domänmodell som backend, så att ett kommando i grafen blir begripligt i fältet.',
+    unlocks: 'Gör att samma modell kan användas i flera ytor.',
   },
 ];
 
@@ -734,6 +818,29 @@ const BASES_NORTH = [
                 <span class="s-tab-label">{{ s }}</span>
               </button>
             }
+          </div>
+
+          <div class="recommendation-panel">
+            <div class="recommendation-panel-head">
+              <span class="recommendation-panel-kicker">Rekommendationer</span>
+              <span class="recommendation-panel-meta">{{ currentRecommendation().title }}</span>
+            </div>
+            <div class="recommendation-panel-current">
+              <div class="recommendation-panel-decision">{{ currentRecommendation().decision }}</div>
+              <div class="recommendation-panel-impact">{{ currentRecommendation().impact }}</div>
+            </div>
+            <div class="recommendation-tabs">
+              @for (rec of scenarioRecommendations; track rec.id; let i = $index) {
+                <button class="recommendation-card" [class.recommendation-card-active]="recommendationIndex() === i" (click)="selectRecommendation(i)">
+                  <div class="recommendation-card-top">
+                    <span class="recommendation-card-index">0{{ i + 1 }}</span>
+                    <span class="recommendation-card-flag">{{ rec.scenarioIndex === 2 ? 'Logistics' : rec.scenarioIndex === 1 ? 'Intercept' : 'Attack' }}</span>
+                  </div>
+                  <div class="recommendation-card-title">{{ rec.title }}</div>
+                  <div class="recommendation-card-summary">{{ rec.summary }}</div>
+                </button>
+              }
+            </div>
           </div>
 
           <div class="map-legend">
@@ -1344,6 +1451,35 @@ const BASES_NORTH = [
             </div>
           </div>
 
+          <div class="kg-section">
+            <div class="kg-section-header kg-path-header">
+              <span class="kg-section-dot" style="background:#f59e0b"></span>
+              GRAFSPÅR SOM SPELAS IGENOM
+            </div>
+            <div class="kg-path-rail">
+              @for (node of kgPathNodes; track node.id; let i = $index) {
+                <button class="kg-path-node" [class.kg-path-node-active]="kgNodeIndex() === i" (click)="selectKgNode(i)">
+                  <span class="kg-path-node-index">0{{ i + 1 }}</span>
+                  <span class="kg-path-node-title">{{ node.title }}</span>
+                  <span class="kg-path-node-summary">{{ node.summary }}</span>
+                </button>
+                @if (i < kgPathNodes.length - 1) {
+                  <div class="kg-path-arrow">→</div>
+                }
+              }
+            </div>
+            @if (currentKgNode(); as kgNode) {
+              <div class="kg-info-card">
+                <div class="kg-info-top">
+                  <div class="kg-info-title">{{ kgNode.title }}</div>
+                  <div class="kg-info-step">{{ (kgNodeIndex() + 1) }} / {{ kgPathNodes.length }}</div>
+                </div>
+                <div class="kg-info-body">{{ kgNode.detail }}</div>
+                <div class="kg-info-unlocks">Varför detta spelar roll: {{ kgNode.unlocks }}</div>
+              </div>
+            }
+          </div>
+
           <p class="kg-hint">Samma state och samma ontologi gör att dessa ytor kan växa ihop utan att bli feature-islands.</p>
         </div>
 
@@ -1398,7 +1534,7 @@ const BASES_NORTH = [
       </div>
 
       <div class="summary-answer">
-        Steel visar en prototyp av ett ledningssystem som hjälper användaren att möta hot nu, bevara förmåga för nästa våg och få ett tydligt, validerat svar på vad som ska göras härnäst.
+        Hackathonet bad inte om ett helt system. Steel visar den del som måste vara rätt först: en ontologi som binder ihop data, beräknar causal intent, ger konkreta förslag och sänker den kognitiva belastningen för C2-personal.
       </div>
 
       <div class="summary-cta">
@@ -1635,6 +1771,31 @@ const BASES_NORTH = [
       color: var(--s-blue); font-weight: 900;
     }
     .scenario-tabs { display: flex; flex-direction: column; gap: 4px; }
+    .recommendation-panel {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 12px; border: 1px solid rgba(92,167,255,0.14); border-radius: 10px;
+      background: rgba(92,167,255,0.04); margin-top: 12px;
+    }
+    .recommendation-panel-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .recommendation-panel-kicker {
+      font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em;
+      color: var(--s-blue);
+    }
+    .recommendation-tabs { display: flex; flex-direction: column; gap: 6px; }
+    .recommendation-card {
+      display: flex; flex-direction: column; gap: 4px; text-align: left;
+      padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s;
+    }
+    .recommendation-card:hover { border-color: rgba(92,167,255,0.24); background: rgba(92,167,255,0.05); }
+    .recommendation-card-active { border-color: rgba(124,224,190,0.32); background: rgba(124,224,190,0.06); }
+    .recommendation-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .recommendation-card-index {
+      font-size: 9px; font-weight: 900; color: var(--s-blue); font-family: monospace; letter-spacing: 0.14em;
+    }
+    .recommendation-card-title { font-size: 11px; font-weight: 800; color: var(--s-text); }
     .s-tab {
       display: flex; align-items: center; gap: 8px; padding: 8px 12px;
       border-radius: 6px; border: 1px solid var(--s-border);
@@ -2099,6 +2260,7 @@ const BASES_NORTH = [
     .kg-demo-header { color: rgba(96,165,250,0.9); }
     .kg-power-header { color: rgba(52,211,153,0.9); }
     .kg-more-header { color: rgba(167,139,250,0.9); }
+    .kg-path-header { color: rgba(245,158,11,0.9); }
     .kg-section-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
     .kg-section-items { display: flex; flex-direction: column; gap: 2px; padding-left: 13px; }
     .kg-item {
@@ -2108,6 +2270,35 @@ const BASES_NORTH = [
     .kg-item:hover { color: var(--s-text); }
     .kg-item-active { color: var(--s-text); }
     .kg-item:last-child { border-bottom: none; }
+    .kg-path-rail {
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px;
+      align-items: stretch; margin-top: 6px;
+    }
+    .kg-path-node {
+      display: flex; flex-direction: column; gap: 4px; text-align: left;
+      padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s;
+      min-height: 108px;
+    }
+    .kg-path-node:hover { border-color: rgba(245,158,11,0.24); background: rgba(245,158,11,0.05); }
+    .kg-path-node-active { border-color: rgba(245,158,11,0.36); background: rgba(245,158,11,0.08); box-shadow: 0 0 0 1px rgba(245,158,11,0.08) inset; }
+    .kg-path-node-index {
+      font-size: 9px; font-weight: 900; font-family: monospace; color: var(--s-amber);
+      text-transform: uppercase; letter-spacing: 0.14em;
+    }
+    .kg-path-node-title { font-size: 11px; font-weight: 800; color: var(--s-text); line-height: 1.35; }
+    .kg-path-arrow {
+      display: grid; place-items: center; align-self: center;
+      font-size: 16px; color: var(--s-amber); font-weight: 900; opacity: 0.9;
+    }
+    .kg-info-card {
+      margin-top: 10px; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid rgba(245,158,11,0.16); background: rgba(245,158,11,0.05);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .kg-info-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .kg-info-title { font-size: 12px; font-weight: 900; color: var(--s-text); text-transform: uppercase; letter-spacing: 0.12em; }
+    .kg-info-body { font-size: 11px; line-height: 1.6; color: var(--s-muted); }
     .kg-hint { font-size: 10px; font-family: monospace; color: rgba(156,176,199,0.4); margin: 0; }
     .pillar { cursor: pointer; transition: all 0.2s; }
     .pillar:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
@@ -2171,7 +2362,9 @@ export class Showcase implements OnInit, OnDestroy {
   readonly unificationEffects = UNIFICATION_EFFECTS;
   readonly slidePreviewCopy = SLIDE_PREVIEW_COPY;
   readonly scenarioStories = SCENARIO_STORIES;
+  readonly scenarioRecommendations = SCENARIO_RECOMMENDATIONS;
   readonly systemComparison = SYSTEM_COMPARISON;
+  readonly kgPathNodes = KG_PATH_NODES;
 
   currentSlide = signal(0);
   mapScenario = signal(0);
@@ -2183,6 +2376,7 @@ export class Showcase implements OnInit, OnDestroy {
   modelFocusIndex = signal(0);
   ontologyFocusIndex = signal(0);
   unificationFocusIndex = signal(0);
+  kgNodeIndex = signal(0);
   summaryFocusIndex = signal(0);
 
   private _consoleLine = signal(0);
@@ -2205,6 +2399,7 @@ export class Showcase implements OnInit, OnDestroy {
   trackPlaying = signal(true);
   trackProgress = signal(0);
   trackPhase = signal<'fly' | 'intercept'>('fly');
+  recommendationIndex = signal(0);
   private _slideDemoTimer: ReturnType<typeof setInterval> | null = null;
   private _slideDemoStep = 0;
 
@@ -2221,8 +2416,10 @@ export class Showcase implements OnInit, OnDestroy {
     this.animatedTracks().find(track => track.id === this.selectedScenarioTrackId()) ?? null
   );
   currentScenarioStory = computed(() => this.scenarioStories[this.mapScenario()] ?? this.scenarioStories[0]);
+  currentRecommendation = computed(() => this.scenarioRecommendations[this.recommendationIndex()] ?? this.scenarioRecommendations[0]);
   currentValidationTree = computed(() => this.validationTrees[this.validationTreeIndex()] ?? this.validationTrees[0]);
   activeValidationBranchIndex = computed(() => this.validationFocusIndex() % Math.max(1, this.currentValidationTree().branches.length));
+  currentKgNode = computed(() => this.kgPathNodes[this.kgNodeIndex()] ?? this.kgPathNodes[0]);
 
   intercepting = computed(() => this.trackPhase() === 'intercept');
 
@@ -2263,6 +2460,7 @@ export class Showcase implements OnInit, OnDestroy {
     if (cueIndex === -1) cueIndex = 0;
     this.mapScenario.set(DEMO_CUES[cueIndex].scenarioIndex);
     this.selectedScenarioTrackId.set(DEMO_CUES[cueIndex].trackId);
+    this.recommendationIndex.set(DEMO_CUES[cueIndex].scenarioIndex);
     this._trackTimer = setInterval(() => {
       if (!this.trackPlaying()) return;
       this._demoTick++;
@@ -2275,6 +2473,7 @@ export class Showcase implements OnInit, OnDestroy {
         cueIndex = (cueIndex + 1) % DEMO_CUES.length;
         this.mapScenario.set(DEMO_CUES[cueIndex].scenarioIndex);
         this.selectedScenarioTrackId.set(DEMO_CUES[cueIndex].trackId);
+        this.recommendationIndex.set(DEMO_CUES[cueIndex].scenarioIndex);
         this._demoTick = 0;
         this.trackProgress.set(0);
         this.trackPhase.set('fly');
@@ -2346,6 +2545,7 @@ export class Showcase implements OnInit, OnDestroy {
     if (slide === 6) {
       this._slideDemoTimer = setInterval(() => {
         this.unificationFocusIndex.set(this._slideDemoStep % this.unificationEffects.length);
+        this.kgNodeIndex.set(this._slideDemoStep % this.kgPathNodes.length);
         this._slideDemoStep++;
       }, 1200);
       return;
@@ -2363,6 +2563,22 @@ export class Showcase implements OnInit, OnDestroy {
     this.mapScenario.set(idx);
     const firstTrack = MAP_SCENARIOS[idx]?.[0];
     if (firstTrack) this.selectedScenarioTrackId.set(firstTrack.id);
+    this.recommendationIndex.set(Math.min(idx, this.scenarioRecommendations.length - 1));
+    if (this.slideDemoStarted()[1]) {
+      this._startTrackAnim();
+    }
+  }
+
+  selectRecommendation(idx: number): void {
+    const recommendation = this.scenarioRecommendations[idx];
+    if (!recommendation) return;
+    this.recommendationIndex.set(idx);
+    this.mapScenario.set(recommendation.scenarioIndex);
+    this.selectedScenarioTrackId.set(recommendation.trackId);
+    this.trackProgress.set(0);
+    this.trackPhase.set('fly');
+    this._demoTick = 0;
+    this.trackPlaying.set(true);
     if (this.slideDemoStarted()[1]) {
       this._startTrackAnim();
     }
@@ -2375,6 +2591,11 @@ export class Showcase implements OnInit, OnDestroy {
   selectValidationTree(index: number): void {
     this.validationTreeIndex.set(index);
     this.validationFocusIndex.set(0);
+  }
+
+  selectKgNode(index: number): void {
+    if (index < 0 || index >= this.kgPathNodes.length) return;
+    this.kgNodeIndex.set(index);
   }
 
   toggleTrackPlayback(): void {
