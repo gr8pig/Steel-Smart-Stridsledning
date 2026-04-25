@@ -23,7 +23,6 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "baseHref": "/",
-            "deployUrl": "https://steel-stridsledning-260424.web.app/",
             "assets": [
               {
                 "glob": "**/*",

@@ -40,14 +40,30 @@ export const KnowledgeGraphStore = signalStore(
   withComputed((store) => ({
     filteredNodes: computed(() => {
       const nodes = store.nodes();
-      const query = store.searchQuery().toLowerCase();
+      const query = store.searchQuery().trim().toLowerCase();
       const categories = store.activeCategories();
       const areas = store.activeAreas();
 
       return nodes.filter(node => {
-        const matchesQuery = !query || 
-          node.label.toLowerCase().includes(query) || 
-          node.description.toLowerCase().includes(query);
+        const haystack = [
+          node.id,
+          node.label,
+          node.description,
+          node.what ?? '',
+          node.why ?? '',
+          node.where ?? '',
+          node.who ?? '',
+          node.route ?? '',
+          node.sourcePath ?? '',
+          node.technicalSpecs.inputs.join(' '),
+          node.technicalSpecs.outputs.join(' '),
+          node.technicalSpecs.logic ?? '',
+          node.technicalSpecs.math ?? '',
+          node.technicalSpecs.doctrine ?? '',
+          node.technicalSpecs.verif ?? '',
+        ].join(' ').toLowerCase();
+
+        const matchesQuery = !query || haystack.includes(query);
         const matchesCategory = categories.length === 0 || categories.includes(node.category);
         const matchesArea = areas.length === 0 || (node.area && areas.includes(node.area));
         return matchesQuery && matchesCategory && matchesArea;

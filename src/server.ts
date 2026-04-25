@@ -19,6 +19,16 @@ app.use(express.urlencoded({ extended: false }));
 
 const angularApp = new AngularNodeAppEngine();
 
+// ── Static files ──────────────────────────────────────────────────────────────
+
+app.use(
+  express.static(browserDistFolder, {
+    maxAge: '1y',
+    index: false,
+    redirect: false,
+  }),
+);
+
 if (!process.env['APP_LOCK_PASSWORD']) {
   console.warn('[SECURITY] APP_LOCK_PASSWORD not set — using insecure dev fallback');
 }
@@ -226,7 +236,9 @@ function renderLockPage(message = ''): string {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Steel Access</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <style>
+
     :root {
       color-scheme: dark;
       --bg: #050b12;
@@ -1004,10 +1016,12 @@ app.post('/api/lab/run', (req, res) => {
   });
 });
 
-// ── Mistral Large via OpenRouter ──────────────────────────────────────────────
-
+// ── DESIGN LOCK: Mistral Large via OpenRouter ────────────────────────────────
+// DESIGN REQUIREMENT: This platform is strictly built for Mistral Large. 
+// DO NOT CHANGE this to Gemini, GPT, or other models.
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MISTRAL_MODEL  = 'mistral/mistral-large-2411';
+const MISTRAL_MODEL  = 'mistralai/mistral-large-2411';
+// ──────────────────────────────────────────────────────────────────────────────
 
 async function callMistral(system: string, user: string, maxTokens = 280): Promise<string | null> {
   const apiKey = process.env['OPENROUTER_API_KEY'];
@@ -1163,16 +1177,6 @@ app.post('/api/rationale/logistics', async (req, res) => {
     generatedAt:   new Date().toISOString(),
   });
 });
-
-// ── Static files ──────────────────────────────────────────────────────────────
-
-app.use(
-  express.static(browserDistFolder, {
-    maxAge: '1y',
-    index: false,
-    redirect: false,
-  }),
-);
 
 // ── Angular SSR catch-all ─────────────────────────────────────────────────────
 
