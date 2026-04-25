@@ -151,6 +151,20 @@ export class SteelApiService {
     return this.http.post<{ status: string; simTime: number; bases: number; threats: number }>(`${this.base}/twins/reset`, {});
   }
 
+  // ── Scenarios ──────────────────────────────────────────────────────────────
+
+  getScenarios(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/scenarios`);
+  }
+
+  saveScenario(scenario: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/scenarios`, scenario);
+  }
+
+  deleteScenario(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.base}/scenarios/${id}`);
+  }
+
 
   // ── COA solver ──────────────────────────────────────────────────────────────
 
@@ -178,6 +192,10 @@ export class SteelApiService {
 
   predictSketchIntent(sketch: SketchIntentRequest): Observable<IntentPredictionResponse> {
     return this.http.post<IntentPredictionResponse>(`${this.base}/ml/predict`, sketch);
+  }
+
+  runAdvancedSim(units: any[]): Observable<import('../state/drawing-board.store').ScenarioBundle> {
+    return this.http.post<import('../state/drawing-board.store').ScenarioBundle>(`${this.base}/ml/advanced-sim`, units);
   }
 
   predictDrawnIntent(drawnPoints: {x: number, y: number}[]): Observable<IntentPredictionResponse> {

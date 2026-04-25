@@ -101,6 +101,35 @@ const GROUPS = ['Ground', 'Naval', 'Air'];
                 }
               }
 
+              <!-- Simple Blue Reactions -->
+              @for (react of store.simpleBlueReactions(); track react.id) {
+                <line [attr.x1]="react.startX" [attr.y1]="react.startY" [attr.x2]="react.endX" [attr.y2]="react.endY" stroke="#0ea5e9" stroke-width="1" opacity="0.8" marker-end="url(#arrowhead-blue)" />
+              }
+
+              <!-- Ghost Trails (Advanced Simulation) -->
+              @if (store.simulationMode() === 'ADVANCED' && store.advancedSimulationBundle(); as bundle) {
+                @if (bundle.trajectories) {
+                  @for (entry of bundle.trajectories | keyvalue; track entry.key) {
+                    <polyline [attr.points]="formatPointCoords(entry.value)" fill="none" stroke="#0ea5e9" stroke-width="1" stroke-dasharray="2,4" opacity="0.3" />
+                  }
+                }
+
+                <!-- Conflict Nodes -->
+                @for (node of bundle.conflictNodes; track $index) {
+                  <g [attr.transform]="'translate(' + node.x + ',' + node.y + ')'" class="animate-pulse">
+                    <circle r="6" fill="#f43f5e" opacity="0.5" />
+                    <circle r="2" fill="#fff" />
+                  </g>
+                }
+              }
+
+              @if (store.lastConflictEvent(); as node) {
+                <g [attr.transform]="'translate(' + node.x + ',' + node.y + ')'" class="animate-bounce">
+                   <circle r="12" fill="none" stroke="#f43f5e" stroke-width="2" class="animate-ping" />
+                   <circle r="4" fill="#f43f5e" />
+                </g>
+              }
+
               @for (unit of store.units(); track unit.id) {
                 @if (unit.waypoints.length > 0) {
                   <polyline [attr.points]="pathPoints(unit)" fill="none" [attr.stroke]="sideColor(unit.side)" stroke-width="1.2" stroke-dasharray="6,4" [attr.marker-end]="'url(#arrowhead-' + unit.side.toLowerCase() + ')'" opacity="0.55" />
@@ -224,6 +253,42 @@ const GROUPS = ['Ground', 'Naval', 'Air'];
         </div>
       }
 
+      <!-- Scenario Vault Sidebar -->
+      @if (vaultVisible()) {
+        <div class="absolute top-24 right-6 bottom-24 w-80 z-40 bg-[#080c12]/95 backdrop-blur-3xl border border-white/10 rounded-sm flex flex-col shadow-2xl animate-in slide-in-from-right duration-500">
+           <div class="px-6 py-6 border-b border-white/10 flex justify-between items-center">
+              <div class="text-[10px] font-black uppercase tracking-[0.4em] text-sky-400">Scenario_Vault</div>
+              <button (click)="vaultVisible.set(false)" class="text-slate-500 hover:text-white transition-colors"><mat-icon class="!text-sm">close</mat-icon></button>
+           </div>
+           
+           <div class="p-6 border-b border-white/10 bg-white/2">
+              <button (click)="saveScenario()" class="w-full py-3 bg-sky-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-sm hover:brightness-110 transition-all">
+                 Save_Current_State
+              </button>
+           </div>
+
+           <div class="flex-grow overflow-y-auto custom-scrollbar p-6 space-y-4">
+              @for (s of store.scenarios(); track s.id) {
+                <div class="group p-4 border border-white/5 bg-white/2 hover:border-sky-500/50 transition-all rounded-sm">
+                   <div class="flex justify-between items-start mb-2">
+                      <div class="text-xs font-bold text-white uppercase tracking-tight">{{ s.name }}</div>
+                      <div class="text-[8px] font-mono text-slate-500">{{ s.updatedAt | date:'short' }}</div>
+                   </div>
+                   <div class="flex gap-2">
+                      <button (click)="store.loadScenario(s.id)" class="px-3 py-1.5 bg-white/5 hover:bg-sky-500/20 text-sky-400 text-[8px] font-black uppercase tracking-widest transition-all rounded-xs">Load</button>
+                      <button (click)="store.deleteScenario(s.id)" class="px-3 py-1.5 bg-white/5 hover:bg-rose-500/20 text-rose-400 text-[8px] font-black uppercase tracking-widest transition-all rounded-xs">Delete</button>
+                   </div>
+                </div>
+              } @empty {
+                <div class="h-full flex flex-col items-center justify-center opacity-20 py-20">
+                   <mat-icon class="!w-12 !h-12 !text-5xl mb-4 text-slate-500">folder_open</mat-icon>
+                   <div class="text-[10px] font-black uppercase tracking-widest text-slate-500">Vault_Empty</div>
+                </div>
+              }
+           </div>
+        </div>
+      }
+
       <!-- Bottom Toolbar (Glass) -->
       <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-6 bg-[#080c12]/80 backdrop-blur-md border border-white/10 rounded-sm px-6 py-3 shadow-2xl pointer-events-auto">
         <div class="flex items-center gap-3 border-r border-white/10 pr-6 mr-2">
@@ -231,15 +296,31 @@ const GROUPS = ['Ground', 'Naval', 'Air'];
               <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none">Active_Assets</span>
               <span class="text-sm font-black text-white leading-none">{{ store.units().length }}</span>
            </div>
-           <button (click)="runIntentInference()" class="px-4 py-2 bg-sky-500 text-white text-[10px] font-black uppercase tracking-widest rounded-sm hover:brightness-110 transition-all shadow-[0_0_15px_rgba(14,165,233,0.4)]">
-              Infer_Intent
-           </button>
+           <div class="flex gap-2 ml-4">
+              <button (click)="runIntentInference()" class="px-4 py-2 bg-sky-500/20 border border-sky-500/30 text-sky-400 text-[10px] font-black uppercase tracking-widest rounded-sm hover:bg-sky-500/40 transition-all">
+                Infer_Intent
+              </button>
+              <button (click)="store.runAdvancedSimulation()" class="px-4 py-2 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-sm hover:brightness-110 transition-all shadow-[0_0_15px_rgba(244,63,94,0.4)]">
+                Run_Advanced_Sim
+              </button>
+           </div>
+        </div>
+
+        <!-- Simulation Mode Toggle -->
+        <div class="flex items-center gap-1 border-r border-white/10 pr-6 mr-2">
+           <div class="text-[8px] font-black text-slate-500 uppercase tracking-widest mr-2">Mode:</div>
+           <button (click)="store.simulationMode.set('SIMPLE')" class="px-3 py-1 text-[9px] font-bold uppercase tracking-widest transition-all rounded-sm" [class.bg-sky-500/20]="store.simulationMode() === 'SIMPLE'" [class.text-sky-400]="store.simulationMode() === 'SIMPLE'" [class.text-slate-500]="store.simulationMode() !== 'SIMPLE'">Simple</button>
+           <button (click)="store.simulationMode.set('ADVANCED')" class="px-3 py-1 text-[9px] font-bold uppercase tracking-widest transition-all rounded-sm" [class.bg-rose-500/20]="store.simulationMode() === 'ADVANCED'" [class.text-rose-400]="store.simulationMode() === 'ADVANCED'" [class.text-slate-500]="store.simulationMode() !== 'ADVANCED'">Advanced</button>
         </div>
 
         <div class="flex items-center gap-2">
            <button (click)="zoomOut()" class="p-2 text-slate-400 hover:text-white transition-colors"><mat-icon class="!w-5 !h-5">remove</mat-icon></button>
            <button (click)="resetView()" class="p-2 text-slate-400 hover:text-white transition-colors uppercase text-[9px] font-black tracking-widest">Reset_View</button>
            <button (click)="zoomIn()" class="p-2 text-slate-400 hover:text-white transition-colors"><mat-icon class="!w-5 !h-5">add</mat-icon></button>
+           <div class="w-px h-4 bg-white/10 mx-2"></div>
+           <button (click)="vaultVisible.set(!vaultVisible())" class="px-4 py-2 text-sky-400 hover:bg-sky-500/10 transition-all uppercase text-[9px] font-black tracking-widest rounded-sm border border-sky-500/20">
+             Vault
+           </button>
         </div>
       </div>
 
@@ -278,6 +359,7 @@ export class DrawingBoard implements OnDestroy {
   posX      = signal(0);
   posY      = signal(0);
   zoomLevel = signal(1);
+  vaultVisible = signal(false);
 
   _ghostX       = signal(0);
   _ghostY       = signal(0);
@@ -298,6 +380,13 @@ export class DrawingBoard implements OnDestroy {
   }
 
   ngOnDestroy() { this._stopLoop(); }
+
+  saveScenario() {
+    const name = prompt('Enter scenario name:');
+    if (name) {
+      this.store.saveCurrentToVault(name);
+    }
+  }
 
   runIntentInference() {
     const sketch = {

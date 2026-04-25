@@ -118,6 +118,19 @@ export class DrawingBoardStore {
     }
   }
 
+  deleteScenario(id: string) {
+    this.api.deleteScenario(id).subscribe(() => {
+      this.refreshScenarios();
+    });
+  }
+
+  runAdvancedSimulation() {
+    this.api.runAdvancedSim(this.units()).subscribe(bundle => {
+      this.advancedSimulationBundle.set(bundle);
+      this.simulationMode.set('ADVANCED');
+    });
+  }
+
   selectedUnit = computed(() => {
     const id = this.selectedUnitId();
     return id ? (this.units().find(u => u.id === id) ?? null) : null;
