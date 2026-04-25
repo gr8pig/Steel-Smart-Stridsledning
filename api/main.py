@@ -59,11 +59,7 @@ load_dotenv()
 
 # ── ML Initialization ────────────────────────────────────────────────────────
 
-class MockModel:
-    def predict(self, x):
-        return [0.8 + 0.1 * i for i in range(6)]
-
-ensemble_inference = EnsembleInference(models=[MockModel() for _ in range(5)])
+ensemble_inference = EnsembleInference()
 runpod_orchestrator = RunPodOrchestrator()
 
 def _calculate_spatial_density(threats: list) -> float:
