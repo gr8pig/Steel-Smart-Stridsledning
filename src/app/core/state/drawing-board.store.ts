@@ -1,4 +1,6 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { SteelApiService } from '../services/steel-api.service';
+import { ENGAGEMENT_MAP_FEATURES } from '../../shared/domain/engagement-map.data';
 
 export type DrawingUnitType =
   | 'INFANTRY' | 'ARMOR' | 'ARTILLERY' | 'SPECIAL_FORCES'
@@ -35,6 +37,22 @@ export interface IntentPrediction {
   trajectories: { x: number; y: number }[][];
 }
 
+export interface ConflictNode {
+  unitId: string;
+  targetId: string;
+  x: number;
+  y: number;
+  t: number;
+  outcome: 'NEUTRALIZED' | 'LEAKED';
+  pk: number;
+}
+
+export interface ScenarioBundle {
+  blueReactions: any[];
+  conflictNodes: ConflictNode[];
+  trajectories?: Record<string, { x: number, y: number, t: number }[]>;
+}
+
 const SPEEDS: Record<DrawingUnitType, number> = {
   INFANTRY:       30,
   ARMOR:          60,
@@ -53,7 +71,10 @@ let _idCounter = 1;
 
 @Injectable({ providedIn: 'root' })
 export class DrawingBoardStore {
+  private api = inject(SteelApiService);
+
   units          = signal<DrawingUnit[]>([]);
+  scenarios      = signal<any[]>([]);
   selectedUnitId = signal<string | null>(null);
   mode           = signal<DrawingMode>('SELECT');
   activeUnitType = signal<DrawingUnitType>('INFANTRY');
@@ -64,6 +85,38 @@ export class DrawingBoardStore {
   isPlaying      = signal<boolean>(false);
   playbackSpeed  = signal<number>(1);
   intentPredictions = signal<IntentPrediction[]>([]);
+  
+  simulationMode = signal<'SIMPLE' | 'ADVANCED'>('SIMPLE');
+  advancedSimulationBundle = signal<ScenarioBundle | null>(null);
+  lastConflictEvent = signal<ConflictNode | null>(null);
+
+  constructor() {
+    this.refreshScenarios();
+  }
+
+  refreshScenarios() {
+    this.api.getScenarios().subscribe(ss => this.scenarios.set(ss));
+  }
+
+  saveCurrentToVault(name: string) {
+    const scenario = {
+      name,
+      units: this.units(),
+    };
+    this.api.saveScenario(scenario).subscribe(() => {
+      this.refreshScenarios();
+    });
+  }
+
+  loadScenario(id: string) {
+    const scenario = this.scenarios().find(s => s.id === id);
+    if (scenario) {
+      this.units.set(scenario.units || []);
+      this.selectedUnitId.set(null);
+      this.playbackTime.set(0);
+      this.isPlaying.set(false);
+    }
+  }
 
   selectedUnit = computed(() => {
     const id = this.selectedUnitId();
@@ -75,9 +128,64 @@ export class DrawingBoardStore {
     return Math.max(60, ...durations);
   });
 
-  unitPositions = computed(() =>
-    this.units().map(u => this._positionAt(u, this.playbackTime()))
-  );
+  unitPositions = computed(() => {
+    const t = this.playbackTime();
+    const mode = this.mode();
+    const simMode = this.simulationMode();
+    const bundle = this.advancedSimulationBundle();
+
+    if (mode === 'PLAYBACK' && simMode === 'ADVANCED' && bundle?.trajectories) {
+      return this.units().map(u => {
+        const traj = bundle.trajectories![u.id];
+        if (traj && traj.length > 0) {
+          return this._interpolateTraj(u.id, traj, t);
+        }
+        return this._positionAt(u, t);
+      });
+    }
+
+    return this.units().map(u => this._positionAt(u, t));
+  });
+
+  simpleBlueReactions = computed(() => {
+    const positions = this.unitPositions();
+    const redUnits = positions.filter(p => {
+      const u = this.units().find(unit => unit.id === p.unitId);
+      return u?.side === 'RED';
+    });
+    
+    const blueBases = ENGAGEMENT_MAP_FEATURES.filter(f => f.side === 'north' && f.subtype === 'air_base');
+    
+    const interceptors: any[] = [];
+    
+    redUnits.forEach(red => {
+      let nearestBase = null;
+      let minDist = Infinity;
+      
+      blueBases.forEach(base => {
+        const bx = base.x ?? 0;
+        const by = base.y ?? 0;
+        const d = Math.hypot(red.x - bx, red.y - by);
+        if (d < minDist) {
+          minDist = d;
+          nearestBase = base;
+        }
+      });
+      
+      if (minDist < 150 && nearestBase) {
+        interceptors.push({
+          id: `INT-${red.unitId}`,
+          targetId: red.unitId,
+          startX: (nearestBase as any).x,
+          startY: (nearestBase as any).y,
+          endX: red.x,
+          endY: red.y
+        });
+      }
+    });
+    
+    return interceptors;
+  });
 
   addUnit(x: number, y: number): string {
     const type = this.activeUnitType();
@@ -128,8 +236,18 @@ export class DrawingBoardStore {
 
   advanceTime(deltaSec: number) {
     const total = this.totalDuration();
+    const prevT = this.playbackTime();
     this.playbackTime.update(t => {
       const next = t + deltaSec * this.playbackSpeed();
+      
+      const bundle = this.advancedSimulationBundle();
+      if (this.simulationMode() === 'ADVANCED' && bundle?.conflictNodes) {
+        const crossNode = bundle.conflictNodes.find(n => n.t > prevT && n.t <= next);
+        if (crossNode) {
+          this.lastConflictEvent.set(crossNode);
+        }
+      }
+
       if (next >= total) { this.isPlaying.set(false); return total; }
       return next;
     });
@@ -140,6 +258,33 @@ export class DrawingBoardStore {
     let d = 0, px = u.startX, py = u.startY;
     for (const w of u.waypoints) { d += Math.hypot(w.x - px, w.y - py); px = w.x; py = w.y; }
     return d / u.speed;
+  }
+
+  private _interpolateTraj(unitId: string, traj: { x: number, y: number, t: number }[], t: number): UnitPosition {
+    if (t <= traj[0].t) return { unitId, x: traj[0].x, y: traj[0].y, heading: 0 };
+    if (t >= traj[traj.length - 1].t) {
+      const last = traj[traj.length - 1];
+      const prev = traj[traj.length - 2] || last;
+      return {
+        unitId, x: last.x, y: last.y,
+        heading: Math.atan2(last.y - prev.y, last.x - prev.x) * 180 / Math.PI
+      };
+    }
+    
+    for (let i = 0; i < traj.length - 1; i++) {
+      const from = traj[i];
+      const to = traj[i+1];
+      if (t >= from.t && t <= to.t) {
+        const s = (t - from.t) / Math.max(0.001, to.t - from.t);
+        return {
+          unitId,
+          x: from.x + (to.x - from.x) * s,
+          y: from.y + (to.y - from.y) * s,
+          heading: Math.atan2(to.y - from.y, to.x - from.x) * 180 / Math.PI
+        };
+      }
+    }
+    return { unitId, x: traj[0].x, y: traj[0].y, heading: 0 };
   }
 
   private _positionAt(u: DrawingUnit, t: number): UnitPosition {
