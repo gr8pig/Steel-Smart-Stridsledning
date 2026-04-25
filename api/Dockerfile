@@ -4,28 +4,25 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-WORKDIR /app
-
-# Install system dependencies if needed (e.g., for numpy/scipy/lightgbm)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
+# Work from root so 'api' folder acts as a package
+WORKDIR /
 
 # Create a non-root user
-RUN addgroup --system appgroup && adduser --system --group appuser
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy all files from context into /api folder
+COPY . /api/
 
-# Ensure the root path is accessible and set ownership
-ENV PYTHONPATH=/app
-RUN chown -R appuser:appgroup /app
+# Ensure ownership
+RUN chown -R appuser:appgroup /api
 
 USER appuser
 
-EXPOSE 8000
+# Cloud Run sets PORT environment variable (default 8080)
+EXPOSE 8080
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn pointing to the api package's main module
+CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
