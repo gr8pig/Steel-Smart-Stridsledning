@@ -13,6 +13,7 @@
 import { Observable, Subject, interval, of } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { TheaterDelta } from './theater-ws.service';
+import { BaseTwin, ThreatTwin } from '../../shared/domain/models';
 
 export type FeedMode = 'LIVE' | 'MOCK' | 'REPLAY';
 
@@ -27,18 +28,18 @@ export interface SensorAdapter {
 
 // ── Mock adapter ──────────────────────────────────────────────────────────────
 
-const MOCK_BASES = [
-  { id: 'BASE-1', name: 'Northern Vanguard',  readiness: 0.82 },
-  { id: 'BASE-2', name: 'Boreal Watch',        readiness: 0.91 },
-  { id: 'BASE-3', name: 'Eastern Sentinel',    readiness: 0.64 },
-  { id: 'BASE-4', name: 'Southern Anchor',     readiness: 0.77 },
-  { id: 'BASE-5', name: 'Deep Reserve Alpha',  readiness: 0.95 },
+const MOCK_BASES: BaseTwin[] = [
+  { id: 'BASE-1', name: 'Northern Vanguard',  role: 'Interceptor Hub', readiness: 0.82, sortieCapacity: 24, runwayStatus: 'OPERATIONAL', airframesAvailable: 12, crewsAvailable: 18, crewFatigue: 0.1, fuelStock: 0.85, missileInventory: { interceptorShort: 40, interceptorMid: 20, interceptorLong: 10 }, recoveryTime: '2h', threatExposure: 0.2 },
+  { id: 'BASE-2', name: 'Boreal Watch',        role: 'Forward Alert',   readiness: 0.91, sortieCapacity: 12, runwayStatus: 'OPERATIONAL', airframesAvailable: 8,  crewsAvailable: 12, crewFatigue: 0.05, fuelStock: 0.90, missileInventory: { interceptorShort: 20, interceptorMid: 10, interceptorLong: 5 },  recoveryTime: '1h', threatExposure: 0.4 },
+  { id: 'BASE-3', name: 'Eastern Sentinel',    role: 'Radar Picket',    readiness: 0.64, sortieCapacity: 6,  runwayStatus: 'DEGRADED',    airframesAvailable: 4,  crewsAvailable: 6,  crewFatigue: 0.3, fuelStock: 0.60, missileInventory: { interceptorShort: 10, interceptorMid: 5,  interceptorLong: 2 },  recoveryTime: '4h', threatExposure: 0.1 },
+  { id: 'BASE-4', name: 'Southern Anchor',     role: 'Logistic Base',   readiness: 0.77, sortieCapacity: 18, runwayStatus: 'OPERATIONAL', airframesAvailable: 10, crewsAvailable: 14, crewFatigue: 0.15, fuelStock: 0.75, missileInventory: { interceptorShort: 30, interceptorMid: 15, interceptorLong: 8 },  recoveryTime: '2h', threatExposure: 0.3 },
+  { id: 'BASE-5', name: 'Deep Reserve Alpha',  role: 'Strategic Res',   readiness: 0.95, sortieCapacity: 36, runwayStatus: 'OPERATIONAL', airframesAvailable: 24, crewsAvailable: 32, crewFatigue: 0.0,  fuelStock: 0.98, missileInventory: { interceptorShort: 80, interceptorMid: 40, interceptorLong: 20 }, recoveryTime: '6h', threatExposure: 0.0 },
 ];
 
-const MOCK_THREATS_SEED = [
-  { id: 'TRK-001', class: 'MISSILE',   intent: 'STRIKE',      confidence: 0.89, timeToTarget: 240, targetId: 'BASE-2', geometry: { x: 920, y: 120, heading: 185, velocity: 480 }, status: 'TRACKING'    as const },
-  { id: 'TRK-002', class: 'DRONE',     intent: 'FEINT',       confidence: 0.54, timeToTarget: 380, targetId: 'BASE-1', geometry: { x: 750, y: 80,  heading: 200, velocity: 95  }, status: 'IDENTIFIED'  as const },
-  { id: 'TRK-003', class: 'AIRCRAFT',  intent: 'SATURATION',  confidence: 0.76, timeToTarget: 175, targetId: 'BASE-4', geometry: { x: 1050, y: 150, heading: 195, velocity: 320 }, status: 'TRACKING'   as const },
+const MOCK_THREATS_SEED: ThreatTwin[] = [
+  { id: 'TRK-001', class: 'MISSILE',   intent: 'STRIKE',      confidence: 0.89, timeToTarget: 240, targetId: 'BASE-2', geometry: { x: 920, y: 120, heading: 185, velocity: 480 }, status: 'TRACKING' },
+  { id: 'TRK-002', class: 'DRONE',     intent: 'FEINT',       confidence: 0.54, timeToTarget: 380, targetId: 'BASE-1', geometry: { x: 750, y: 80,  heading: 200, velocity: 95  }, status: 'IDENTIFIED' },
+  { id: 'TRK-003', class: 'AIRCRAFT',  intent: 'SATURATION',  confidence: 0.76, timeToTarget: 175, targetId: 'BASE-4', geometry: { x: 1050, y: 150, heading: 195, velocity: 320 }, status: 'TRACKING' },
 ];
 
 export class MockSensorAdapter implements SensorAdapter {
@@ -53,7 +54,7 @@ export class MockSensorAdapter implements SensorAdapter {
       map(() => {
         this._simTime += 2;
         this._threats = this._threats.map(t => {
-          if (t.status === 'NEUTRALIZED' as string) return t;
+          if (t.status === 'NEUTRALIZED') return t;
           const tti = Math.max(0, t.timeToTarget - 2);
           const rad = t.geometry.heading * (Math.PI / 180);
           return {
@@ -64,7 +65,7 @@ export class MockSensorAdapter implements SensorAdapter {
               x: +(t.geometry.x + Math.cos(rad) * (t.geometry.velocity / 50)).toFixed(1),
               y: +(t.geometry.y + Math.sin(rad) * (t.geometry.velocity / 50)).toFixed(1),
             },
-          };
+          } as ThreatTwin;
         });
         return {
           type: 'DELTA' as const,
@@ -140,7 +141,7 @@ export function buildReplayScenario(frameCount = 30): ReplayScenario {
           x: +(t.geometry.x + Math.cos(rad) * (t.geometry.velocity / 50)).toFixed(1),
           y: +(t.geometry.y + Math.sin(rad) * (t.geometry.velocity / 50)).toFixed(1),
         },
-      };
+      } as ThreatTwin;
     });
     frames.push({ type: 'DELTA', simTime, threats: [...threats], bases: MOCK_BASES, phase: 'replay' });
   }

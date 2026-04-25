@@ -1,6 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal, DestroyRef, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { HttpClient } from '@angular/common/http';
+import { timer } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReadinessStore } from '../core/state/readiness.store';
 import { PolicyStore } from '../core/state/policy.store';
 import { OrchestrationStore } from '../core/state/orchestration.store';
@@ -208,6 +211,38 @@ import { SteelApiService, ReadinessProjection } from '../core/services/steel-api
                              </div>
                         </div>
                     </div>
+
+                    @if (base.forecast) {
+                      <div class='grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-boreal-border/40'>
+                        <div class='flex flex-col items-center gap-1'>
+                          <span class='text-[7px] font-black uppercase tracking-widest text-boreal-text-muted'>+6H</span>
+                          <span class='text-[11px] font-mono font-bold'
+                                [class.text-boreal-green]='base.forecast.h6 >= 0.6'
+                                [class.text-boreal-amber]='base.forecast.h6 < 0.6 && base.forecast.h6 >= 0.4'
+                                [class.text-boreal-red]='base.forecast.h6 < 0.4'>
+                            {{ base.forecast.h6 * 100 | number:'1.0-0' }}%
+                          </span>
+                        </div>
+                        <div class='flex flex-col items-center gap-1 border-x border-boreal-border/40'>
+                          <span class='text-[7px] font-black uppercase tracking-widest text-boreal-text-muted'>+12H</span>
+                          <span class='text-[11px] font-mono font-bold'
+                                [class.text-boreal-green]='base.forecast.h12 >= 0.6'
+                                [class.text-boreal-amber]='base.forecast.h12 < 0.6 && base.forecast.h12 >= 0.4'
+                                [class.text-boreal-red]='base.forecast.h12 < 0.4'>
+                            {{ base.forecast.h12 * 100 | number:'1.0-0' }}%
+                          </span>
+                        </div>
+                        <div class='flex flex-col items-center gap-1'>
+                          <span class='text-[7px] font-black uppercase tracking-widest text-boreal-text-muted'>+24H</span>
+                          <span class='text-[11px] font-mono font-bold'
+                                [class.text-boreal-green]='base.forecast.h24 >= 0.6'
+                                [class.text-boreal-amber]='base.forecast.h24 < 0.6 && base.forecast.h24 >= 0.4'
+                                [class.text-boreal-red]='base.forecast.h24 < 0.4'>
+                            {{ base.forecast.h24 * 100 | number:'1.0-0' }}%
+                          </span>
+                        </div>
+                      </div>
+                    }
                 </div>
 
                 <!-- Footer Actions -->
@@ -322,11 +357,11 @@ import { SteelApiService, ReadinessProjection } from '../core/services/steel-api
                             <div class="p-4 bg-boreal-blue/5 border border-boreal-blue/20 rounded-sm space-y-2">
                                 <div class="flex justify-between items-baseline">
                                     <span class="text-[9px] text-boreal-text-muted uppercase font-bold">Theater Floor</span>
-                                    <span class="text-sm font-mono font-black text-boreal-blue">70.0%</span>
+                                    <span class="text-sm font-mono font-black text-boreal-blue">{{ vm().theaterFloor * 100 | number:'1.1-1' }}%</span>
                                 </div>
                                 <div class="flex justify-between items-baseline">
                                     <span class="text-[9px] text-boreal-text-muted uppercase font-bold">Forecast Surplus</span>
-                                    <span class="text-[11px] font-mono font-bold text-boreal-text-primary">+{{ (vm().projectedFleetReadiness * 100 - 70).toFixed(1) }}%</span>
+                                    <span class="text-[11px] font-mono font-bold text-boreal-text-primary">+{{ (vm().projectedFleetReadiness * 100 - vm().theaterFloor * 100).toFixed(1) }}%</span>
                                 </div>
                             </div>
                         </div>
@@ -363,13 +398,25 @@ export class ReadinessConsole {
     orchestration = inject(OrchestrationStore);
     orchestrator = inject(CapabilityOrchestrator);
     private api = inject(SteelApiService);
+    private destroyRef = inject(DestroyRef);
+    private http = inject(HttpClient);
 
     private _projectionMap = signal<Record<string, ReadinessProjection>>({});
 
     constructor() {
+      timer(0, 30_000).pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.loadProjection());
+
+      effect(() => {
+        this.policy.selectedCOA();
+        untracked(() => this.loadProjection());
+      });
+    }
+
+    private loadProjection() {
       this.api.getReadinessProjection().subscribe({
         next: rows => this._projectionMap.set(Object.fromEntries(rows.map(r => [r.baseId, r]))),
-        error: () => {},
+        error: (e) => console.error('[ReadinessConsole] projection', e),
       });
     }
 
@@ -413,12 +460,22 @@ export class ReadinessConsole {
                 readinessFloor: floor,
                 lifeExpectancy: Math.min(12, wavesToFloor),
                 lifeExpectancyHours,
+                forecast: backendProj ? {
+                  h6:  backendProj.readiness6h,
+                  h12: backendProj.readiness12h,
+                  h24: backendProj.readiness24h,
+                } : null
             };
         });
 
         const currentOverall = this.readiness.overallReadiness();
         const projectedOverall = enhancedBases.reduce((acc, b) => acc + b.projectedReadiness, 0) / enhancedBases.length;
         const totalBurn = currentOverall - projectedOverall;
+
+        const floorValues = Object.values(floors);
+        const theaterFloor = floorValues.length > 0
+          ? floorValues.reduce((a, b) => a + b, 0) / floorValues.length
+          : 0.7;
 
         return {
             bases: enhancedBases,
@@ -430,43 +487,27 @@ export class ReadinessConsole {
             nextWaveViabilityNum: projectedOverall * 100,
             scenarioId: activePolicy?.id || 'ALPHA-00',
             policyName: activePolicy?.name || 'DEFAULT',
-            isSustainable: projectedOverall > 0.7
+            isSustainable: projectedOverall > 0.7,
+            theaterFloor
         };
     });
 
     enforceReserve(baseId: string) {
-        this.readiness.toggleReserve(baseId);
-        
-        const base = this.readiness.bases().find(b => b.id === baseId);
-        const isReservedNow = base?.isReserved;
-
-        this.orchestrator.showFeature({
-            name: isReservedNow ? 'Reserve Enforced' : 'Reserve Revoked',
-            operationalFunction: isReservedNow 
-                ? 'Base strictly inhibited for tactical assignments to preserve future capability.'
-                : 'Base released back to theater-wide tactical engagement queue.',
-            persona: 'Base Readiness Officer',
-            decisionImproved: 'Strategic Capacity Management',
-            rationale: 'Force preservation ensures that even if local defense metrics drop now, strategic reserves are held for predicted saturation waves.',
-            status: 'PARTIAL_FRONTEND',
-            tier: 'MVP',
-            nextStep: 'Connect reserve status to Tactical engagement assignment logic.'
-        });
+      this.readiness.toggleReserve(baseId);
+      const reservedIds = this.readiness.bases()
+        .filter(b => b.isReserved).map(b => b.id);
+      this.api.updateReservedBases(reservedIds).subscribe({
+        next: () => this.loadProjection(),
+        error: (e) => console.error('[ReadinessConsole] reserve sync', e)
+      });
     }
 
     rebalance(baseId: string) {
-        this.readiness.rebalanceBase(baseId);
-        
-        this.orchestrator.showFeature({
-            name: 'Inter-Base Rebalance',
-            operationalFunction: 'Shifting mission-ready assets and personnel cross-theater to stabilize the selected node.',
-            persona: 'Logistics Officer',
-            decisionImproved: 'Theater-Wide Resource Efficiency',
-            rationale: 'Readiness asymmetry is a vulnerability. Active rebalancing smooths the depletion curve.',
-            status: 'PARTIAL_FRONTEND',
-            tier: 'MVP',
-            nextStep: 'Implement timed logistics delivery curves.'
-        });
+      this.readiness.rebalanceBase(baseId);
+      this.http.post('/api/twins/rebalance', { targetBaseId: baseId }).subscribe({
+        next: () => this.loadProjection(),
+        error: (e) => console.error('[ReadinessConsole] rebalance sync', e)
+      });
     }
 
     viewMaintenanceDrag(baseId: string) {

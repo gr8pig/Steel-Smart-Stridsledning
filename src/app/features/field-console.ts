@@ -150,7 +150,7 @@ const SYNC_RESET_MS = 5000;
 
         @if (sceneCapture(); as capture) {
           <div class="relative h-40">
-             <img [src]="capture.dataUrl" class="h-full w-full object-cover grayscale opacity-80" />
+             <img [src]="capture.dataUrl" alt="" class="h-full w-full object-cover grayscale opacity-80" />
              <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
              <div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
                 <div>

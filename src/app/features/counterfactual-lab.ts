@@ -1,16 +1,19 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, debounceTime, firstValueFrom, switchMap, tap, catchError, EMPTY } from 'rxjs';
+import { Subject, debounceTime, firstValueFrom, switchMap, tap, catchError, EMPTY, timer, takeWhile } from 'rxjs';
 
 import { SteelApiService } from '../core/services/steel-api.service';
 import { CounterfactualLabStore } from '../core/ml/counterfactual-lab.store';
 import {
   CounterfactualAsset,
+  CounterfactualPrediction,
   CounterfactualSimulationRequest,
   CounterfactualTheaterVector,
 } from '../core/ml/counterfactual-lab.models';
 import { FrontierViewComponent } from '../shared/ui/frontier-view';
+import { MatIconModule } from '@angular/material/icon';
 import { DrawingBoardStore, DrawingUnit } from '../core/state/drawing-board.store';
 import { ScenarioStore } from '../core/state/scenario.store';
 import { TacticalStore } from '../core/state/tactical.store';
@@ -83,7 +86,7 @@ const FALLBACK_ASSETS: CounterfactualAsset[] = [
 @Component({
   selector: 'app-counterfactual-lab',
   standalone: true,
-  imports: [CommonModule, FrontierViewComponent],
+  imports: [CommonModule, FrontierViewComponent, MatIconModule],
   template: `
     <div class="h-full w-full overflow-hidden bg-boreal-canvas text-boreal-text-primary">
       <div class="flex h-full min-h-0 flex-col p-6 gap-5 animate-in fade-in duration-500">
@@ -331,10 +334,37 @@ const FALLBACK_ASSETS: CounterfactualAsset[] = [
                 </div>
               </div>
 
+              @if (store.deepSimPolling()) {
+                <div class='flex items-center gap-2 mt-3 py-2 px-3 bg-boreal-blue/5 border border-boreal-blue/20 rounded-sm'>
+                  <span class='w-2 h-2 rounded-full bg-boreal-blue animate-ping flex-shrink-0'></span>
+                  <span class='text-[8px] font-mono text-boreal-blue uppercase tracking-widest'>
+                    Awaiting RunPod result…
+                  </span>
+                </div>
+              }
+              @if (store.deepSimError()) {
+                <div class='flex items-center gap-2 mt-3 py-2 px-3 bg-boreal-red/5 border border-boreal-red/20 rounded-sm'>
+                  <mat-icon class='!text-xs text-boreal-red'>error_outline</mat-icon>
+                  <span class='text-[8px] font-mono text-boreal-red'>{{ store.deepSimError() }}</span>
+                </div>
+              }
+
               @if (store.latestPrediction()?.deep_sim_hint; as hint) {
                 <div class="mt-4 rounded border border-boreal-border bg-boreal-canvas/45 p-3 text-[9px] leading-relaxed text-boreal-text-secondary">
                   <div class="mb-1 text-[8px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Why</div>
                   {{ hint.reason }}
+                </div>
+              }
+
+              @if (deepSimResult(); as result) {
+                <div class='mt-4 rounded-sm border border-boreal-border bg-boreal-panel-elevated p-4 space-y-3'>
+                  <div class='text-[8px] font-mono uppercase tracking-widest text-boreal-text-muted'>Deep Sim Result</div>
+                  <div class='text-2xl font-black text-boreal-green'>{{ result.trust_score * 100 | number:'1.0-0' }}<span class='text-sm'>%</span> confidence</div>
+                  <svg viewBox='0 0 80 30' class='w-full h-10 border-b border-boreal-border/30'>
+                    <polyline [attr.points]='trajectoryPoints()' fill='none' stroke='var(--boreal-blue)' stroke-width='1.5' stroke-linejoin='round'/>
+                  </svg>
+                  <div class='text-[8px] font-mono text-boreal-amber'>Scenario Digest: {{ result.scenario_digest }}</div>
+                  <div class='text-[8px] text-boreal-text-muted italic leading-relaxed'>Model: {{ result.model_version }}</div>
                 </div>
               }
             </section>
@@ -433,6 +463,7 @@ const FALLBACK_ASSETS: CounterfactualAsset[] = [
 export class CounterfactualLab {
   readonly store = inject(CounterfactualLabStore);
   private readonly api = inject(SteelApiService);
+  private readonly http = inject(HttpClient);
   private readonly drawingBoard = inject(DrawingBoardStore);
   private readonly scenario = inject(ScenarioStore);
   private readonly tactical = inject(TacticalStore);
@@ -440,9 +471,20 @@ export class CounterfactualLab {
   private readonly logistics = inject(LogisticsStore);
   private readonly destroyRef = inject(DestroyRef);
 
+  private jobId = signal<string | null>(null);
+  simRunning = signal(false);
+  deepSimResult = signal<CounterfactualPrediction | null>(null);
+  simError = signal<string | null>(null);
+
   readonly selectedMetricName = signal('robustness');
 
   private readonly request$ = new Subject<CounterfactualSimulationRequest>();
+
+  readonly trajectoryPoints = computed(() => {
+    const t = this.deepSimResult()?.p50;
+    if (!t || t.length === 0) return '';
+    return t.map((v: number, i: number) => `${i * 26 + 2},${28 - v * 26}`).join(' ');
+  });
 
   readonly selectedMetric = computed(() => {
     const prediction = this.store.latestPrediction();
@@ -459,6 +501,7 @@ export class CounterfactualLab {
   readonly assetImpacts = computed(() => this.store.assetImpacts());
   readonly featureImportances = computed(() => this.store.featureImportances());
   readonly ensembleMembers = computed(() => this.store.ensembleMembers());
+
   constructor() {
     this.setupPredictionPipeline();
 
@@ -516,14 +559,43 @@ export class CounterfactualLab {
     if (!request) return;
 
     this.store.setSimulating(true);
+    this.store.setDeepSimError(null);
+    this.store.setDeepSimPolling(false);
+
     try {
       const job = await firstValueFrom(this.api.triggerDeepSim(request));
       this.store.setDeepSimJob(job);
+      this.store.setSimulating(false);
+      this.startJobPolling(job.provider_job_id ?? job.job_id);
     } catch (error) {
-      console.error('Deep sim failed', error);
-    } finally {
+      console.error('[CounterfactualLab] trigger failed', error);
       this.store.setSimulating(false);
     }
+  }
+
+  private startJobPolling(jobId: string): void {
+    this.store.setDeepSimPolling(true);
+    timer(3000, 4000).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      switchMap(() => this.api.getDeepSimStatus(jobId)),
+      takeWhile(r => r.status !== 'COMPLETED' && r.status !== 'FAILED', true),
+    ).subscribe({
+      next: r => {
+        if (r.status === 'COMPLETED' && r.output) {
+          this.store.applyPrediction(r.output);
+          this.store.setDeepSimPolling(false);
+        }
+        if (r.status === 'FAILED') {
+          this.store.setDeepSimError(r.error ?? 'Deep simulation failed on RunPod');
+          this.store.setDeepSimPolling(false);
+        }
+      },
+      error: e => {
+        console.error('[CounterfactualLab] poll error', e);
+        this.store.setDeepSimError('Network error during polling');
+        this.store.setDeepSimPolling(false);
+      },
+    });
   }
 
   theaterLabel(): string {

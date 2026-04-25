@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, HostListener } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { TacticalStore } from '../core/state/tactical.store';
@@ -108,6 +108,48 @@ interface DegradedHeatCell {
                 {{ tactical.sync().source }}
               </span>
               <span class="bg-boreal-red/10 text-boreal-red px-1 rounded">{{capabilityStore.remappedTracks().length}} TOTAL</span>
+              
+              <div class='relative'>
+                <button (click)='showScenarioPicker.set(!showScenarioPicker())'
+                  class='flex items-center gap-1 px-2 py-0.5 rounded-sm border border-boreal-border/50
+                         text-[8px] font-black uppercase tracking-widest text-boreal-text-muted
+                         hover:border-boreal-blue/50 hover:text-boreal-blue transition-all'>
+                  <mat-icon class='!text-[10px] !w-3 !h-3'>tune</mat-icon>
+                  SCENARIO
+                </button>
+                @if (showScenarioPicker()) {
+                  <div class='fixed inset-0 z-40' (click)='showScenarioPicker.set(false)'></div>
+                  <div class='absolute left-0 top-full mt-1 z-50 w-64 bg-boreal-panel border
+                              border-boreal-border rounded-sm shadow-2xl overflow-hidden'>
+                    <div class='px-3 py-2 text-[8px] font-black uppercase tracking-widest
+                                text-boreal-text-muted bg-boreal-panel-muted/30 border-b border-boreal-border'>
+                      Load Scenario Preset
+                    </div>
+                    @for (preset of scenarioPresets; track preset.id) {
+                      <button (click)='loadPreset(preset)'
+                        class='w-full flex items-start gap-3 px-3 py-2.5 text-left
+                               hover:bg-boreal-panel-muted/50 border-b border-boreal-border/30
+                               transition-colors last:border-0'>
+                        <span class='shrink-0 mt-0.5 px-1 py-px rounded-sm text-[7px] font-black
+                                     uppercase tracking-widest'
+                              [class.bg-boreal-red/20]='preset.color === "boreal-red"'
+                              [class.text-boreal-red]='preset.color === "boreal-red"'
+                              [class.bg-boreal-amber/20]='preset.color === "boreal-amber"'
+                              [class.text-boreal-amber]='preset.color === "boreal-amber"'>
+                          {{preset.badge}}
+                        </span>
+                        <div class='flex flex-col min-w-0'>
+                          <span class='text-[10px] font-bold text-boreal-text-primary uppercase
+                                       tracking-tight truncate'>{{preset.name}}</span>
+                          <span class='text-[8px] text-boreal-text-muted leading-relaxed mt-0.5'>
+                            {{preset.description}}
+                          </span>
+                        </div>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
             </div>
         </div>
         
@@ -779,7 +821,7 @@ interface DegradedHeatCell {
                 <span class="font-mono tabular-nums text-boreal-text-primary text-[10px]">T+{{formatSimTime(scenario.simTime())}}</span>
                 <span>{{scenario.currentPhase()?.name}}</span>
                 <button (click)="timelineExpanded.set(!timelineExpanded())" class="flex items-center text-boreal-text-muted hover:text-boreal-blue transition-colors" [title]="timelineExpanded() ? 'Collapse' : 'Expand timeline'">
-                  <mat-icon class="!text-[12px] !w-3 !h-3">{{timelineExpanded() ? 'expand_more' : 'expand_less'}}</mat-icon>
+                  <mat-icon class="!text-[12px] !w-3 !h-3">{{timelineExpanded() ? 'expand_less' : 'expand_more'}}</mat-icon>
                 </button>
               </div>
             </div>
@@ -1074,7 +1116,7 @@ interface DegradedHeatCell {
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TacticalConsole {
+export class TacticalConsole implements OnInit, OnDestroy {
     tactical = inject(TacticalStore);
     capabilityStore = inject(CapabilityLayerStore);
     policy = inject(PolicyStore);
@@ -1091,6 +1133,60 @@ export class TacticalConsole {
     directiveQueue = inject(OperationalDirectiveQueueService);
 
     mapFeatures = ENGAGEMENT_MAP_FEATURES;
+
+    readonly scenarioPresets = [
+      { id: 'SCOUT_PROBE',    name: 'Scout Probe',           badge: 'RECON',      color: 'boreal-amber',
+        description: '6 low-confidence feint probes — sensor and ID stress',
+        phase: 'phase-1', tracks: [{ count: 6,  type: 'FEINT'   as const }], jamming: false },
+      { id: 'DRONE_SWARM',    name: 'Drone Swarm',           badge: 'SWARM',      color: 'boreal-amber',
+        description: '14 drone threats — exhaust intercept inventory',
+        phase: 'phase-2', tracks: [{ count: 14, type: 'DRONE'   as const }], jamming: false },
+      { id: 'KINETIC_STRIKE', name: 'Kinetic Strike',        badge: 'HI-VAL',     color: 'boreal-red',
+        description: '7 cruise missiles at high confidence — COA decision required',
+        phase: 'phase-3', tracks: [{ count: 7,  type: 'KINETIC' as const }], jamming: false },
+      { id: 'SATURATION_WAVE',name: 'Saturation Wave',       badge: 'SATURATION', color: 'boreal-red',
+        description: '12 mixed threats across all sectors — solver stress test',
+        phase: 'phase-3', tracks: [{ count: 12, type: 'MIXED'   as const }], jamming: false },
+      { id: 'FULL_SPECTRUM',  name: 'Full Spectrum + Jamming',badge: 'FULL SPEC', color: 'boreal-red',
+        description: '8 feints + 6 kinetics under active jamming — worst case',
+        phase: 'phase-3', tracks: [{ count: 8,  type: 'FEINT'   as const },
+                                    { count: 6,  type: 'KINETIC' as const }], jamming: true },
+    ] as const;
+
+    showScenarioPicker = signal(false);
+
+    loadPreset(preset: typeof this.scenarioPresets[number]): void {
+      this.showScenarioPicker.set(false);
+      this.scenario.reset();
+      this.scenario.setPhase(preset.phase);
+      this.scenario.setJamming(preset.jamming);
+      this.tactical.clearTracks();
+      this.api.resetScenario().subscribe(() => {
+        for (const wave of preset.tracks) {
+          this.api.injectTracks(wave.count, wave.type).subscribe();
+        }
+      });
+      this.audit.log({ actor: 'OPERATOR', action: 'Scenario Loaded: ' + preset.name,
+                       rationale: preset.description, category: 'SYSTEM' });
+    }
+
+    private _clockInterval: ReturnType<typeof setInterval> | null = null;
+    private _scrubMoveListener: ((e: MouseEvent) => void) | null = null;
+    private _scrubUpListener: (() => void) | null = null;
+
+    ngOnInit() {
+      this._clockInterval = setInterval(() => {
+        if (this.scenario.runState() === 'RUNNING') {
+          this.scenario.tick();
+        }
+      }, 1000);
+    }
+
+    ngOnDestroy() {
+      if (this._clockInterval) clearInterval(this._clockInterval);
+      if (this._scrubMoveListener) window.removeEventListener('mousemove', this._scrubMoveListener);
+      if (this._scrubUpListener) window.removeEventListener('mouseup', this._scrubUpListener);
+    }
 
     // Map Navigation & UI State
     posX = signal(0);
@@ -1266,20 +1362,22 @@ export class TacticalConsole {
       if (this._wasRunning) this.scenario.setRunState('PAUSED');
       this.isScrubbing.set(true);
 
-      const onMove = (e: MouseEvent) => {
+      this._scrubMoveListener = (e: MouseEvent) => {
         const deltaSeconds = Math.round(-(e.clientX - this._scrubStartX) / 48 * 60);
         this.scenario.setSimTime(Math.max(0, Math.min(9000, this._scrubStartTime + deltaSeconds)));
       };
 
-      const onUp = () => {
+      this._scrubUpListener = () => {
         this.isScrubbing.set(false);
         if (this._wasRunning) this.scenario.setRunState('RUNNING');
-        window.removeEventListener('mousemove', onMove);
-        window.removeEventListener('mouseup', onUp);
+        if (this._scrubMoveListener) window.removeEventListener('mousemove', this._scrubMoveListener);
+        if (this._scrubUpListener) window.removeEventListener('mouseup', this._scrubUpListener);
+        this._scrubMoveListener = null;
+        this._scrubUpListener = null;
       };
 
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('mouseup', onUp);
+      window.addEventListener('mousemove', this._scrubMoveListener);
+      window.addEventListener('mouseup', this._scrubUpListener);
     }
 
     togglePlayback(): void {
@@ -1465,7 +1563,7 @@ export class TacticalConsole {
             } else {
                 this.api.engageTrack(rec.trackId, assignment.baseId, assignment.effectorType).subscribe({
                     next: () => this.tactical.markEngaged(rec.trackId),
-                    error: () => {},
+                    error: (e) => console.error('[TacticalConsole]', e),
                 });
             }
         }

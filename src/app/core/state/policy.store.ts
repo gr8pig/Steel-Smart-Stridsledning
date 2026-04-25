@@ -66,7 +66,7 @@ export class PolicyStore {
     const current = this._activePolicy()?.weights;
     if (current) {
       this._weightChange$.next(current);
-      this.api.updatePolicy(current).subscribe({ error: () => {} });
+      this.api.updatePolicy(current).subscribe({ error: (e) => console.error('[PolicyStore]', e) });
     }
   }
 

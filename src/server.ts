@@ -15,6 +15,13 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 app.use(express.json());
+app.use((_req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
+  if (_req.method === 'OPTIONS') { res.sendStatus(204); return; }
+  next();
+});
 app.use(express.urlencoded({ extended: false }));
 
 const angularApp = new AngularNodeAppEngine();
@@ -55,8 +62,10 @@ const PROXIED_API_PATHS = [
   /^\/api\/lab\/run$/,
   /^\/api\/ml\/predict$/,
   /^\/api\/ml\/deep-sim$/,
+  /^\/api\/ml\/deep-sim\/[^/]+\/status$/,
   /^\/api\/rationale\/coa$/,
   /^\/api\/rationale\/lab-result$/,
+  /^\/api\/rationale\/logistics$/,
 ];
 
 // ── Mock theater state ────────────────────────────────────────────────────────
@@ -89,6 +98,8 @@ interface MockCOA {
   };
   assignments: { threatId: string; baseId: string; effectorType: string; pk: number; }[];
 }
+
+const _deepSimCallCounts = new Map<string, number>();
 
 function isPublicPath(pathname: string): boolean {
   return (
@@ -860,6 +871,22 @@ app.get('/api/twins/campaign', (_req, res) => {
 
 app.get('/api/twins/bases', (_req, res) => res.json(BASES));
 
+app.get('/api/twins/decision-fabric', (_req, res) => {
+  res.json({
+    id: 'C2-TWIN-01',
+    simTime: Date.now(),
+    c2ResilienceScore: 0.91,
+    trustEntropy: 0.08,
+    authorityFriction: 0.12,
+    operatorLoad: 0.34,
+    auditCompleteness: 0.97,
+    failureProbability: 0.04,
+    projectedCollapseSec: null,
+    status: 'HEALTHY',
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/api/twins/threats', (_req, res) => {
   res.json(threats.filter(t => t.status !== 'NEUTRALIZED' && t.status !== 'LEAKED'));
 });
@@ -886,7 +913,27 @@ app.post('/api/twins/policy', (req, res) => {
       resilience:     w.resilience     ?? policyWeights.resilience,
     };
   }
+
+  const rb = req.body?.reservedBases;
+  if (Array.isArray(rb)) {
+    BASES.forEach(b => {
+      b.isReserved = rb.includes(b.id);
+    });
+  }
+
   res.json({ ok: true, weights: policyWeights });
+});
+
+app.post('/api/twins/rebalance', (req, res) => {
+  const { targetBaseId } = req.body;
+  const sorted = [...BASES].sort((a, b) => b.readiness - a.readiness);
+  const donor = sorted.find(b => b.id !== targetBaseId);
+  const target = BASES.find(b => b.id === targetBaseId);
+  if (donor && target) {
+    donor.readiness  = Math.max(0.05, donor.readiness - 0.05);
+    target.readiness = Math.min(1.0,  target.readiness + 0.05);
+  }
+  res.json({ ok: true, targetBaseId });
 });
 
 app.post('/api/twins/engage', (req, res) => {
@@ -1053,6 +1100,106 @@ async function callMistral(system: string, user: string, maxTokens = 280): Promi
     return null;
   }
 }
+
+// ── Counterfactual Lab Mock ──────────────────────────────────────────────────
+
+app.post('/api/ml/predict', (_req, res) => {
+  const horizon = [0, 5, 10, 15, 20, 25, 30];
+  const p50 = [0.85, 0.82, 0.78, 0.74, 0.70, 0.67, 0.64];
+  res.json({
+    time_horizon: horizon,
+    p10: p50.map(v => Math.max(0, v - 0.1)),
+    p50,
+    p90: p50.map(v => Math.min(1, v + 0.1)),
+    trust_score: 0.88,
+    is_speculative: true,
+    metric_trajectories: [
+      { name: 'robustness', unit: 'score', p10: p50.map(v => Math.max(0, v - 0.1)), p50, p90: p50.map(v => Math.min(1, v + 0.1)) }
+    ],
+    ensemble_members: [],
+    feature_importances: [],
+    asset_impacts: [],
+    deep_sim_hint: { required: true, reason: 'High variance in latent perturbation space.', recommended_runs: 1000, provider: 'runpod' }
+  });
+});
+
+app.post('/api/ml/deep-sim', (_req, res) => {
+  const stableJobId = `deep-${crypto.createHash('md5').update(JSON.stringify(_req.body)).digest('hex')}`;
+  res.json({
+    status: 'triggered',
+    job_id: stableJobId,
+    provider: 'runpod',
+    provider_job_id: `rp-${Math.random().toString(36).substring(7)}`,
+    scenario_digest: stableJobId,
+    model_version: 'synthetic-v1',
+    n_runs: 1000,
+    created_at: new Date().toISOString()
+  });
+});
+
+app.get('/api/ml/deep-sim/:jobId/status', (req, res) => {
+  const { jobId } = req.params;
+  const count = (_deepSimCallCounts.get(jobId) ?? 0) + 1;
+  _deepSimCallCounts.set(jobId, count);
+
+  if (count < 3) {
+    return res.json({ id: jobId, status: 'IN_PROGRESS' });
+  }
+
+  _deepSimCallCounts.delete(jobId);
+  const horizon = [0, 5, 10, 15, 20, 25, 30];
+  const p50 = [0.88, 0.85, 0.81, 0.77, 0.74, 0.71, 0.68];
+  const p10 = p50.map(v => Math.max(0.05, v - 0.14));
+  const p90 = p50.map(v => Math.min(0.99, v + 0.09));
+
+  return res.json({
+    id: jobId,
+    status: 'COMPLETED',
+    output: {
+      time_horizon: horizon,
+      p10, p50, p90,
+      trust_score: 0.91,
+      is_speculative: false,
+      model_version: 'deep-sim-v1',
+      scenario_digest: jobId,
+      metric_trajectories: [
+        {
+          name: 'Intercept Fraction',
+          unit: '%',
+          p10: p10.map(v => +(v * 100).toFixed(1)),
+          p50: p50.map(v => +(v * 100).toFixed(1)),
+          p90: p90.map(v => +(v * 100).toFixed(1))
+        },
+        {
+          name: 'Blue Expenditure',
+          unit: 'interceptors',
+          p10: [2, 3, 4, 5, 6, 7, 8],
+          p50: [3, 4, 5, 7, 8, 9, 11],
+          p90: [4, 6, 8, 10, 12, 14, 16]
+        },
+        {
+          name: 'Readiness Δ',
+          unit: '%',
+          p10: [-2, -4, -6, -8, -10, -12, -14],
+          p50: [-1, -3, -5, -7, -9, -11, -13],
+          p90: [0, -1, -2, -4, -5, -7, -8]
+        }
+      ],
+      ensemble_members: [
+        { id: 'M1', label: 'Conservative', values: p10, agreement: 0.88, variance: 0.03 },
+        { id: 'M2', label: 'Nominal',      values: p50, agreement: 0.94, variance: 0.01 },
+        { id: 'M3', label: 'Optimistic',   values: p90, agreement: 0.91, variance: 0.02 }
+      ],
+      feature_importances: [
+        { name: 'Track Count',      category: 'THEATER', value: 0.82, impact: 0.31 },
+        { name: 'Base Readiness',   category: 'READINESS', value: 0.74, impact: 0.27 },
+        { name: 'Policy Resilience',category: 'POLICY',  value: 0.68, impact: 0.21 }
+      ],
+      asset_impacts: [],
+      deep_sim_hint: { required: false, reason: 'High-fidelity simulation complete', recommended_runs: 0, provider: 'runpod' }
+    }
+  });
+});
 
 // ── Rationale endpoints ───────────────────────────────────────────────────────
 

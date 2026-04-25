@@ -3,7 +3,7 @@ import {
   PLATFORM_KNOWLEDGE_GRAPH_NODES,
 } from '../models/platform-knowledge-graph.data';
 import {
-  KnowledgeGraphViewMode,
+  
   NodeCategory,
   PlatformArea,
   TechNode,

@@ -1,5 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { LogisticsStore } from '../core/state/logistics.store';
 import { ReadinessStore } from '../core/state/readiness.store';
@@ -34,6 +35,9 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../shared/domain
           @for (node of logistics.supplyNodes(); track node.id) {
             <div class="p-4 border-b border-boreal-border hover:bg-boreal-panel-muted/30 transition-colors cursor-pointer"
                  (click)="selectNode(node.id)"
+                 tabindex="0"
+                 (keydown.enter)="selectNode(node.id)"
+                 (keydown.space)="selectNode(node.id)"
                  [class.bg-boreal-panel-elevated]="selectedNodeId() === node.id">
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
@@ -350,6 +354,15 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../shared/domain
               </div>
             </div>
           }
+
+          <div class='mt-4 border-t border-boreal-border/30 pt-3'>
+            <div class='text-[8px] font-mono uppercase tracking-widest text-boreal-text-muted mb-2'>Logistics Rationale</div>
+            @if (logisticsRationaleLoading()) {
+              <div class='animate-pulse h-2 bg-boreal-border/50 rounded w-3/4'></div>
+            } @else {
+              <p class='text-[9px] italic text-boreal-text-muted leading-relaxed border-l-2 border-boreal-border pl-3'>{{ logisticsRationale() }}</p>
+            }
+          </div>
         </div>
       </div>
     </div>
@@ -400,19 +413,33 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../shared/domain
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LogisticsConsole {
+export class LogisticsConsole implements OnInit {
   logistics  = inject(LogisticsStore);
   readiness  = inject(ReadinessStore);
   policy     = inject(PolicyStore);
   layers     = inject(MapLayerStore);
   llm        = inject(LLMService);
   audit      = inject(AuditLogger);
+  private http = inject(HttpClient);
 
   mapFeatures = ENGAGEMENT_MAP_FEATURES;
 
   selectedNodeId  = signal<string | null>(null);
   _advisoryText   = signal<string | null>(null);
   _advisoryLoading = signal(false);
+
+  logisticsRationale = signal('');
+  logisticsRationaleLoading = signal(false);
+
+  ngOnInit() {
+    this.logisticsRationaleLoading.set(true);
+    this.http.post<{rationaleText: string}>('/api/rationale/logistics', {
+      context: 'Current logistics posture assessment'
+    }).subscribe({
+      next: r => { this.logisticsRationale.set(r.rationaleText); this.logisticsRationaleLoading.set(false); },
+      error: () => this.logisticsRationaleLoading.set(false)
+    });
+  }
 
   selectedNode = computed(() =>
     this.logistics.supplyNodes().find(n => n.id === this.selectedNodeId()) ?? null

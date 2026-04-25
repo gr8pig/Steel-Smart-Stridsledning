@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpClient } from '@angular/common/http';
 import { BaseTwin } from '../../shared/domain/models';
 import { AuditLogger } from '../services/audit-logger';
 import { TheaterWsService } from '../services/theater-ws.service';
@@ -18,6 +19,7 @@ export class ReadinessStore {
   private ws = inject(TheaterWsService);
   private persistence = inject(SteelLocalPersistenceService);
   private destroyRef = inject(DestroyRef);
+  private http = inject(HttpClient);
 
   private _bases = signal<BaseTwin[]>([]);
 
@@ -54,6 +56,11 @@ export class ReadinessStore {
     });
   }
 
+  loadProjections() {
+    // This will be implemented/expanded to refresh projections from the API
+    console.log('[ReadinessStore] loadProjections triggered');
+  }
+
   toggleReserve(baseId: string) {
     this._bases.update(bases => bases.map(b => {
       if (b.id === baseId) {
@@ -68,6 +75,13 @@ export class ReadinessStore {
       }
       return b;
     }));
+
+    const reservedIds = this._bases().filter(b => b.isReserved).map(b => b.id);
+    this.http.post('/api/twins/policy', { reservedBases: [...reservedIds] })
+      .subscribe({ 
+        next: () => this.loadProjections(), 
+        error: (e) => console.error('[ReadinessStore] toggleReserve', e) 
+      });
   }
 
   rebalanceBase(baseId: string) {
@@ -75,6 +89,10 @@ export class ReadinessStore {
     const strongest = [...currentBases].sort((a, b) => b.readiness - a.readiness)[0];
     const target = currentBases.find(b => b.id === baseId);
     if (strongest && strongest.id !== baseId && target) {
+      const amount = 5;
+      const fromBaseId = strongest.id;
+      const toBaseId = baseId;
+
       this._bases.update(bases => bases.map(b => {
         if (b.id === strongest.id) return { ...b, readiness: Math.max(0.1, b.readiness - 0.05) };
         if (b.id === baseId) return { ...b, readiness: Math.min(1.0, b.readiness + 0.05) };
@@ -86,6 +104,12 @@ export class ReadinessStore {
         rationale: `Manually rebalancing readiness from ${strongest.name} to ${target.name} following theater risk shift.`,
         category: 'READINESS'
       });
+
+      this.http.post('/api/twins/rebalance', { fromBaseId, toBaseId, amount })
+        .subscribe({ 
+          next: () => this.loadProjections(), 
+          error: (e) => console.error('[ReadinessStore] rebalance', e) 
+        });
     }
   }
 }

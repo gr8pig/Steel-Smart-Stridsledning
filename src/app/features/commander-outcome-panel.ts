@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { HttpClient } from '@angular/common/http';
 import { CapabilityOrchestrator } from '../core/services/capability-orchestrator';
 import { OrchestrationStore } from '../core/state/orchestration.store';
 import { PolicyStore } from '../core/state/policy.store';
@@ -74,15 +75,53 @@ import { ReadinessStore } from '../core/state/readiness.store';
               <div class="h-1.5 overflow-hidden rounded-full border border-boreal-border bg-boreal-canvas">
                 <div class="h-full bg-gradient-to-r from-boreal-amber via-boreal-amber to-boreal-red/40" [style.width.%]="coa.projectedOutcome.cost / 2000000 * 100"></div>
               </div>
-              <p class="border-l-2 border-boreal-border pl-3 text-[9px] italic leading-relaxed text-boreal-text-muted">
-                {{ coa.rationale }}
-              </p>
+
+              <div class='mt-3 pt-2 border-t border-boreal-border/30 flex gap-4 text-[8px] font-mono uppercase tracking-widest text-boreal-text-muted'>
+                <span>Pareto frontier: {{ policy.paretoSize() }} candidates</span>
+                <span>Solved in {{ policy.solveTimeMs() }}ms</span>
+              </div>
+
+              <div class='mt-3'>
+                <button
+                  (click)='showAssignments.set(!showAssignments())'
+                  class='text-[8px] font-mono uppercase tracking-widest text-boreal-blue hover:text-boreal-text-primary transition-colors flex items-center gap-1'>
+                  ENGAGEMENT ASSIGNMENTS ({{ coa.assignments.length }})
+                  <span>{{ showAssignments() ? '▲' : '▼' }}</span>
+                </button>
+                @if (showAssignments()) {
+                  <div class='mt-2 space-y-1'>
+                    @for (a of coa.assignments; track a.threatId) {
+                      <div class='grid grid-cols-4 gap-2 text-[8px] font-mono text-boreal-text-muted'>
+                        <span class='text-boreal-red'>{{ a.threatId }}</span>
+                        <span>→ {{ a.baseId }}</span>
+                        <span>{{ a.effectorType }}</span>
+                        <span class='text-boreal-green'>pk: {{ ((a.pk || 0) * 100) | number:'1.0-0' }}%</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              
+              @if (rationaleLoading()) {
+                <div class='animate-pulse h-2 bg-boreal-border/50 rounded w-3/4 my-1'></div>
+                <div class='animate-pulse h-2 bg-boreal-border/50 rounded w-1/2 my-1'></div>
+              } @else {
+                <p class='border-l-2 border-boreal-border pl-3 text-[9px] italic leading-relaxed text-boreal-text-muted'>{{ rationaleText() }}</p>
+              }
             </div>
 
             <div class="space-y-2">
+
               <div class="flex items-baseline justify-between">
                 <span class="text-[9px] uppercase text-boreal-text-muted font-bold tracking-widest">Decision Robustness Score</span>
-                <span class="text-[9px] font-mono text-boreal-blue">{{ coa.projectedOutcome.robustnessScore }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-[9px] font-mono text-boreal-blue">{{ coa.projectedOutcome.robustnessScore }}</span>
+                  <span class='text-[8px] font-mono font-black px-1.5 py-0.5 rounded-sm bg-boreal-panel-elevated/50'
+                        [class.text-boreal-green]='coa.projectedOutcome.robustnessScore > policy.legacyBaseline().robustnessScore'
+                        [class.text-boreal-red]='coa.projectedOutcome.robustnessScore <= policy.legacyBaseline().robustnessScore'>
+                    {{ (coa.projectedOutcome.robustnessScore - policy.legacyBaseline().robustnessScore) | number:"+1.2-2" }} vs baseline
+                  </span>
+                </div>
               </div>
               <div class="h-1 overflow-hidden rounded-full border border-boreal-border bg-boreal-canvas">
                 <div class="h-full bg-gradient-to-r from-boreal-blue via-boreal-blue to-boreal-green/70" [style.width.%]="coa.projectedOutcome.robustnessScore * 100"></div>
@@ -171,6 +210,25 @@ export class CommanderOutcomePanel {
   readiness = inject(ReadinessStore);
   orchestration = inject(OrchestrationStore);
   orchestrator = inject(CapabilityOrchestrator);
+  private http = inject(HttpClient);
+
+  rationaleText = signal('');
+  rationaleLoading = signal(false);
+  showAssignments = signal(false);
+
+  constructor() {
+    effect(() => {
+      const c = this.policy.selectedCOA();
+      if (!c) return;
+      this.rationaleLoading.set(true);
+      this.rationaleText.set('');
+      this.http.post<{rationaleText: string}>('/api/rationale/coa', { coaId: c.id })
+        .subscribe({
+          next: r => { this.rationaleText.set(r.rationaleText); this.rationaleLoading.set(false); },
+          error: () => { this.rationaleLoading.set(false); }
+        });
+    });
+  }
 
   summary = computed(() => {
     const activePolicy = this.policy.activePolicy();

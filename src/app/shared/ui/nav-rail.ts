@@ -13,7 +13,7 @@ import { ShellLayoutService } from '../../core/services/shell-layout.service';
   imports: [RouterLink, RouterLinkActive, MatIconModule],
   template: `
     <div
-      class="fixed inset-y-0 left-0 z-40 flex w-[18rem] max-w-[85vw] -translate-x-full flex-col overflow-y-auto border-r border-boreal-border bg-boreal-panel py-4 text-boreal-text-primary shadow-2xl transition-transform duration-300 select-none lg:static lg:z-auto lg:h-full lg:w-16 lg:max-w-none lg:translate-x-0 lg:items-center lg:gap-6 lg:overflow-hidden lg:border-r lg:shadow-none"
+      class="fixed inset-y-0 left-0 z-40 flex w-[18rem] max-w-[85vw] -translate-x-full flex-col overflow-y-auto border-r border-boreal-border bg-boreal-panel py-4 text-boreal-text-primary shadow-2xl transition-transform duration-300 select-none lg:static lg:z-auto lg:h-full lg:w-16 lg:max-w-none lg:translate-x-0 lg:items-center lg:gap-2 lg:overflow-hidden lg:border-r lg:shadow-none"
       [class.translate-x-0]="layout.compact() && layout.navOpen()"
     >
       <div class="flex w-full items-center justify-between px-4 pb-3 lg:mb-4 lg:justify-center lg:px-0">
@@ -44,12 +44,15 @@ import { ShellLayoutService } from '../../core/services/shell-layout.service';
           <a 
             [routerLink]="item.path" 
             routerLinkActive="bg-boreal-panel-muted/50 text-boreal-text-primary border-l-2 border-boreal-blue"
-            class="relative flex items-center gap-3 rounded-sm border border-transparent px-4 py-3 text-boreal-text-muted transition-all hover:bg-boreal-panel-muted/50 hover:text-boreal-text-primary group lg:w-full lg:flex-col lg:items-center lg:justify-center lg:border-l-2 lg:px-0 lg:py-4"
+            class="relative flex items-center gap-3 rounded-sm border border-transparent px-4 py-3 text-boreal-text-muted transition-all hover:bg-boreal-panel-muted/50 hover:text-boreal-text-primary group lg:w-full lg:flex-col lg:items-center lg:justify-center lg:border-l-2 lg:px-0 lg:py-2"
             [title]="item.label"
             (click)="layout.closeNav()"
           >
             <mat-icon class="transition-transform group-hover:scale-110">{{item.icon}}</mat-icon>
             <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-boreal-text-primary lg:hidden">
+              {{item.label}}
+            </span>
+            <span class='hidden lg:block text-[7px] font-mono uppercase tracking-tighter text-boreal-text-muted text-center leading-tight mt-0.5 w-full truncate px-0.5'>
               {{item.label}}
             </span>
             

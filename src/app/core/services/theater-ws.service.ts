@@ -2,14 +2,15 @@ import { Injectable, OnDestroy, NgZone, inject, PLATFORM_ID, signal } from '@ang
 import { isPlatformBrowser } from '@angular/common';
 import { Subject, Observable } from 'rxjs';
 import { share } from 'rxjs/operators';
+import { BaseTwin, ThreatTwin } from '../../shared/domain/models';
 
 export type WsConnectionStatus = 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED';
 
 export interface TheaterDelta {
   type: 'FULL_SNAPSHOT' | 'DELTA';
   simTime: number;
-  threats: any[];
-  bases: any[];
+  threats: ThreatTwin[];
+  bases: BaseTwin[];
   phase: string;
 }
 

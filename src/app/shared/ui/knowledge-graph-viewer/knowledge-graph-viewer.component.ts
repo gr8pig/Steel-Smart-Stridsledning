@@ -1,11 +1,11 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, inject, input, effect } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, inject, effect } from '@angular/core';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { TechNode, GraphEdge } from '../../../core/models/knowledge-graph.types';
+import { TechNode } from '../../../core/models/knowledge-graph.types';
 import { KnowledgeGraphStore } from '../../../core/state/knowledge-graph.store';
 import gsap from 'gsap';
 
@@ -15,7 +15,7 @@ import gsap from 'gsap';
  */
 class DataFlowSystem {
   private points: THREE.Points;
-  private particleCount: number = 25;
+  private particleCount = 25;
   private geometry: THREE.BufferGeometry;
   private positions: Float32Array;
   private progress: number[] = [];
@@ -54,7 +54,7 @@ class DataFlowSystem {
     scene.add(this.points);
   }
 
-  update(opacityScale: number = 1.0) {
+  update(opacityScale = 1.0) {
     (this.points.material as THREE.PointsMaterial).opacity = 0.9 * opacityScale;
     for (let i = 0; i < this.particleCount; i++) {
       this.progress[i] += this.speeds[i];

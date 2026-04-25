@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CounterfactualAsset, CounterfactualPrediction, ForecastMetric } from '../../core/ml/counterfactual-lab.models';
 
@@ -188,7 +188,7 @@ export class FrontierViewComponent implements OnChanges {
   selectedMetric: ForecastMetric | null = null;
   ensembleAgreement = 0;
 
-  ngOnChanges(_: SimpleChanges): void {
+  ngOnChanges(): void {
     this.rebuild();
   }
 

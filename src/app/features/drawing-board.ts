@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { SteelApiService } from '../core/services/steel-api.service';
 import {
-  DrawingBoardStore, DrawingUnit, DrawingUnitType, DrawingMode, DrawingSide,
+  DrawingBoardStore, DrawingUnit, DrawingUnitType, DrawingMode, DrawingSide, IntentPrediction,
 } from '../core/state/drawing-board.store';
 import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
 
@@ -47,6 +47,9 @@ const GROUPS = ['Ground', 'Naval', 'Air'];
           (mousedown)="onMapMouseDown($event)"
           (mousemove)="onMapMouseMove($event)"
           (click)="onMapClick($event)"
+          tabindex="0"
+          (keydown.enter)="onMapClick($any($event))"
+          (keydown.space)="onMapClick($any($event))"
         >
           <!-- Dot grid -->
           <div class="absolute inset-0 opacity-5 pointer-events-none"
@@ -311,7 +314,7 @@ export class DrawingBoard implements OnDestroy {
     };
     
     this.api.predictSketchIntent(sketch).subscribe({
-      next: (res: any) => {
+      next: (res: { predictions: IntentPrediction[] }) => {
         if (res?.predictions) {
           this.store.intentPredictions.set(res.predictions);
         }
@@ -360,6 +363,9 @@ export class DrawingBoard implements OnDestroy {
 
   onMapClick(event: MouseEvent) {
     if (this._hasMoved) return;
+    // Accessibility: ignore keyboard events if they don't have coordinates
+    if (!(event instanceof MouseEvent) || event.clientX === undefined) return;
+    
     const mode = this.store.mode();
     if (mode === 'PLACE') {
       const pos = this._svgCoords(event);

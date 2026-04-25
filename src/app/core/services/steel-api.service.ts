@@ -3,6 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LogisticsSnapshot } from '../../shared/domain/logistics-ontology';
 import {
+  BaseTwin,
+  ThreatTwin,
+  PolicyTwin,
+  COATwin,
+} from '../../shared/domain/models';
+import {
   CounterfactualPrediction,
   CounterfactualSimulationRequest,
   DeepSimJobMetadata,
@@ -16,12 +22,30 @@ export interface LogisticsContext {
 }
 
 export interface COASolveResult {
-  coas: import('../../shared/domain/models').COATwin[];
+  coas: COATwin[];
   paretoFrontierSize: number;
   solveTimeMs: number;
   threatCount: number;
   reachableAssignments: number;
 }
+
+export interface SketchIntentRequest {
+  timestamp: string;
+  agents: {
+    id: string;
+    type: string;
+    side: string;
+    x: number;
+    y: number;
+    armament?: string;
+    origin?: string;
+  }[];
+}
+
+export interface IntentPredictionResponse {
+  predictions: import('../state/drawing-board.store').IntentPrediction[];
+}
+
 
 export interface Distribution {
   mean: number; std: number; p10: number; p90: number;
@@ -77,16 +101,16 @@ export class SteelApiService {
 
   // ── Twin reads ──────────────────────────────────────────────────────────────
 
-  getCampaign(): Observable<{ bases: any[], threats: any[], policy: any, coas: any[], simTime: number, phase: string }> {
-    return this.http.get<{ bases: any[], threats: any[], policy: any, coas: any[], simTime: number, phase: string }>(`${this.base}/twins/campaign`);
+  getCampaign(): Observable<{ bases: BaseTwin[], threats: ThreatTwin[], policy: PolicyTwin, coas: COATwin[], simTime: number, phase: string }> {
+    return this.http.get<{ bases: BaseTwin[], threats: ThreatTwin[], policy: PolicyTwin, coas: COATwin[], simTime: number, phase: string }>(`${this.base}/twins/campaign`);
   }
 
-  getBases(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.base}/twins/bases`);
+  getBases(): Observable<BaseTwin[]> {
+    return this.http.get<BaseTwin[]>(`${this.base}/twins/bases`);
   }
 
-  getThreats(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.base}/twins/threats`);
+  getThreats(): Observable<ThreatTwin[]> {
+    return this.http.get<ThreatTwin[]>(`${this.base}/twins/threats`);
   }
 
   getReadinessProjection(): Observable<ReadinessProjection[]> {
@@ -95,8 +119,13 @@ export class SteelApiService {
 
   // ── Policy ──────────────────────────────────────────────────────────────────
 
-  updatePolicy(weights: { safety: number; sustainability: number; resilience: number }): Observable<{ ok: boolean; weights: any }> {
-    return this.http.post<{ ok: boolean; weights: any }>(`${this.base}/twins/policy`, { policyWeights: weights });
+  updatePolicy(weights: { safety: number; sustainability: number; resilience: number }): Observable<{ ok: boolean; weights: PolicyTwin['weights'] }> {
+    return this.http.post<{ ok: boolean; weights: PolicyTwin['weights'] }>(`${this.base}/twins/policy`, { policyWeights: weights });
+  }
+
+  updateReservedBases(reservedBaseIds: string[]): Observable<{ ok: boolean }> {
+    return this.http.post<{ ok: boolean }>(`${this.base}/twins/policy`,
+      { reservedBases: reservedBaseIds });
   }
 
   engageTrack(
@@ -146,21 +175,27 @@ export class SteelApiService {
     return this.http.post<CounterfactualPrediction>(`${this.base}/ml/predict`, request);
   }
 
-  predictSketchIntent(sketch: any): Observable<any> {
-    return this.http.post<any>(`${this.base}/ml/predict`, sketch);
+  predictSketchIntent(sketch: SketchIntentRequest): Observable<IntentPredictionResponse> {
+    return this.http.post<IntentPredictionResponse>(`${this.base}/ml/predict`, sketch);
   }
 
-  predictDrawnIntent(drawnPoints: {x: number, y: number}[]): Observable<any> {
+  predictDrawnIntent(drawnPoints: {x: number, y: number}[]): Observable<IntentPredictionResponse> {
     // Construct a mock TheaterState payload from the drawn points
     const payload = {
       theater: { timestamp: new Date().toISOString(), trackCount: drawnPoints.length },
       assets: drawnPoints.map((p, i) => ({ id: `DRAWN-${i}`, lat: p.y, lng: p.x, class: 'UNKNOWN' }))
     };
-    return this.http.post<any>(`${this.base}/ml/predict`, payload);
+    return this.http.post<IntentPredictionResponse>(`${this.base}/ml/predict`, payload);
   }
 
   triggerDeepSim(request: CounterfactualSimulationRequest): Observable<DeepSimJobMetadata> {
     return this.http.post<DeepSimJobMetadata>(`${this.base}/ml/deep-sim`, request);
+  }
+
+  getDeepSimStatus(jobId: string): Observable<{ id: string; status: string; output?: CounterfactualPrediction; error?: string }> {
+    return this.http.get<{ id: string; status: string; output?: CounterfactualPrediction; error?: string }>(
+      `${this.base}/ml/deep-sim/${jobId}/status`
+    );
   }
 
   // ── Logistics ───────────────────────────────────────────────────────────────
@@ -172,14 +207,14 @@ export class SteelApiService {
   // ── Rationale (backend is sole inference boundary) ───────────────────────────
 
   getRationaleForCOA(coaId: string): Observable<{ rationaleText: string; model?: string; generatedAt: string }> {
-    return this.http.post<any>(`${this.base}/rationale/coa`, { coaId });
+    return this.http.post<{ rationaleText: string; model?: string; generatedAt: string }>(`${this.base}/rationale/coa`, { coaId });
   }
 
   getRationaleForLabResult(runResult: LabRunResult): Observable<{ rationaleText: string; model?: string }> {
-    return this.http.post<any>(`${this.base}/rationale/lab-result`, { runResult });
+    return this.http.post<{ rationaleText: string; model?: string }>(`${this.base}/rationale/lab-result`, { runResult });
   }
 
   getRationaleForLogistics(ctx: LogisticsContext): Observable<{ rationaleText: string; model?: string }> {
-    return this.http.post<any>(`${this.base}/rationale/logistics`, { ctx });
+    return this.http.post<{ rationaleText: string; model?: string }>(`${this.base}/rationale/logistics`, { ctx });
   }
 }

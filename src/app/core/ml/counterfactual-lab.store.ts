@@ -24,6 +24,8 @@ export class CounterfactualLabStore {
   private readonly _trustLevel = signal<number>(1.0);
   private readonly _activePolicyDeltas = signal<CounterfactualPolicyDeltas>({ safety: 0, sustainability: 0, resilience: 0 });
   private readonly _deepSimJob = signal<DeepSimJobMetadata | null>(null);
+  private readonly _deepSimPolling = signal(false);
+  private readonly _deepSimError   = signal<string | null>(null);
 
   readonly currentTrajectory = this._currentPrediction.asReadonly();
   readonly latestPrediction = this._currentPrediction.asReadonly();
@@ -33,6 +35,8 @@ export class CounterfactualLabStore {
   readonly selectedAssetId = this._selectedAssetId.asReadonly();
   readonly availableAssets = this._assets.asReadonly();
   readonly deepSimJob = this._deepSimJob.asReadonly();
+  readonly deepSimPolling = this._deepSimPolling.asReadonly();
+  readonly deepSimError   = this._deepSimError.asReadonly();
   readonly simulationTheater = this._theater.asReadonly();
 
   readonly selectedAsset = computed(() => {
@@ -75,6 +79,8 @@ export class CounterfactualLabStore {
     selectedAssetId: this._selectedAssetId(),
     assets: this._assets(),
     deepSimJob: this._deepSimJob(),
+    deepSimPolling: this._deepSimPolling(),
+    deepSimError: this._deepSimError(),
     forecastSeries: this.forecastSeries(),
     ensembleMembers: this.ensembleMembers(),
     featureImportances: this.featureImportances(),
@@ -120,6 +126,9 @@ export class CounterfactualLabStore {
   setDeepSimJob(job: DeepSimJobMetadata | null) {
     this._deepSimJob.set(job);
   }
+
+  setDeepSimPolling(v: boolean)      { this._deepSimPolling.set(v); }
+  setDeepSimError(e: string | null)  { this._deepSimError.set(e); }
 
   setForecastMetric(metricName: string) {
     const prediction = this._currentPrediction();

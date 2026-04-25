@@ -1,6 +1,6 @@
 import {
   Component, ChangeDetectionStrategy, signal, computed,
-  OnInit, OnDestroy, inject
+  OnInit, OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -748,7 +748,7 @@ const BASES_NORTH = [
       </div>
     </div>
     <div class="flex items-center gap-4">
-      <span class="text-[9px] font-mono text-[var(--s-muted)] uppercase tracking-widest">Hackathon Demo · 2025</span>
+      <span class="text-[9px] font-mono text-[var(--s-muted)] uppercase tracking-widest">Hackathon Demo · 2026</span>
       <a routerLink="/" class="showcase-exit-btn">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
         Stäng
@@ -1122,7 +1122,7 @@ const BASES_NORTH = [
         <!-- COA cards -->
         <div class="coa-list">
           @for (coa of coas; track coa.id) {
-            <div class="coa-card" [class.coa-selected]="selectedCoaId() === coa.id" (click)="selectedCoaId.set(coa.id)">
+            <div class="coa-card" [class.coa-selected]="selectedCoaId() === coa.id" (click)="selectedCoaId.set(coa.id)" tabindex="0" (keydown.enter)="selectedCoaId.set(coa.id)" (keydown.space)="selectedCoaId.set(coa.id)">
               <div class="coa-top">
                 <span class="coa-id" [style.color]="coa.color">{{ coa.id }}</span>
                 @if (selectedCoaId() === coa.id) {
@@ -1219,7 +1219,7 @@ const BASES_NORTH = [
 
           <div class="board-features">
             @for (step of validationSteps; track step.id; let i = $index) {
-              <div class="board-feat" [class.board-feat-active]="validationFocusIndex() === i" (click)="validationFocusIndex.set(i)">
+              <div class="board-feat" [class.board-feat-active]="validationFocusIndex() === i" (click)="validationFocusIndex.set(i)" tabindex="0" (keydown.enter)="validationFocusIndex.set(i)" (keydown.space)="validationFocusIndex.set(i)">
                 <div class="feat-icon">{{ step.tag }}</div>
                 <div class="feat-text">
                   <div class="feat-title">{{ step.title }}</div>
@@ -1322,7 +1322,7 @@ const BASES_NORTH = [
 
       <div class="ml-grid">
         <!-- Single source of truth -->
-        <div class="ml-card ml-card-primary" [class.ml-card-focus]="modelFocusIndex() === 0" (click)="modelFocusIndex.set(0)">
+        <div class="ml-card ml-card-primary" [class.ml-card-focus]="modelFocusIndex() === 0" (click)="modelFocusIndex.set(0)" tabindex="0" (keydown.enter)="modelFocusIndex.set(0)" (keydown.space)="modelFocusIndex.set(0)">
           <div class="ml-card-header">
             <span class="ml-icon">⊚</span>
             <span class="ml-card-title">Single source of truth</span>
@@ -1349,7 +1349,7 @@ const BASES_NORTH = [
         </div>
 
         <!-- Backend authority -->
-        <div class="ml-card" [class.ml-card-focus]="modelFocusIndex() === 1" (click)="modelFocusIndex.set(1)">
+        <div class="ml-card" [class.ml-card-focus]="modelFocusIndex() === 1" (click)="modelFocusIndex.set(1)" tabindex="0" (keydown.enter)="modelFocusIndex.set(1)" (keydown.space)="modelFocusIndex.set(1)">
           <div class="ml-card-header">
             <span class="ml-icon">⊛</span>
             <span class="ml-card-title">Backend authority</span>
@@ -1382,7 +1382,7 @@ const BASES_NORTH = [
         </div>
 
         <!-- Consumers -->
-        <div class="ml-card ml-card-highlight" [class.ml-card-focus]="modelFocusIndex() === 2" (click)="modelFocusIndex.set(2)">
+        <div class="ml-card ml-card-highlight" [class.ml-card-focus]="modelFocusIndex() === 2" (click)="modelFocusIndex.set(2)" tabindex="0" (keydown.enter)="modelFocusIndex.set(2)" (keydown.space)="modelFocusIndex.set(2)">
           <div class="ml-card-header">
             <span class="ml-icon">⊟</span>
             <span class="ml-card-title">Consumers</span>
@@ -1399,7 +1399,7 @@ const BASES_NORTH = [
         </div>
 
         <!-- BDT vs dagens system -->
-        <div class="ml-card" [class.ml-card-focus]="modelFocusIndex() === 3" (click)="modelFocusIndex.set(3)">
+        <div class="ml-card" [class.ml-card-focus]="modelFocusIndex() === 3" (click)="modelFocusIndex.set(3)" tabindex="0" (keydown.enter)="modelFocusIndex.set(3)" (keydown.space)="modelFocusIndex.set(3)">
           <div class="ml-card-header">
             <span class="ml-icon">◷</span>
             <span class="ml-card-title">BDT vs dagens system</span>
@@ -1456,7 +1456,7 @@ const BASES_NORTH = [
 
           <div class="gov-authority-levels">
             @for (domain of ontologyDomains; track domain.id; let i = $index) {
-              <div class="auth-level" [class.active-auth]="ontologyFocusIndex() === i" (click)="ontologyFocusIndex.set(i)">
+              <div class="auth-level" [class.active-auth]="ontologyFocusIndex() === i" (click)="ontologyFocusIndex.set(i)" tabindex="0" (keydown.enter)="ontologyFocusIndex.set(i)" (keydown.space)="ontologyFocusIndex.set(i)">
                 <div class="auth-badge">{{ $index + 1 }}</div>
                 <div class="auth-info">
                   <div class="auth-name">{{ domain.title }}</div>
@@ -1520,7 +1520,7 @@ const BASES_NORTH = [
             </div>
             <div class="kg-section-items">
             @for (effect of unificationEffects; track effect.id; let i = $index) {
-                <div class="kg-item" [class.kg-item-active]="unificationFocusIndex() === i" (click)="unificationFocusIndex.set(i)"><strong>{{ effect.title }}</strong> · {{ effect.body }}</div>
+                <div class="kg-item" [class.kg-item-active]="unificationFocusIndex() === i" (click)="unificationFocusIndex.set(i)" tabindex="0" (keydown.enter)="unificationFocusIndex.set(i)" (keydown.space)="unificationFocusIndex.set(i)"><strong>{{ effect.title }}</strong> · {{ effect.body }}</div>
               }
             </div>
           </div>
@@ -1633,7 +1633,7 @@ const BASES_NORTH = [
 
       <div class="summary-pillars">
         @for (method of novelMethods; track method.id; let i = $index) {
-          <div class="pillar" [class.pillar-active]="summaryFocusIndex() === i" (click)="summaryFocusIndex.set(i)">
+          <div class="pillar" [class.pillar-active]="summaryFocusIndex() === i" (click)="summaryFocusIndex.set(i)" tabindex="0" (keydown.enter)="summaryFocusIndex.set(i)" (keydown.space)="summaryFocusIndex.set(i)">
             <div class="pillar-icon">{{ method.tag }}</div>
             <div class="pillar-title">{{ method.title }}</div>
             <div class="pillar-desc">{{ method.body }}</div>
