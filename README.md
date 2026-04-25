@@ -8,23 +8,18 @@ Steel - Smart Stridsledning is the canonical live copy of the command-support ap
 
 ## Snapshot
 
-- Angular 21 SSR application with Express server rendering
-- Cloud Run target region: `europe-north2` for Stockholm hosting
-- Single-instance runtime model for in-memory simulation and websocket state
-- Local branding assets in `public/`
-- Runpod-backed lab inference with local fallback when the endpoint is offline
-- OpenRouter-backed rationale generation through the backend
-- Public capability remapping, C2 resilience, counterfactual, and reference documentation surfaces
-- Fresh GitHub-ready repo, not a research archive
+- **Dual-Tier Deployment:** Static assets distributed globally via Firebase Hosting CDN, while dynamic WebSocket/SSR traffic routes to Cloud Run in `europe-north2` (Stockholm).
+- **Angular 21 + FastAPI:** Angular SSR frontend paired with a Python FastAPI backend for ML and high-performance simulation logic.
+- **RunPod Compute:** Serverless GPU orchestration via RunPod for deep counterfactual simulation when local heuristic trust drops.
+- **OpenRouter LLMs:** Real-time rationale and doctrinal synthesis generated via OpenRouter.
+- **Novel Decision Layers:** Implements a Command Resilience Twin, Public Capability Remapping, and a WebGL 3D Knowledge Graph.
 
 ## What Ships
 
-- Mission overview, tactical control, commander orchestration, readiness, governance, and robustness surfaces
-- C2 resilience lab, counterfactual lab, and reference docs surfaces
-- SSR server entry points and backend rationale endpoints
-- Dockerfile for repeatable container builds
-- GCP deploy script for Artifact Registry and Cloud Run
-- Minimal favicon and banner asset for the repository landing page
+- **Surfaces:** Mission Overview, Tactical Control, Commander Orchestration, Readiness, Logistics, Threat Inspector.
+- **Labs:** C2 Resilience Lab, Robustness Lab, Counterfactual Lab, Drawing Board, and 3D Reference Graph.
+- **Backend (`/api`):** Python FastAPI handling the Twin Engine, Monte Carlo Solvers, and ML LightGBM Ensembles.
+- **Infrastructure:** Dockerfile, Firebase configuration (`firebase.json`), and GCP deploy scripts.
 
 ## What Is Deliberately Excluded
 
