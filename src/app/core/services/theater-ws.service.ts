@@ -3,27 +3,17 @@ import { isPlatformBrowser } from '@angular/common';
 import { Subject, Observable } from 'rxjs';
 import { share } from 'rxjs/operators';
 import { BaseTwin, ThreatTwin } from '../../shared/domain/models';
+import { API_BASE_URL } from '../tokens/api.token';
 
 export type WsConnectionStatus = 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED';
-
-export interface TheaterDelta {
-  type: 'FULL_SNAPSHOT' | 'DELTA';
-  simTime: number;
-  threats: ThreatTwin[];
-  bases: BaseTwin[];
-  phase: string;
-}
-
+// ... (TheaterDelta interface)
 @Injectable({ providedIn: 'root' })
 export class TheaterWsService implements OnDestroy {
   private zone = inject(NgZone);
   private platformId = inject(PLATFORM_ID);
+  private apiBase = inject(API_BASE_URL);
   private socket: WebSocket | null = null;
-  private _messages$ = new Subject<TheaterDelta>();
-  private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  private _destroyed = false;
-  private _connectionStatus = signal<WsConnectionStatus>('DISCONNECTED');
-
+  // ... (private fields)
   readonly messages$: Observable<TheaterDelta> = this._messages$.pipe(share());
   readonly connectionStatus = this._connectionStatus.asReadonly();
 
@@ -39,13 +29,17 @@ export class TheaterWsService implements OnDestroy {
 
     this._connectionStatus.set('CONNECTING');
 
-    // Derive WebSocket URL from current page host (works with Angular proxy)
-    const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const url = `${proto}://${window.location.host}/ws/theater`;
+    // Derive WebSocket URL from API_BASE_URL token
+    const url = (() => {
+       const base = this.apiBase.replace(/\/$/, ''); // Remove trailing slash
+       const wsProto = base.startsWith('https') ? 'wss' : 'ws';
+       return `${base.replace(/^http(s)?/, wsProto)}/ws/theater`;
+    })();
 
     try {
       this.socket = new WebSocket(url);
     } catch {
+// ...
       this._connectionStatus.set('DISCONNECTED');
       this._scheduleReconnect();
       return;

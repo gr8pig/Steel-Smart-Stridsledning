@@ -6,8 +6,6 @@ import {
 } from '@angular/ssr/node';
 import crypto from 'node:crypto';
 import express from 'express';
-import { createServer } from 'node:http';
-import { WebSocketServer, WebSocket } from 'ws';
 import { join } from 'node:path';
 import { computeAdversaryImpact, type RedModel, type TheaterState } from './app/core/sim/red-adversary';
 
@@ -1262,80 +1260,16 @@ app.use((req, res, next) => {
     .catch(next);
 });
 
-// ── Server startup with WebSocket ─────────────────────────────────────────────
+// ── Server startup ───────────────────────────────────────────────────────────
 
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = Number(process.env['PORT'] || 4000);
 
-  const httpServer = createServer(app);
-
-  // WebSocket server — no built-in HTTP server; we handle the upgrade manually
-  const wss = new WebSocketServer({ noServer: true });
-
-  httpServer.on('upgrade', (request, socket, head) => {
-    const { pathname } = new URL(request.url ?? '/', `http://${request.headers.host}`);
-    if (pathname === '/ws/theater' && verifyToken(parseCookies(request.headers.cookie)[LOCK_COOKIE_NAME])) {
-      wss.handleUpgrade(request, socket, head, ws => {
-        wss.emit('connection', ws, request);
-      });
-    } else {
-      socket.destroy();
-    }
-  });
-
-  wss.on('connection', (clientWs: WebSocket) => {
-    const upstreamUrl = new URL('/ws/theater', FASTAPI_WS_URL);
-    const upstreamWs = new WebSocket(upstreamUrl, {
-      headers: {
-        'x-forwarded-host': FASTAPI_WS_URL.host,
-      },
-    });
-
-    const closeBoth = (code?: number, reason?: string) => {
-      if (clientWs.readyState === WebSocket.OPEN || clientWs.readyState === WebSocket.CONNECTING) {
-        clientWs.close(code, reason);
-      }
-      if (upstreamWs.readyState === WebSocket.OPEN || upstreamWs.readyState === WebSocket.CONNECTING) {
-        upstreamWs.close(code, reason);
-      }
-    };
-
-    upstreamWs.on('message', data => {
-      if (clientWs.readyState === WebSocket.OPEN) {
-        clientWs.send(data);
-      }
-    });
-
-    clientWs.on('message', data => {
-      if (upstreamWs.readyState === WebSocket.OPEN) {
-        upstreamWs.send(data);
-      }
-    });
-
-    upstreamWs.on('close', (code, reason) => closeBoth(code, reason.toString()));
-    clientWs.on('close', (code, reason) => closeBoth(code, reason.toString()));
-
-    upstreamWs.on('error', () => {
-      if (clientWs.readyState === WebSocket.OPEN) {
-        clientWs.send(JSON.stringify({
-          type: 'DELTA',
-          simTime: 0,
-          threats: [],
-          bases: [],
-          phase: 'upstream-unavailable',
-        }));
-      }
-      closeBoth(1011, 'FastAPI theater feed unavailable');
-    });
-    clientWs.on('error', () => closeBoth(1011, 'Client websocket error'));
-  });
-
-  // Local mock theater remains available only for legacy local handlers.
+  // Local mock theater remains available for local dev logging.
   setInterval(tick, 2000);
 
-  httpServer.listen(port, () => {
+  app.listen(port, () => {
     console.log(`Node Express server listening on http://localhost:${port}`);
-    console.log(`WebSocket theater feed at ws://localhost:${port}/ws/theater`);
   });
 }
 
