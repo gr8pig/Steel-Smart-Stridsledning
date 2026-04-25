@@ -1,5 +1,5 @@
 """
-Boreal Decision Twin — FastAPI backend.
+Steel Smart Stridsledning — FastAPI backend.
 
 Run with:  uvicorn api.main:app --reload --port 8000
 """
@@ -12,6 +12,9 @@ from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 
 from typing import Annotated
+
+from scipy.spatial import ConvexHull
+import numpy as np
 
 from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,6 +66,17 @@ class MockModel:
 ensemble_inference = EnsembleInference(models=[MockModel() for _ in range(5)])
 runpod_orchestrator = RunPodOrchestrator()
 
+def _calculate_spatial_density(threats) -> float:
+    if len(threats) < 3:
+        return float(len(threats)) / 10.0 # Fallback
+    points = np.array([[t.x, t.y] for t in threats])
+    try:
+        hull = ConvexHull(points)
+        area = hull.volume if hull.volume > 0 else 1.0
+        return len(threats) / area
+    except Exception:
+        return float(len(threats)) / 10.0
+
 def vectorize_theater_state(policy_deltas: PolicyDeltas = None) -> TheaterStateVector:
     """Converts current campaign_twin state into a ML state vector."""
     active_threats = campaign_twin.get_active_threats()
@@ -73,7 +87,7 @@ def vectorize_theater_state(policy_deltas: PolicyDeltas = None) -> TheaterStateV
         velocity_spread = max(velocities) - min(velocities) if len(velocities) > 1 else 0.0
 
     # Simple cluster density calculation
-    density = len(active_threats) / 10.0 # Normalized
+    density = _calculate_spatial_density(active_threats)
 
     return TheaterStateVector(
         timestamp=datetime.now(timezone.utc).isoformat(),
@@ -171,7 +185,7 @@ async def _theater_tick_loop() -> None:
 # ── App ───────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="Boreal Decision Twin API",
+    title="Steel Smart Stridsledning API",
     version="1.0.0",
     lifespan=lifespan,
 )
