@@ -71,6 +71,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/drawing-board').then(m => m.DrawingBoard)
   },
   {
+    path: 'showcase',
+    loadComponent: () => import('./features/showcase').then(m => m.Showcase)
+  },
+  {
     path: '**',
     redirectTo: 'overview'
   }

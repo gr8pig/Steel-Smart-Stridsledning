@@ -84,7 +84,9 @@ function isPublicPath(pathname: string): boolean {
   return (
     pathname === '/health' ||
     pathname === '/unlock' ||
-    pathname === '/logout'
+    pathname === '/logout' ||
+    pathname === '/showcase' ||
+    pathname.startsWith('/showcase/')
   );
 }
 
@@ -504,6 +506,7 @@ function renderLockPage(message = ''): string {
         <input type="password" name="password" placeholder="ENTER ACCESS KEY" autocomplete="current-password" autofocus />
         <button type="submit">AUTHENTICATE</button>
       </form>
+      <a href="/showcase" style="display:block;text-align:center;margin-top:12px;padding:12px 20px;border:1px solid rgba(148,189,255,0.2);border-radius:14px;color:rgba(156,176,199,0.8);font-size:13px;text-decoration:none;letter-spacing:0.04em;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(92,167,255,0.5)';this.style.color='#edf5ff'" onmouseout="this.style.borderColor='rgba(148,189,255,0.2)';this.style.color='rgba(156,176,199,0.8)'">Visa presentation →</a>
       <div class="hint">The command fabric is locked pending authentication.</div>
       <div class="tiny">Access token is issued server-side and applies to the SSR app, API, and WebSocket feed.</div>
       <div class="footer">
