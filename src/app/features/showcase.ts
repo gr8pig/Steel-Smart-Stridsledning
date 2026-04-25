@@ -508,7 +508,7 @@ interface KnowledgePathNode {
 const DEMO_CUES: DemoCue[] = [
   { scenarioIndex: 0, trackId: 'N1' },
   { scenarioIndex: 1, trackId: 'M2' },
-  { scenarioIndex: 2, trackId: 'S2' },
+  { scenarioIndex: 2, trackId: 'S5' },
   { scenarioIndex: 0, trackId: 'N3' },
 ];
 
@@ -537,6 +537,10 @@ const MAP_SCENARIOS: MapTrack[][] = [
     { id: 'S2', x: 720, y: 1040, tx: 760, ty: 390, type: 'ship' },
     { id: 'S3', x: 1230, y: 1090, tx: 1030, ty: 420, type: 'missile' },
     { id: 'S4', x: 1420, y: 860, tx: 1190, ty: 360, type: 'air' },
+    { id: 'S5', x: 210, y: 1200, tx: 510, ty: 500, type: 'air' },
+    { id: 'S6', x: 390, y: 1180, tx: 620, ty: 460, type: 'air' },
+    { id: 'S7', x: 570, y: 1210, tx: 730, ty: 420, type: 'air' },
+    { id: 'S8', x: 980, y: 1190, tx: 920, ty: 450, type: 'air' },
   ],
 ];
 
@@ -562,7 +566,7 @@ const SCENARIO_STORIES: ScenarioStory[] = [
   {
     title: 'Supply lines',
     lead: 'Ett viktigt logistikflöde måste hållas öppet samtidigt som en högvärdig länk hotas.',
-    detail: 'Data om last, corridor, resume-rate och runway pressure gör att ett beslut måste tas tidigt, inte efter att linjen brutits.',
+    detail: 'Data om last, corridor, resume-rate, runway pressure och drönarsvärm gör att ett beslut måste tas tidigt, inte efter att linjen brutits.',
     decision: 'Skydda supply line nu, eller bevara stridsförmåga för ett bättre läge senare?',
   },
 ];
@@ -961,6 +965,16 @@ const BASES_NORTH = [
             <polygon [attr.points]="terrain.islandWest" fill="rgba(92,167,255,0.08)" stroke="rgba(92,167,255,0.25)" stroke-width="1"/>
             <polygon [attr.points]="terrain.islandEast" fill="rgba(92,167,255,0.08)" stroke="rgba(92,167,255,0.25)" stroke-width="1"/>
             <polygon [attr.points]="terrain.southFwd" fill="rgba(239,68,68,0.07)" stroke="rgba(239,68,68,0.18)" stroke-width="1"/>
+
+            @if (mapScenario() === 2) {
+              <g opacity="0.95">
+                <path d="M 240 1140 C 330 1000, 370 860, 430 720 C 480 600, 520 510, 590 430" fill="none" stroke="rgba(245,158,11,0.7)" stroke-width="2.4" stroke-dasharray="10,6"/>
+                <path d="M 430 1120 C 500 980, 560 830, 640 690 C 700 580, 740 500, 780 400" fill="none" stroke="rgba(245,158,11,0.55)" stroke-width="2.4" stroke-dasharray="10,6"/>
+                <path d="M 860 1140 C 910 990, 950 850, 980 710 C 1010 570, 1040 500, 1080 430" fill="none" stroke="rgba(245,158,11,0.45)" stroke-width="2.4" stroke-dasharray="10,6"/>
+                <text x="320" y="1088" font-size="10" font-family="monospace" fill="rgba(245,158,11,0.68)" letter-spacing="0.2em">SUPPLY LINES</text>
+                <text x="980" y="1080" font-size="10" font-family="monospace" fill="rgba(245,158,11,0.68)" letter-spacing="0.2em">DRONE SWARM</text>
+              </g>
+            }
 
             <!-- Strait label -->
             <text x="835" y="720" text-anchor="middle" font-size="22" font-family="monospace" fill="rgba(156,176,199,0.3)" font-weight="bold" letter-spacing="8">BOREALIS SUND</text>
@@ -1787,8 +1801,8 @@ const BASES_NORTH = [
       display: grid; grid-template-columns: 320px 1fr; gap: 32px; height: 100%;
     }
     .slide-map .slide-split {
-      grid-template-columns: minmax(760px, 860px) minmax(0, 1fr);
-      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
       align-items: start;
     }
     .slide-map .slide-left-panel { gap: 10px; }
@@ -2867,6 +2881,7 @@ export class Showcase implements OnInit, OnDestroy {
       if (track.id === 'S1') return 'Supply line som måste hålla öppet för att support ska nå fram i tid.';
       if (track.id === 'S2') return 'Eskort och skydd för korridoren, där reserve floor vägs mot räckvidd.';
       if (track.id === 'S3') return 'Hotet som gör att ett beslut måste tas innan korridoren bryts.';
+      if (track.id === 'S4' || track.id === 'S5' || track.id === 'S6' || track.id === 'S7' || track.id === 'S8') return 'Drönare i svärm som pressar korridoren och påverkar beslutet direkt.';
       return 'Luftburen del av samma logistik- och hotbild.';
     }
     if (track.type === 'missile') {
@@ -2882,11 +2897,12 @@ export class Showcase implements OnInit, OnDestroy {
     const secondsLeft = Math.max(6, Math.round((1 - this.trackProgress()) * 52));
     const scenario = this.mapScenario();
     if (scenario === 2) {
+      const isSwarm = ['S4', 'S5', 'S6', 'S7', 'S8'].includes(track.id);
       return [
-        { label: 'Roll', value: track.id === 'S1' ? 'Supply line' : track.id === 'S2' ? 'Escort' : track.id === 'S3' ? 'Threat' : 'Air cover' },
+        { label: 'Roll', value: track.id === 'S1' ? 'Supply line' : track.id === 'S2' ? 'Escort' : track.id === 'S3' ? 'Threat' : isSwarm ? 'Drone swarm' : 'Air cover' },
         { label: 'Tid', value: `${secondsLeft}s` },
-        { label: 'Beslut', value: track.id === 'S3' ? 'Intercept now' : 'Protect corridor' },
-        { label: 'Konsekvens', value: track.id === 'S1' ? 'Support reaches base' : track.id === 'S3' ? 'Corridor breaks' : 'Reserve is consumed' },
+        { label: 'Beslut', value: track.id === 'S3' ? 'Intercept now' : isSwarm ? 'Suppress swarm' : 'Protect corridor' },
+        { label: 'Konsekvens', value: track.id === 'S1' ? 'Support reaches base' : track.id === 'S3' ? 'Corridor breaks' : isSwarm ? 'Corridor pressure rises' : 'Reserve is consumed' },
       ];
     }
     if (scenario === 1) {
@@ -2909,10 +2925,11 @@ export class Showcase implements OnInit, OnDestroy {
     const scenario = this.mapScenario();
     const secondsLeft = Math.max(6, Math.round((1 - this.trackProgress()) * 52));
     if (scenario === 2) {
-      const corridor = track.id === 'S1' ? 'Supply line' : track.id === 'S2' ? 'Escort' : track.id === 'S3' ? 'Threat' : 'Air cover';
+      const isSwarm = ['S4', 'S5', 'S6', 'S7', 'S8'].includes(track.id);
+      const corridor = track.id === 'S1' ? 'Supply line' : track.id === 'S2' ? 'Escort' : track.id === 'S3' ? 'Threat' : isSwarm ? 'Drone swarm' : 'Air cover';
       return [
         { label: 'Data', value: '4 logistics signals', detail: 'Last, corridor pressure, escort and runway status.' },
-        { label: 'Recommendation', value: track.id === 'S3' ? 'Intercept now' : 'Protect corridor', detail: 'Tidigt beslut behövs innan linjen bryts.' },
+        { label: 'Recommendation', value: track.id === 'S3' ? 'Intercept now' : isSwarm ? 'Suppress swarm' : 'Protect corridor', detail: 'Tidigt beslut behövs innan linjen bryts.' },
         { label: 'Why now', value: `${secondsLeft}s decision window`, detail: `${corridor} påverkar samma state som COA och validation.` },
       ];
     }
