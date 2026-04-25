@@ -19,6 +19,8 @@ export interface DrawingUnit {
   startY: number;
   waypoints: DrawingWaypoint[];
   speed: number; // SVG units per simulated second
+  armament?: string;
+  origin?: string;
 }
 
 export interface UnitPosition {
@@ -26,6 +28,11 @@ export interface UnitPosition {
   x: number;
   y: number;
   heading: number; // degrees, 0 = right, 90 = down
+}
+
+export interface IntentPrediction {
+  unitId: string;
+  trajectories: { x: number; y: number }[][];
 }
 
 const SPEEDS: Record<DrawingUnitType, number> = {
@@ -51,9 +58,12 @@ export class DrawingBoardStore {
   mode           = signal<DrawingMode>('SELECT');
   activeUnitType = signal<DrawingUnitType>('INFANTRY');
   activeSide     = signal<DrawingSide>('RED');
+  activeArmament = signal<string>('Standard');
+  activeOrigin   = signal<string>('Base Alpha');
   playbackTime   = signal<number>(0);
   isPlaying      = signal<boolean>(false);
   playbackSpeed  = signal<number>(1);
+  intentPredictions = signal<IntentPrediction[]>([]);
 
   selectedUnit = computed(() => {
     const id = this.selectedUnitId();
@@ -76,6 +86,7 @@ export class DrawingBoardStore {
     this.units.update(us => [...us, {
       id, type, side: this.activeSide(), label: id,
       startX: x, startY: y, waypoints: [], speed: SPEEDS[type],
+      armament: this.activeArmament(), origin: this.activeOrigin()
     }]);
     return id;
   }

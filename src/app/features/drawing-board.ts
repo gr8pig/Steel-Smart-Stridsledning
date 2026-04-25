@@ -3,7 +3,9 @@ import {
   effect, OnDestroy, ElementRef, ViewChild, HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { SteelApiService } from '../core/services/steel-api.service';
 import {
   DrawingBoardStore, DrawingUnit, DrawingUnitType, DrawingMode, DrawingSide,
 } from '../core/state/drawing-board.store';
@@ -30,7 +32,7 @@ const GROUPS = ['Ground', 'Naval', 'Air'];
 @Component({
   selector: 'app-drawing-board',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   template: `
     <div class="h-full w-full flex overflow-hidden">
 
@@ -81,8 +83,33 @@ const GROUPS = ['Ground', 'Naval', 'Air'];
         </div>
 
         <!-- Unit type palette -->
-        <div class="border-t border-boreal-border px-2 py-2">
-          <div class="text-[9px] font-black text-boreal-text-muted uppercase tracking-widest mb-1.5">Unit Type</div>
+        <div class="border-t border-boreal-border px-2 py-2 flex flex-col gap-2">
+          <div class="flex flex-col gap-1">
+            <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-widest">Armament</span>
+            <select
+              [ngModel]="store.activeArmament()"
+              (ngModelChange)="store.activeArmament.set($event)"
+              class="w-full bg-boreal-canvas border border-boreal-border rounded-sm text-[10px] px-2 py-1 text-boreal-text-primary focus:outline-none focus:border-boreal-blue"
+            >
+              <option value="Standard">Standard</option>
+              <option value="Heavy">Heavy</option>
+              <option value="Anti-Air">Anti-Air</option>
+            </select>
+          </div>
+          <div class="flex flex-col gap-1">
+            <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-widest">Origin</span>
+            <select
+              [ngModel]="store.activeOrigin()"
+              (ngModelChange)="store.activeOrigin.set($event)"
+              class="w-full bg-boreal-canvas border border-boreal-border rounded-sm text-[10px] px-2 py-1 text-boreal-text-primary focus:outline-none focus:border-boreal-blue"
+            >
+              <option value="Base Alpha">Base Alpha</option>
+              <option value="Base Bravo">Base Bravo</option>
+              <option value="Unknown">Unknown</option>
+            </select>
+          </div>
+
+          <div class="text-[9px] font-black text-boreal-text-muted uppercase tracking-widest mt-1">Unit Type</div>
           @for (group of groups; track group) {
             <div class="text-[8px] text-boreal-text-muted font-mono uppercase tracking-widest mt-1.5 mb-0.5 opacity-60">{{ group }}</div>
             <div class="grid grid-cols-2 gap-1">
@@ -116,17 +143,24 @@ const GROUPS = ['Ground', 'Naval', 'Air'];
         </div>
 
         <!-- Placed units list -->
-        <div class="flex-grow overflow-y-auto border-t border-boreal-border mt-1">
-          <div class="flex items-center justify-between px-2 py-1.5">
+        <div class="flex-grow overflow-y-auto border-t border-boreal-border mt-1 flex flex-col">
+          <div class="flex items-center justify-between px-2 py-1.5 shrink-0">
             <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-widest">Units ({{ store.units().length }})</span>
             @if (store.units().length > 0) {
-              <button (click)="store.clearAll()"
-                class="text-[8px] text-boreal-red font-bold uppercase tracking-wider hover:opacity-80 transition-opacity">
-                Clear All
-              </button>
+              <div class="flex gap-2 items-center">
+                <button (click)="runIntentInference()"
+                  class="text-[8px] bg-boreal-blue/20 text-boreal-blue border border-boreal-blue/50 rounded-sm px-1.5 py-0.5 font-bold uppercase tracking-wider hover:bg-boreal-blue/30 transition-colors">
+                  Infer Intent
+                </button>
+                <button (click)="store.clearAll()"
+                  class="text-[8px] text-boreal-red font-bold uppercase tracking-wider hover:opacity-80 transition-opacity">
+                  Clear All
+                </button>
+              </div>
             }
           </div>
-          @for (unit of store.units(); track unit.id) {
+          <div class="flex-grow overflow-y-auto">
+            @for (unit of store.units(); track unit.id) {
             <button
               (click)="store.selectUnit(unit.id)"
               class="w-full text-left px-2 py-1.5 border-b border-boreal-border/40 flex items-center gap-2 transition-colors"
@@ -269,6 +303,19 @@ const GROUPS = ['Ground', 'Naval', 'Air'];
               }
 
               <!-- ── DRAWING LAYER ──────────────────────────────────────── -->
+
+              <!-- Intent Predictions -->
+              @for (pred of store.intentPredictions(); track pred.unitId) {
+                @for (traj of pred.trajectories; track $index) {
+                  <polyline
+                    [attr.points]="formatPointCoords(traj)"
+                    fill="none"
+                    stroke="var(--boreal-amber)"
+                    stroke-width="2"
+                    stroke-dasharray="4,4"
+                    opacity="0.6" />
+                }
+              }
 
               <!-- Waypoint paths (always visible) -->
               @for (unit of store.units(); track unit.id) {
@@ -557,6 +604,7 @@ const GROUPS = ['Ground', 'Naval', 'Air'];
 })
 export class DrawingBoard implements OnDestroy {
   store = inject(DrawingBoardStore);
+  api = inject(SteelApiService);
 
   @ViewChild('mapSvg')   mapSvgRef!:   ElementRef<SVGSVGElement>;
   @ViewChild('mapGroup') mapGroupRef!: ElementRef<SVGGElement>;
@@ -598,6 +646,31 @@ export class DrawingBoard implements OnDestroy {
   }
 
   ngOnDestroy() { this._stopLoop(); }
+
+  runIntentInference() {
+    const sketch = {
+      timestamp: new Date().toISOString(),
+      agents: this.store.units().map(u => ({
+        id: u.id,
+        type: u.type,
+        side: u.side,
+        x: u.startX,
+        y: u.startY,
+        armament: u.armament,
+        origin: u.origin
+      }))
+    };
+    
+    this.api.predictSketchIntent(sketch).subscribe({
+      next: (res: any) => {
+        // Assume backend returns an array of predictions or map of { unitId: trajectories }
+        if (res?.predictions) {
+          this.store.intentPredictions.set(res.predictions);
+        }
+      },
+      error: (err) => console.error('Intent inference failed', err)
+    });
+  }
 
   // ── Computed ──────────────────────────────────────────────────────────────
 
@@ -741,6 +814,10 @@ export class DrawingBoard implements OnDestroy {
 
   formatCoords(coords: [number, number][]): string {
     return coords.map(c => `${c[0]},${c[1]}`).join(' ');
+  }
+
+  formatPointCoords(pts: {x: number, y: number}[]): string {
+    return pts.map(p => `${p.x},${p.y}`).join(' ');
   }
 
   formatTime(seconds: number): string {

@@ -2,7 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LogisticsSnapshot } from '../../shared/domain/logistics-ontology';
-import { DecisionFabricTwin } from '../../shared/domain/decision-fabric';
+import {
+  CounterfactualPrediction,
+  CounterfactualSimulationRequest,
+  DeepSimJobMetadata,
+} from '../ml/counterfactual-lab.models';
 
 export interface LogisticsContext {
   supplyHealth: number;
@@ -60,7 +64,7 @@ export interface LabRunConfig {
   nRuns?: number;
 }
 
-export interface MutationSyncOptions {
+export interface ActionReplayMetadata {
   clientActionId?: string;
   deviceId?: string;
   queuedAt?: string;
@@ -73,8 +77,8 @@ export class SteelApiService {
 
   // ── Twin reads ──────────────────────────────────────────────────────────────
 
-  getCampaign(): Observable<any> {
-    return this.http.get(`${this.base}/twins/campaign`);
+  getCampaign(): Observable<{ bases: any[], threats: any[], policy: any, coas: any[], simTime: number, phase: string }> {
+    return this.http.get<{ bases: any[], threats: any[], policy: any, coas: any[], simTime: number, phase: string }>(`${this.base}/twins/campaign`);
   }
 
   getBases(): Observable<any[]> {
@@ -89,47 +93,34 @@ export class SteelApiService {
     return this.http.get<ReadinessProjection[]>(`${this.base}/twins/readiness/projection`);
   }
 
-  getDecisionFabric(): Observable<DecisionFabricTwin> {
-    return this.http.get<DecisionFabricTwin>(`${this.base}/twins/decision-fabric`);
-  }
-
   // ── Policy ──────────────────────────────────────────────────────────────────
 
-  updatePolicy(
-    weights: { safety: number; sustainability: number; resilience: number },
-    sync?: MutationSyncOptions,
-  ): Observable<any> {
-    return this.http.post(`${this.base}/twins/policy`, {
-      policyWeights: weights,
-      clientActionId: sync?.clientActionId,
-      deviceId: sync?.deviceId,
-      queuedAt: sync?.queuedAt,
-    });
+  updatePolicy(weights: { safety: number; sustainability: number; resilience: number }): Observable<{ ok: boolean; weights: any }> {
+    return this.http.post<{ ok: boolean; weights: any }>(`${this.base}/twins/policy`, { policyWeights: weights });
   }
 
   engageTrack(
     trackId: string,
     baseId: string,
     effectorType: string,
-    sync?: MutationSyncOptions,
-  ): Observable<any> {
-    return this.http.post(`${this.base}/twins/engage`, {
+    replay?: ActionReplayMetadata
+  ): Observable<{ success: boolean; trackId: string; newStatus: string; effectorType: string }> {
+    return this.http.post<{ success: boolean; trackId: string; newStatus: string; effectorType: string }>(`${this.base}/twins/engage`, {
       trackId,
       baseId,
       effectorType,
-      clientActionId: sync?.clientActionId,
-      deviceId: sync?.deviceId,
-      queuedAt: sync?.queuedAt,
+      ...(replay ?? {}),
     });
   }
 
-  injectTracks(count: number, type: 'FEINT' | 'KINETIC' | 'MIXED' | 'DRONE'): Observable<any> {
-    return this.http.post(`${this.base}/twins/inject-tracks`, { count, type });
+  injectTracks(count: number, type: 'FEINT' | 'KINETIC' | 'MIXED' | 'DRONE'): Observable<{ injected: number; ids: string[] }> {
+    return this.http.post<{ injected: number; ids: string[] }>(`${this.base}/twins/inject-tracks`, { count, type });
   }
 
-  resetScenario(): Observable<any> {
-    return this.http.post(`${this.base}/twins/reset`, {});
+  resetScenario(): Observable<{ status: string; simTime: number; bases: number; threats: number }> {
+    return this.http.post<{ status: string; simTime: number; bases: number; threats: number }>(`${this.base}/twins/reset`, {});
   }
+
 
   // ── COA solver ──────────────────────────────────────────────────────────────
 
@@ -147,6 +138,29 @@ export class SteelApiService {
       trackDegradation: config.trackDegradation,
       nRuns:           config.nRuns ?? 500,
     });
+  }
+
+  // ── Counterfactual lab ────────────────────────────────────────────────────
+
+  predictCounterfactual(request: CounterfactualSimulationRequest): Observable<CounterfactualPrediction> {
+    return this.http.post<CounterfactualPrediction>(`${this.base}/ml/predict`, request);
+  }
+
+  predictSketchIntent(sketch: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/ml/predict`, sketch);
+  }
+
+  predictDrawnIntent(drawnPoints: {x: number, y: number}[]): Observable<any> {
+    // Construct a mock TheaterState payload from the drawn points
+    const payload = {
+      theater: { timestamp: new Date().toISOString(), trackCount: drawnPoints.length },
+      assets: drawnPoints.map((p, i) => ({ id: `DRAWN-${i}`, lat: p.y, lng: p.x, class: 'UNKNOWN' }))
+    };
+    return this.http.post<any>(`${this.base}/ml/predict`, payload);
+  }
+
+  triggerDeepSim(request: CounterfactualSimulationRequest): Observable<DeepSimJobMetadata> {
+    return this.http.post<DeepSimJobMetadata>(`${this.base}/ml/deep-sim`, request);
   }
 
   // ── Logistics ───────────────────────────────────────────────────────────────
