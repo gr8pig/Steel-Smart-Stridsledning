@@ -97,7 +97,7 @@ export interface ActionReplayMetadata {
 @Injectable({ providedIn: 'root' })
 export class SteelApiService {
   private http = inject(HttpClient);
-  private base = '/api';
+  private base = (window as any).API_BASE_URL || 'http://127.0.0.1:8000';
 
   // ── Twin reads ──────────────────────────────────────────────────────────────
 
