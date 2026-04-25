@@ -48,7 +48,7 @@ export class DecisionFabricStore {
           actor: 'SYSTEM',
           action: 'C2 Resilience Shift',
           rationale: `Decision fabric status changed from ${this._prevStatus} to ${currentStatus}. Score: ${currentScore.toFixed(2)}`,
-          category: 'SYSTEM'
+          category: 'GOVERNANCE'
         });
       }
       this._prevStatus = currentStatus;

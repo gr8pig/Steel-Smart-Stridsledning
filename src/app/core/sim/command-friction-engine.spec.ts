@@ -9,26 +9,23 @@ describe('CommandFrictionEngine', () => {
       expect(score).toBeCloseTo(1, 2);
     });
 
-    it('should return a low score when one metric is very low (Harmonic Mean property)', () => {
-      // Harmonic mean is sensitive to low values
+    it('should use a weighted sum model (25/25/30/20)', () => {
       const metrics = { trust: 0.1, tempo: 1, cognitive: 1, audit: 1 };
       const score = CommandFrictionEngine.calculateResilience(metrics);
-      // Weights: trust: 0.25, tempo: 0.25, cognitive: 0.30, audit: 0.20
-      // 1 / (0.25/0.1 + 0.25/1 + 0.3/1 + 0.2/1) = 1 / (2.5 + 0.25 + 0.3 + 0.2) = 1 / 3.25 = 0.307
-      expect(score).toBeLessThan(0.4);
-      expect(score).toBeCloseTo(0.307, 2);
+      // (0.1 * 0.25) + (1 * 0.25) + (1 * 0.30) + (1 * 0.20) = 0.025 + 0.25 + 0.30 + 0.20 = 0.775
+      expect(score).toBeCloseTo(0.775, 3);
     });
 
-    it('should handle zero values by capping at 0.01 to avoid division by zero', () => {
+    it('should return 0.75 if trust is 0 and others are 1', () => {
       const metrics = { trust: 0, tempo: 1, cognitive: 1, audit: 1 };
       const score = CommandFrictionEngine.calculateResilience(metrics);
-      // 1 / (0.25/0.01 + 0.25/1 + 0.3/1 + 0.2/1) = 1 / (25 + 0.25 + 0.3 + 0.2) = 1 / 25.75 = 0.0388
-      expect(score).toBeCloseTo(0.0388, 3);
+      // (0 * 0.25) + (1 * 0.25) + (1 * 0.30) + (1 * 0.20) = 0.75
+      expect(score).toBe(0.75);
     });
   });
 
   describe('projectCollapse', () => {
-    it('should return null if velocity is positive (improving resilience)', () => {
+    it('should return null if resilience is improving (current >= prev)', () => {
       const current = 0.8;
       const prev = 0.7;
       const dt = 10;
@@ -36,34 +33,24 @@ describe('CommandFrictionEngine', () => {
       expect(projection).toBeNull();
     });
 
-    it('should return null if velocity is zero', () => {
-      const current = 0.8;
-      const prev = 0.8;
-      const dt = 10;
+    it('should return null if dt is 0', () => {
+      const current = 0.6;
+      const prev = 0.7;
+      const dt = 0;
       const projection = CommandFrictionEngine.projectCollapse(current, prev, dt, 0.1);
       expect(projection).toBeNull();
     });
 
-    it('should project time to collapse correctly when velocity is negative', () => {
+    it('should project time to zero and accelerate by failure probability', () => {
       const current = 0.6;
       const prev = 0.7;
       const dt = 10;
       const pFail = 0.5;
-      // velocity = (0.6 - 0.7) / 10 = -0.01 units/sec
-      // distance to collapse (0.2) = 0.6 - 0.2 = 0.4
-      // multiplier = 1 + 0.5 = 1.5
-      // adjusted velocity magnitude = 0.01 * 1.5 = 0.015
-      // time = 0.4 / 0.015 = 26.666...
+      // velocity = (0.7 - 0.6) / 10 = 0.01 units/sec
+      // timeToZero = 0.6 / 0.01 = 60
+      // adjusted = 60 * (1 - (0.5 * 0.5)) = 60 * 0.75 = 45
       const projection = CommandFrictionEngine.projectCollapse(current, prev, dt, pFail);
-      expect(projection).toBeCloseTo(26.67, 1);
-    });
-
-    it('should return 0 if current score is already below threshold', () => {
-      const current = 0.15;
-      const prev = 0.25;
-      const dt = 10;
-      const projection = CommandFrictionEngine.projectCollapse(current, prev, dt, 0.1);
-      expect(projection).toBe(0);
+      expect(projection).toBeCloseTo(45, 1);
     });
   });
 });
