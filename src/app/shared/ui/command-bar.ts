@@ -62,28 +62,10 @@ import { CapabilityLayerSwitch } from './capability-layer-switch';
         >
           <div class="flex flex-col items-end">
             <span class="text-[7px] font-mono text-boreal-text-muted uppercase tracking-widest leading-none mb-0.5">Fabric Health</span>
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] font-mono font-bold text-boreal-text-primary leading-none">{{(fabric.resilienceScore() * 100).toFixed(0)}}%</span>
-              <span class="text-[9px] font-black uppercase tracking-tighter transition-colors group-hover:text-boreal-blue leading-none" [class]="getFabricStatusClass()">{{fabric.status()}}</span>
-            </div>
+            <span class="text-[9px] font-black uppercase tracking-tighter transition-colors group-hover:text-boreal-blue leading-none" [class]="getFabricStatusClass()">{{fabric.status()}}</span>
           </div>
           <div class="w-1 h-4 rounded-full" [class]="getFabricBarClass()"></div>
         </a>
-
-        <div class="hidden xl:flex items-center gap-2">
-          <a
-            routerLink="/reference"
-            class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all"
-          >
-            Reference
-          </a>
-          <a
-            routerLink="/counterfactual-lab"
-            class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all"
-          >
-            What-If
-          </a>
-        </div>
 
         <div class="h-6 w-px bg-boreal-border mx-1"></div>
 
@@ -225,3 +207,4 @@ export class CommandBar {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 }
+

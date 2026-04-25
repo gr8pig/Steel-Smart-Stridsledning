@@ -16,13 +16,16 @@ import { ThreatTwin, COATwin, MapFeature } from '../shared/domain/models';
 import { SupplyNode, SupplyCorridor } from '../shared/domain/logistics-ontology';
 
 import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
+import { CapabilityLayerStore } from '../core/state/capability-layer.store';
+import { SafetyBanner } from '../shared/ui/safety-banner';
 
 @Component({
   selector: 'app-tactical-console',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, SafetyBanner],
   template: `
-    <div class="h-full w-full flex overflow-hidden">
+    <div class="h-full w-full flex overflow-hidden relative">
+      <app-safety-banner />
 
       <!-- HITL Manual Confirmation Modal -->
       @if (_pendingConfirm()) {
@@ -82,11 +85,11 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
       <div class="w-85 border-r border-boreal-border bg-boreal-panel flex flex-col z-20 shadow-2xl">
         <div class="panel-header uppercase tracking-widest text-[10px] text-boreal-text-muted flex items-center justify-between">
             <span>Threat Queue</span>
-            <span class="bg-boreal-red/10 text-boreal-red px-1 rounded">{{tactical.activeThreats().length}} ACTIVE</span>
+            <span class="bg-boreal-red/10 text-boreal-red px-1 rounded">{{capabilityStore.remappedTracks().length}} TOTAL</span>
         </div>
         
         <div class="flex-grow overflow-y-auto select-none">
-            @for (track of tactical.imminentThreats(); track track.id) {
+            @for (track of capabilityStore.remappedTracks(); track track.id) {
                 <button 
                     (click)="selectTrack(track.id)"
                     [class.bg-boreal-panel-elevated]="tactical.selectedTrackId() === track.id"
@@ -97,7 +100,11 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2">
                             <span class="text-[10px] font-mono text-boreal-text-muted">{{track.id}}</span>
-                            <span class="text-xs font-bold leading-none" [class.text-boreal-red]="track.class === 'MISSILE'">{{track.class}}</span>
+                            @if (track.publicInterpretation; as pi) {
+                                <span class="text-[10px] font-black text-boreal-blue uppercase tracking-tight">{{pi.displayName}}</span>
+                            } @else {
+                                <span class="text-xs font-bold leading-none" [class.text-boreal-red]="track.class === 'MISSILE'">{{track.class}}</span>
+                            }
                         </div>
                         <span class="text-[10px] font-mono tabular-nums" [class.text-boreal-red]="track.timeToTarget < 100" [class.text-boreal-amber]="track.timeToTarget >= 100">
                             {{track.timeToTarget}}s
@@ -106,9 +113,15 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                     
                     <div class="flex items-center justify-between">
                         <div class="flex gap-1 items-center">
-                            <span class="px-1.5 py-0.5 rounded bg-boreal-canvas/40 text-[9px] font-mono border border-boreal-border text-boreal-text-secondary uppercase">
-                                {{track.intent}}
-                            </span>
+                            @if (track.publicInterpretation; as pi) {
+                                <span class="px-1.5 py-0.5 rounded bg-boreal-blue/10 text-[8px] font-black border border-boreal-blue/20 text-boreal-blue uppercase">
+                                    {{pi.bdtAbstraction}}
+                                </span>
+                            } @else {
+                                <span class="px-1.5 py-0.5 rounded bg-boreal-canvas/40 text-[9px] font-mono border border-boreal-border text-boreal-text-secondary uppercase">
+                                    {{track.intent}}
+                                </span>
+                            }
                             <span class="text-[9px] text-boreal-text-muted font-medium italic">Conf: {{track.confidence * 100 | number:'1.0-0'}}%</span>
                         </div>
                         <mat-icon class="!text-xs text-boreal-text-muted opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</mat-icon>
@@ -491,7 +504,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
 
                     <!-- Threat Track Layer -->
                     @if (layers.isLayerVisible('threat_tracks')) {
-                        @for (track of tactical.tracks(); track track.id) {
+                        @for (track of capabilityStore.remappedTracks(); track track.id) {
                             <g 
                                 [attr.transform]="getTrackTransform(track)" 
                                 class="transition-transform duration-500 ease-linear cursor-pointer group/track"
@@ -541,7 +554,12 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                                      <g [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 0 0;'">
                                          <g transform="translate(18, -18)">
                                             <rect x="0" y="-12" width="60" height="12" class="fill-boreal-blue/20 stroke-boreal-blue/40" stroke-width="0.5"></rect>
-                                            <text x="4" y="-3" class="text-[8px] font-mono fill-boreal-blue font-black uppercase tracking-widest">TRK_{{track.id}}</text>
+                                            <text x="4" y="-3" class="text-[8px] font-mono fill-boreal-blue font-black uppercase tracking-widest">
+                                                {{ track.publicInterpretation ? track.publicInterpretation.displayName : 'TRK_' + track.id }}
+                                            </text>
+                                            @if (layers.isLayerVisible('source_badges') && track.publicInterpretation) {
+                                                <text x="65" y="-3" class="text-[6px] font-mono fill-boreal-amber font-black uppercase tracking-tight">[SAAB-SOURCE]</text>
+                                            }
                                          </g>
                                      </g>
                                 }
@@ -554,8 +572,15 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                                         style="paint-order: stroke; stroke: var(--boreal-red); stroke-width: 2px;"
                                         [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 12px 14px;'"
                                     >
-                                        {{track.id}}
+                                        {{ track.publicInterpretation ? track.publicInterpretation.displayName : track.id }}
                                     </text>
+                                    @if (layers.isLayerVisible('source_badges') && track.publicInterpretation) {
+                                        <text 
+                                            x="12" y="22" 
+                                            class="text-[6px] font-mono fill-boreal-amber font-black select-none pointer-events-none uppercase tracking-tighter"
+                                            [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 12px 22px;'"
+                                        >[SAAB-SOURCE]</text>
+                                    }
                                 }
                             </g>
                         }
@@ -913,6 +938,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
 })
 export class TacticalConsole {
     tactical = inject(TacticalStore);
+    capabilityStore = inject(CapabilityLayerStore);
     policy = inject(PolicyStore);
     readiness = inject(ReadinessStore);
     scenario = inject(ScenarioStore);
@@ -937,6 +963,8 @@ export class TacticalConsole {
     isDragging = signal(false);
     lastMouseX = 0;
     lastMouseY = 0;
+    private readonly viewboxWidth = 1670;
+    private readonly viewboxHeight = 1300;
 
     // IFZ mode toggle labels shown in map controls
     readonly ifzModes = [
@@ -1136,7 +1164,10 @@ export class TacticalConsole {
 
     selectTrack(id: string) {
         this.tactical.selectTrack(id);
-        // Center on selection could be implemented here as well
+        const track = this.tactical.selectedTrack();
+        if (track) {
+            this.focusOnPoint(track.geometry.x, track.geometry.y);
+        }
     }
 
     acceptRecommendation() {
@@ -1286,21 +1317,45 @@ export class TacticalConsole {
     getEngagementPath(track: ThreatTwin): { targetX: number, targetY: number } | null {
         const assignment = this.policy.selectedCOA()?.assignments.find(a => a.threatId === track.id);
         if (assignment) {
-            const base = this.readiness.bases().find(b => b.id === assignment.baseId);
-            if (base) {
-                // Return a point between threat and base as the intercept point
+            const basePoint = this.getBasePoint(assignment.baseId);
+            if (basePoint) {
                 return {
-                    targetX: (track.geometry.x + 800) / 2, // Dummy intercept point calculation
-                    targetY: (track.geometry.y + 400) / 2
+                    targetX: (track.geometry.x + basePoint.x) / 2,
+                    targetY: (track.geometry.y + basePoint.y) / 2
                 };
             }
         }
-        
-        // Default to a vector showing predicted track if no assignment
+
+        // Default to a vector showing predicted track if no assignment or no mapped base
         return {
             targetX: track.geometry.x + Math.cos(track.geometry.heading * Math.PI / 180) * 100,
             targetY: track.geometry.y + Math.sin(track.geometry.heading * Math.PI / 180) * 100
         };
+    }
+
+    private getBasePoint(baseId: string): { x: number; y: number } | null {
+        const baseName = this.readiness.bases().find(b => b.id === baseId)?.name;
+        if (!baseName) return null;
+
+        const feature = this.mapFeatures.find(f =>
+            f.recordType === 'location' &&
+            f.subtype === 'air_base' &&
+            f.name === baseName &&
+            f.x !== undefined &&
+            f.y !== undefined
+        );
+
+        return feature?.x !== undefined && feature?.y !== undefined
+            ? { x: feature.x, y: feature.y }
+            : null;
+    }
+
+    private focusOnPoint(x: number, y: number): void {
+        // The SVG is rendered in viewBox coordinates, so we can recenter directly.
+        const centeredX = (this.viewboxWidth / 2) - (x * this.zoomLevel());
+        const centeredY = (this.viewboxHeight / 2) - (y * this.zoomLevel());
+        this.posX.set(centeredX);
+        this.posY.set(centeredY);
     }
 
     shouldShowLabel(feature: MapFeature, zoom: number): boolean {

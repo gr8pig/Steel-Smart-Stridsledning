@@ -51,15 +51,6 @@ export const routes: Routes = [
     loadChildren: () => import('./features/reference/reference.routes').then(m => m.referenceRoutes)
   },
   {
-    path: 'c2-resilience-lab',
-    redirectTo: 'c2-resilience',
-    pathMatch: 'full'
-  },
-  {
-    path: 'c2-resilience',
-    loadComponent: () => import('./features/c2-resilience-lab').then(m => m.C2ResilienceLab)
-  },
-  {
     path: 'knowledge-graph',
     loadComponent: () => import('./features/knowledge-graph').then(m => m.KnowledgeGraph)
   },
@@ -70,6 +61,14 @@ export const routes: Routes = [
   {
     path: 'field',
     loadComponent: () => import('./features/field-console').then(m => m.FieldConsole)
+  },
+  {
+    path: 'c2-resilience',
+    loadComponent: () => import('./features/c2-resilience-lab').then(m => m.C2ResilienceLabComponent)
+  },
+  {
+    path: 'drawing-board',
+    loadComponent: () => import('./features/drawing-board').then(m => m.DrawingBoard)
   },
   {
     path: '**',

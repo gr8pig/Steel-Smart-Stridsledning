@@ -147,7 +147,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                             </div>
                             <div class="text-boreal-text-muted text-[10px]">vs</div>
                             <div class="flex flex-col">
-                                <span class="text-[7px] text-boreal-text-muted uppercase tracking-widest">Steel @ T+12</span>
+                                <span class="text-[7px] text-boreal-text-muted uppercase tracking-widest">BDT @ T+12</span>
                                 <span class="text-base font-black text-boreal-blue font-mono tracking-tighter">62%</span>
                             </div>
                             <div class="ml-auto text-right">
@@ -179,7 +179,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                     <div class="flex flex-col">
                         <h2 class="text-sm font-bold text-boreal-text-primary uppercase tracking-tight">Wave-2 Readiness Projection</h2>
                         <p class="text-[10px] text-boreal-text-muted mt-1 leading-relaxed italic">
-                            Steel holds 62% readiness at T+12. Legacy depletes to 8%. Select COA and see the divergence curve live.
+                            BDT holds 62% readiness at T+12. Legacy depletes to 8%. Select COA and see the divergence curve live.
                         </p>
                     </div>
                 </div>
@@ -197,7 +197,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                     <div class="flex flex-col">
                         <h2 class="text-sm font-bold text-boreal-text-primary uppercase tracking-tight">Monte Carlo Stress Test</h2>
                         <p class="text-[10px] text-boreal-text-muted mt-1 leading-relaxed italic">
-                            Steel: 73% robustness against SATURATION. Legacy: 18%. Run 500 iterations and watch the heatmap converge.
+                            BDT: 73% robustness against SATURATION. Legacy: 18%. Run 500 iterations and watch the heatmap converge.
                         </p>
                     </div>
                 </div>
@@ -216,6 +216,24 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                         <h2 class="text-sm font-bold text-boreal-text-primary uppercase tracking-tight">AI-Explained Tradeoffs</h2>
                         <p class="text-[10px] text-boreal-text-muted mt-1 leading-relaxed italic">
                             Mistral Large explains every COA decision in plain language. Immutable audit trail for every engagement.
+                        </p>
+                    </div>
+                </div>
+            </button>
+         </div>
+
+         <!-- Demo Hook: Reference Graph -->
+         <div class="col-span-12 lg:col-span-4">
+            <button routerLink="/reference" class="group w-full design-card overflow-hidden !p-0 border-l-2 border-l-boreal-text-muted hover:scale-[1.01] transition-all text-left bg-gradient-to-r from-boreal-text-muted/5 to-transparent">
+                <div class="p-5 flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[9px] font-bold text-boreal-text-muted uppercase tracking-[0.2em]">Reference Graph</span>
+                        <mat-icon class="text-boreal-text-muted group-hover:translate-x-1 transition-transform !w-3.5 !h-3.5 !text-sm">menu_book</mat-icon>
+                    </div>
+                    <div class="flex flex-col">
+                        <h2 class="text-sm font-bold text-boreal-text-primary uppercase tracking-tight">Truth-First Docs</h2>
+                        <p class="text-[10px] text-boreal-text-muted mt-1 leading-relaxed italic">
+                            Browse the 00-12 backbone mapped to the actual repo, with status labels grounded in implementation reality.
                         </p>
                     </div>
                 </div>

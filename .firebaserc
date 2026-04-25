@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "steel-stridsledning-260424"
+  },
+  "targets": {
+    "steel-stridsledning-260424": {
+      "hosting": {
+        "default": [
+          "steel-stridsledning-260424"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

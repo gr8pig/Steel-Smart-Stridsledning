@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export type FeatureFlag = 'kgsa' | 'sensorFeedAdapter' | 'redAdversaryEvolution';
+export type FeatureFlag = 'kgsa' | 'sensorFeedAdapter' | 'redAdversaryEvolution' | 'publicCapabilityLayer';
 
 @Injectable({ providedIn: 'root' })
 export class FeatureFlagService {
@@ -9,6 +9,7 @@ export class FeatureFlagService {
     kgsa:                 false,
     sensorFeedAdapter:    true,
     redAdversaryEvolution: true,
+    publicCapabilityLayer: true,
   });
 
   isEnabled(flag: string): boolean {

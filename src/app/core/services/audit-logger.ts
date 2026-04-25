@@ -8,7 +8,7 @@ export interface AuditEvent {
   actor: 'SYSTEM' | 'COMMANDER' | 'ANALYST' | 'ADMIN' | 'DIRECTOR' | 'OPERATOR';
   action: string;
   rationale: string;
-  category: 'TACTICAL' | 'POLICY' | 'READINESS' | 'LAB' | 'SYSTEM';
+  category: 'TACTICAL' | 'POLICY' | 'READINESS' | 'LAB' | 'SYSTEM' | 'GOVERNANCE';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,7 +21,7 @@ export class AuditLogger {
       time: new Date(Date.now() - 3600000).toLocaleTimeString(),
       actor: 'SYSTEM',
       action: 'System Initialization',
-      rationale: 'Steel baseline policies and twins synchronized.',
+      rationale: 'Boreal Decision Twin baseline policies and twins synchronized.',
       category: 'SYSTEM'
     }
   ]);

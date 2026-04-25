@@ -84,7 +84,7 @@ npm run dev
 ```
 
 The app starts on [http://localhost:3000](http://localhost:3000).
-For API-backed features, run the server-side env vars as well if you want OpenRouter or Runpod behavior locally.
+For API-backed features, run the server-side env vars as well if you want OpenRouter or Runpod behaviour locally.
 
 ## Useful Scripts
 

@@ -12,8 +12,8 @@ IMAGE_TAG="${IMAGE_TAG:-latest}"
 MIN_INSTANCES="${MIN_INSTANCES:-0}"
 MAX_INSTANCES="${MAX_INSTANCES:-1}"
 CONCURRENCY="${CONCURRENCY:-250}"
-CPU="${CPU:-1}"
-MEMORY="${MEMORY:-512Mi}"
+CPU="${CPU:-2}"
+MEMORY="${MEMORY:-1024Mi}"
 
 if [[ -z "${PROJECT_ID}" ]]; then
   echo "Set PROJECT_ID or run 'gcloud config set project <project-id>' first." >&2

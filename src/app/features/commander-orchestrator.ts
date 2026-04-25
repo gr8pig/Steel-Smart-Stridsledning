@@ -1,7 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
 import { PolicyStore } from '../core/state/policy.store';
 import { ReadinessStore } from '../core/state/readiness.store';
 import { LabStore } from '../core/state/lab.store';
@@ -13,7 +12,7 @@ import { PublicCapabilityCard } from '../shared/domain/public-capability';
 @Component({
   selector: 'app-commander-orchestrator',
   standalone: true,
-  imports: [CommonModule, MatIconModule, RouterLink],
+  imports: [CommonModule, MatIconModule],
   template: `
     <div class="h-full w-full p-4 flex flex-col gap-4 overflow-hidden bg-boreal-canvas text-boreal-text-primary">
       <header class="flex items-center justify-between border-b border-boreal-border pb-3">
@@ -21,18 +20,7 @@ import { PublicCapabilityCard } from '../shared/domain/public-capability';
             <h1 class="text-2xl font-light tracking-tight text-boreal-text-primary uppercase tracking-[0.2em]">Commander Orchestrator</h1>
             <p class="text-[10px] text-boreal-text-muted font-mono uppercase tracking-widest italic leading-none">Policy-driven COA tradeoff analysis & intent publication</p>
         </div>
-        <div class="flex items-center gap-4">
-             <div class="hidden xl:flex items-center gap-2">
-                <a routerLink="/reference" class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all">
-                    Reference
-                </a>
-                <a routerLink="/reference/c2-resilience-lab" class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all">
-                    C2 Lab
-                </a>
-                <a routerLink="/reference/counterfactual-lab" class="px-3 py-1.5 rounded-sm border border-boreal-border text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-muted/40 transition-all">
-                    What-If
-                </a>
-             </div>
+        <div class="flex gap-4">
              <!-- Mode Indicator -->
              <div class="flex flex-col items-end pr-4 border-r border-boreal-border">
                 <span class="text-[9px] font-mono text-boreal-text-muted uppercase">Remapping Mode</span>

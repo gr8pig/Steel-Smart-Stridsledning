@@ -385,7 +385,7 @@ export class Governance {
             source: selectedTrack.uncertaintySource || 'Classification Ambiguity',
             confidence: (selectedTrack.confidence * 100).toFixed(0) + '%',
             trackId: selectedTrack.id,
-            description: `Decision logic inhibited by ${selectedTrack.intent} profile signature mismatch. Steel recommending high-dwell verification.`
+            description: `Decision logic inhibited by ${selectedTrack.intent} profile signature mismatch. BDT recommending high-dwell verification.`
         } : (latestLab ? {
             source: `Lab Insight: ${latestLab.fragilityPoint}`,
             confidence: (latestLab.robustnessScore * 100).toFixed(0) + '% Robust',

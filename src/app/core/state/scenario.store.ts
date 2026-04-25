@@ -4,7 +4,7 @@ import { ScenarioPhase } from '../../shared/domain/models';
 @Injectable({ providedIn: 'root' })
 export class ScenarioStore {
   // Signals for state
-  private _scenarioName = signal<string>('Steel Sentinel I');
+  private _scenarioName = signal<string>('Boreal Sentinel I');
   private _currentPhaseId = signal<string>('phase-1');
   private _simTime = signal<number>(0);
   private _runState = signal<'IDLE' | 'RUNNING' | 'PAUSED' | 'REPLAY'>('IDLE');
