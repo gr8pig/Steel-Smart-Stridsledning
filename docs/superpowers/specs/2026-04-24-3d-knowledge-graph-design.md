@@ -10,6 +10,7 @@ The Knowledge Graph in the "Steel" command surface transforms the static, pseudo
 ## 2. Architecture: Pure Three.js + Angular
 
 ### 2.1 The Data Layer (Signals)
+- **Source of Truth:** Data is sourced from `src/app/core/models/platform-knowledge-graph.data.ts`, providing a comprehensive map of 56+ nodes and 190+ edges across runtime, backend, docs, research, and scaffold areas.
 - **Store:** `KnowledgeGraphStore` (using `@ngrx/signals`) manages the semantic data of the graph (Nodes, Edges, Active State).
 - **Nodes:** Represent entities like Core Systems, Decisions, Logistics, Intelligence, Governance, and Surface.
 - **Edges:** Represent relationships and data flows between nodes.

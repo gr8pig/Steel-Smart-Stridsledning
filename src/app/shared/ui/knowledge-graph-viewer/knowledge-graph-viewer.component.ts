@@ -18,7 +18,6 @@ import gsap from 'gsap';
 export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
   @ViewChild('container', { static: true }) containerRef!: ElementRef<HTMLDivElement>;
   
-  nodes = input<TechNode[]>([]);
   nodeObjects = new Map<string, THREE.Group>();
   store = inject(KnowledgeGraphStore);
 
@@ -47,7 +46,7 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
   constructor() {
     effect(() => { 
       if (this.scene) {
-        this.buildNodes(this.nodes()); 
+        this.buildNodes(this.store.filteredNodes()); 
       }
     });
   }
@@ -112,7 +111,7 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
     this.renderer.domElement.addEventListener('pointermove', this.onMouseMove.bind(this));
     this.renderer.domElement.addEventListener('click', this.onClick.bind(this));
 
-    this.buildNodes(this.nodes());
+    this.buildNodes(this.store.filteredNodes());
   }
 
   setupResizeObserver() {
