@@ -466,6 +466,7 @@ function renderLockPage(message = ''): string {
       </div>
     </div>
   </section>
+  <script>window.API_BASE_URL = "${FASTAPI_BASE_URL}";</script>
 </body>
 </html>`;
 }

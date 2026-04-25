@@ -84,12 +84,7 @@ interface DragState {
           <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.10),transparent_28%),linear-gradient(180deg,rgba(5,8,13,0.86),rgba(5,8,13,1))] pointer-events-none z-0"></div>
 
           <div class="absolute inset-0 z-10">
-            <app-knowledge-graph-viewer 
-               [nodes]="visibleNodes()"
-               [edges]="visibleEdges()"
-               [selectedNodeId]="store.selectedNodeId()"
-               (nodeSelected)="store.selectNode($event)">
-            </app-knowledge-graph-viewer>
+            <app-knowledge-graph-viewer></app-knowledge-graph-viewer>
           </div>
 
           <div class="absolute left-4 top-4 z-20 flex max-w-[70%] flex-wrap gap-2 pointer-events-none">
@@ -300,6 +295,17 @@ export class KnowledgeGraph {
 
   readonly nodes = computed(() => this.store.nodes());
   readonly visibleNodes = computed(() => this.store.filteredNodes());
+  readonly visibleEdges = computed(() => {
+    const nodes = this.visibleNodes();
+    const ids = new Set(nodes.map(n => n.id));
+    let count = 0;
+    nodes.forEach(n => {
+      n.connectedTo?.forEach(targetId => {
+        if (ids.has(targetId)) count++;
+      });
+    });
+    return { length: count };
+  });
 
   readonly selectedNode = computed(() => {
     const selectedId = this.store.selectedNodeId();
