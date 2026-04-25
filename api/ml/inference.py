@@ -19,8 +19,88 @@ from .models import (
 )
 
 
+import math
+
 class SurrogateModel:
-    def predict(self, x: np.ndarray | Any) -> np.ndarray:
+    def predict(self, context: np.ndarray | Any) -> np.ndarray | dict[str, list[float]]:
+        if isinstance(context, SimulationContext):
+            results = {}
+            blue_bases = [
+                a for a in context.assets 
+                if a.side == "BLUE" and "BASE" in a.unit_type.upper()
+            ]
+            
+            for asset in context.assets:
+                # Default 6-element distribution: 
+                # [probe, feint, strike, saturation, decoy, strategic_strike]
+                dist = {
+                    'probe': 0.15,
+                    'feint': 0.15,
+                    'strike': 0.15,
+                    'saturation': 0.15,
+                    'decoy': 0.15,
+                    'strategic_strike': 0.15
+                }
+                
+                # Armament Loadout heuristics
+                if asset.armament == 'ELECTRONIC_WARFARE':
+                    dist['decoy'] += 0.40  # DECEPTION
+                    dist['probe'] += 0.40  # SURVEILLANCE
+                
+                if asset.armament == 'KINETIC_STRIKE' and asset.speed > 800:
+                    dist['strike'] += 10.0  # Maximize STRIKE
+                
+                # OriginCountry and Heading heuristics
+                if asset.origin_country == 'RUSSIA' and asset.heading is not None:
+                    asset_x = asset.metadata.get('x', 0.0)
+                    asset_y = asset.metadata.get('y', 0.0)
+                    
+                    is_directed = False
+                    for bb in blue_bases:
+                        bb_x = bb.metadata.get('x', 0.0)
+                        bb_y = bb.metadata.get('y', 0.0)
+                        
+                        dx = bb_x - asset_x
+                        dy = bb_y - asset_y
+                        
+                        # Calculate bearing where 0 is North (-y)
+                        angle_deg = math.degrees(math.atan2(dx, -dy)) % 360
+                        
+                        diff = abs(angle_deg - asset.heading)
+                        if diff > 180:
+                            diff = 360 - diff
+                        
+                        if diff < 15:
+                            is_directed = True
+                            
+                        # Proximity to critical assets
+                        dist_sq = dx**2 + dy**2
+                        if dist_sq < 25000:  # Arbitrary proximity threshold
+                            dist['strike'] += 0.2
+                    
+                    if is_directed:
+                        dist['strike'] += 0.5
+                
+                # Theater state proximity heuristic
+                if context.theater.cluster_density > 0.8:
+                    dist['saturation'] += 0.3
+                    dist['strike'] += 0.1
+
+                total = sum(dist.values())
+                if total > 0:
+                    results[asset.id] = [
+                        round(dist['probe']/total, 3),
+                        round(dist['feint']/total, 3),
+                        round(dist['strike']/total, 3),
+                        round(dist['saturation']/total, 3),
+                        round(dist['decoy']/total, 3),
+                        round(dist['strategic_strike']/total, 3)
+                    ]
+                else:
+                    results[asset.id] = [round(1.0/6.0, 3)] * 6
+                    
+            return results
+
         # Introduce actual variance based on input shape
         # Return a 6-element array simulating a trajectory prediction
         noise = np.random.normal(0, 0.05, size=6)
