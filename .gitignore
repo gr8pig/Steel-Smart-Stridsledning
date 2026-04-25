@@ -15,6 +15,14 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 # IDEs and editors
 .idea/
 .project
