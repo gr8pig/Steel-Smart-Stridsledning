@@ -102,6 +102,30 @@ interface SlidePreviewCopy {
   bullets: string[];
 }
 
+interface SystemComparisonRow {
+  label: string;
+  legacyText: string;
+  benefit: string;
+  bdtText: string;
+}
+
+interface ValidationBranch {
+  label: string;
+  probability: number;
+  score: number;
+  outcome: string;
+  counterfactual: string;
+}
+
+interface ValidationTree {
+  id: string;
+  title: string;
+  premise: string;
+  modelHint: string;
+  collapseHint: string;
+  branches: ValidationBranch[];
+}
+
 const OPERATOR_STEPS: NarrativeCard[] = [
   {
     id: 'step-1',
@@ -159,6 +183,92 @@ const VALIDATION_STEPS: NarrativeCard[] = [
     tag: 'CH',
     title: 'Collapse horizon',
     body: 'Vi visar när en gren blir för skör för att låsas som operativ rekommendation.',
+  },
+];
+
+const VALIDATION_TREES: ValidationTree[] = [
+  {
+    id: 'tree-1',
+    title: 'Intercept certainty',
+    premise: 'När sensorconfidence är hög vill modellen låsa en snabb intercept-gren.',
+    modelHint: 'Decision tree prioriterar commit när signalen är ren och tidsfönstret är kort.',
+    collapseHint: 'Om confidence sjunker under tröskeln ska grenen falla tillbaka till hold.',
+    branches: [
+      {
+        label: 'Commit intercept',
+        probability: 0.74,
+        score: 0.91,
+        outcome: 'Commit',
+        counterfactual: 'Drop confidence 12% and the tree flips to hold reserve.',
+      },
+      {
+        label: 'Hold / reconfirm',
+        probability: 0.26,
+        score: 0.43,
+        outcome: 'Hold',
+        counterfactual: 'Raise false positive cost and the hold branch becomes dominant.',
+      },
+    ],
+  },
+  {
+    id: 'tree-2',
+    title: 'Allocation balance',
+    premise: 'När commander posture vägs mot reserve floor jämförs tre COA-grenar.',
+    modelHint: 'ML inferens score:ar varje alternativ mot effect now, balance och depth.',
+    collapseHint: 'COA-MAX blir skör om reserve floor trycks upp; COA-DST blir skör om time pressure ökar.',
+    branches: [
+      {
+        label: 'COA-MAX',
+        probability: 0.23,
+        score: 0.63,
+        outcome: 'Fast effect',
+        counterfactual: 'Increase reserve floor and MAX loses dominance immediately.',
+      },
+      {
+        label: 'COA-BAL',
+        probability: 0.52,
+        score: 0.84,
+        outcome: 'Balanced',
+        counterfactual: 'Slightly worse posture still keeps BAL as the safest middle.',
+      },
+      {
+        label: 'COA-DST',
+        probability: 0.25,
+        score: 0.90,
+        outcome: 'Deep reserve',
+        counterfactual: 'If the mission becomes time-critical, DST loses to BAL.',
+      },
+    ],
+  },
+  {
+    id: 'tree-3',
+    title: 'Supply corridor',
+    premise: 'När supply lines, escort och corridor pressure finns i samma state måste beslutet komma tidigt.',
+    modelHint: 'Counterfactual inference tests whether the line survives if support is delayed or rerouted.',
+    collapseHint: 'Once corridor pressure crosses the threshold, delay becomes worse than a hard intercept.',
+    branches: [
+      {
+        label: 'Protect corridor',
+        probability: 0.61,
+        score: 0.88,
+        outcome: 'Support reaches base',
+        counterfactual: 'Remove escort and the branch collapses into supply failure.',
+      },
+      {
+        label: 'Re-route support',
+        probability: 0.27,
+        score: 0.66,
+        outcome: 'Support delayed',
+        counterfactual: 'Worsen corridor pressure and the reroute branch degrades quickly.',
+      },
+      {
+        label: 'Delay commitment',
+        probability: 0.12,
+        score: 0.34,
+        outcome: 'Line breaks',
+        counterfactual: 'Under higher threat this branch becomes non-viable instantly.',
+      },
+    ],
   },
 ];
 
@@ -319,7 +429,7 @@ const SLIDES: SlideConfig[] = [
     id: 'map',
     eyebrow: 'Operatörens flöde',
     title: 'Attack, interception och supply lines',
-    subtitle: 'Starta demo-flödet och klicka på objekten för att se hur lägesbild, beredskap och viktiga beslut skiftar',
+    subtitle: 'Se hur lägesbild, beredskap och viktiga beslut skiftar',
   },
   {
     id: 'ai',
@@ -470,6 +580,39 @@ const COA_GUIDE = [
     meaning: 'Policy väger hot, posture och reserve floor.',
     when: 'Systemet score:ar alternativen och väljer det som bäst matchar missionen.',
     tradeoff: 'Operatören får ett tydligt svar plus motivering, inte bara ett tal.',
+  },
+] as const;
+
+const SYSTEM_COMPARISON: SystemComparisonRow[] = [
+  {
+    label: 'Sanning',
+    legacyText: 'Varje yta har sin egen kopia av läget.',
+    benefit: 'Operatören och backend ser samma state.',
+    bdtText: 'En gemensam theatre state styr allt.',
+  },
+  {
+    label: 'Beslut',
+    legacyText: 'Analys, val och genomförande sker i separata steg.',
+    benefit: 'Policy blir direkt action med mindre friktion.',
+    bdtText: 'COA, risk och reserv vägs i samma kedja.',
+  },
+  {
+    label: 'Spårbarhet',
+    legacyText: 'Loggar ligger utspridda och är svåra att följa.',
+    benefit: 'En enda beslutskedja kan granskas i efterhand.',
+    bdtText: 'Varje val länkas till samma inference trace.',
+  },
+  {
+    label: 'Scenarion',
+    legacyText: 'Varje demo kräver nya handbyggda kopplingar.',
+    benefit: 'Samma scenario kan återanvändas i flera ytor.',
+    bdtText: 'Demo, labb och drift kör samma kontrakt.',
+  },
+  {
+    label: 'Deployment',
+    legacyText: 'Betydelser glider mellan lokal miljö och cloud.',
+    benefit: 'Samma semantik ger samma beslut oavsett miljö.',
+    bdtText: 'Lokalt, EU eller backend utan semantisk drift.',
   },
 ] as const;
 
@@ -878,6 +1021,16 @@ const BASES_NORTH = [
             <span class="validation-chip">Counterfactual lab</span>
           </div>
 
+          <div class="validation-tree-strip">
+            @for (tree of validationTrees; track tree.id; let i = $index) {
+              <button class="validation-tree-card" type="button" [class.validation-tree-card-active]="validationTreeIndex() === i" (click)="selectValidationTree(i)">
+                <div class="validation-tree-card-title">{{ tree.title }}</div>
+                <div class="validation-tree-card-premise">{{ tree.premise }}</div>
+                <div class="validation-tree-card-meta">{{ tree.branches.length }} inferensgrenar</div>
+              </button>
+            }
+          </div>
+
           <div class="board-features">
             @for (step of validationSteps; track step.id; let i = $index) {
               <div class="board-feat" [class.board-feat-active]="validationFocusIndex() === i" (click)="validationFocusIndex.set(i)">
@@ -893,49 +1046,70 @@ const BASES_NORTH = [
 
         <!-- Board mini demo SVG -->
         <div class="board-demo-container">
-          <div class="board-demo-label">ROBUSTNESS LAB — {{ validationSteps[validationFocusIndex()].title.toUpperCase() }}</div>
-          <svg viewBox="0 0 1670 1300" preserveAspectRatio="xMidYMid slice" class="board-svg">
-            <!-- Terrain -->
-            <polygon [attr.points]="terrain.north" fill="rgba(92,167,255,0.05)" stroke="rgba(92,167,255,0.15)" stroke-width="1.5"/>
-            <polygon [attr.points]="terrain.south" fill="rgba(239,68,68,0.04)" stroke="rgba(239,68,68,0.12)" stroke-width="1.5"/>
-            <polygon [attr.points]="terrain.islandWest" fill="rgba(92,167,255,0.07)" stroke="rgba(92,167,255,0.2)" stroke-width="1"/>
-            <polygon [attr.points]="terrain.islandEast" fill="rgba(92,167,255,0.07)" stroke="rgba(92,167,255,0.2)" stroke-width="1"/>
-            <polygon [attr.points]="terrain.southFwd" fill="rgba(239,68,68,0.06)" stroke="rgba(239,68,68,0.15)" stroke-width="1"/>
+          <div class="board-demo-label">ROBUSTNESS LAB — {{ validationSteps[validationFocusIndex()].title.toUpperCase() }} · {{ currentValidationTree().title.toUpperCase() }}</div>
+          <div class="board-demo-stage">
+            <div class="board-demo-stage-head">
+              <div class="board-demo-stage-title">{{ currentValidationTree().premise }}</div>
+              <div class="board-demo-stage-sub">{{ currentValidationTree().modelHint }}</div>
+            </div>
+            <svg viewBox="0 0 760 420" preserveAspectRatio="xMidYMid slice" class="board-svg validation-svg">
+              <defs>
+                <filter id="tree-glow"><feGaussianBlur stdDeviation="2.4" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
+              </defs>
+              <rect x="1" y="1" width="758" height="418" rx="12" fill="rgba(3,7,12,0.75)" stroke="rgba(148,189,255,0.08)"/>
+              <text x="32" y="36" font-size="11" fill="rgba(156,176,199,0.6)" font-family="monospace" text-transform="uppercase">Inference trace</text>
+              <text x="32" y="58" font-size="15" fill="#edf5ff" font-family="monospace" font-weight="bold">{{ currentValidationTree().title }}</text>
+              <g>
+                <circle cx="110" cy="210" r="34" fill="rgba(92,167,255,0.12)" stroke="#5ca7ff" stroke-width="1.5"/>
+                <text x="110" y="204" text-anchor="middle" font-size="10" fill="#5ca7ff" font-family="monospace" font-weight="bold">ROOT</text>
+                <text x="110" y="219" text-anchor="middle" font-size="11" fill="#edf5ff" font-family="monospace">{{ currentValidationTree().title }}</text>
+              </g>
+              @for (branch of currentValidationTree().branches; track branch.label; let i = $index) {
+                @let y = 90 + (i * 110);
+                <g>
+                  <line x1="144" y1="210" [attr.x2]="220" [attr.y2]="y" stroke="rgba(148,189,255,0.22)" stroke-width="1.2" />
+                  <line x1="220" [attr.y1]="y" x2="410" [attr.y2]="y" [attr.stroke]="activeValidationBranchIndex() === i ? 'rgba(124,224,190,0.9)' : 'rgba(148,189,255,0.18)'" stroke-width="1.2" stroke-dasharray="6,4" />
+                  <circle cx="220" [attr.cy]="y" [attr.r]="activeValidationBranchIndex() === i ? 20 : 16" [attr.fill]="activeValidationBranchIndex() === i ? 'rgba(124,224,190,0.16)' : 'rgba(92,167,255,0.08)'" [attr.stroke]="activeValidationBranchIndex() === i ? '#7ce0be' : '#5ca7ff'" stroke-width="1.2"/>
+                  <text x="220" [attr.y]="y - 2" text-anchor="middle" font-size="9" fill="#edf5ff" font-family="monospace" font-weight="bold">{{ branch.label }}</text>
+                  <text x="220" [attr.y]="y + 12" text-anchor="middle" font-size="9" fill="rgba(156,176,199,0.7)" font-family="monospace">p={{ branch.probability }}</text>
+                  <circle cx="438" [attr.cy]="y" [attr.r]="activeValidationBranchIndex() === i ? 24 : 19" fill="rgba(255,255,255,0.03)" [attr.stroke]="activeValidationBranchIndex() === i ? '#7ce0be' : 'rgba(156,176,199,0.22)'" stroke-width="1.2"/>
+                  <text x="438" [attr.y]="y - 3" text-anchor="middle" font-size="9" fill="#edf5ff" font-family="monospace" font-weight="bold">{{ branch.outcome }}</text>
+                  <text x="438" [attr.y]="y + 10" text-anchor="middle" font-size="9" [attr.fill]="activeValidationBranchIndex() === i ? '#7ce0be' : 'rgba(156,176,199,0.68)'" font-family="monospace">score {{ branch.score }}</text>
+                </g>
+              }
+              <g opacity="0.95">
+                <rect x="520" y="44" width="204" height="118" rx="10" fill="rgba(255,255,255,0.02)" stroke="rgba(92,167,255,0.12)"/>
+                <text x="536" y="68" font-size="9" fill="rgba(156,176,199,0.7)" font-family="monospace" text-transform="uppercase">ML inference</text>
+                <text x="536" y="88" font-size="11" fill="#edf5ff" font-family="monospace">Each branch gets a score.</text>
+                <text x="536" y="108" font-size="11" fill="#edf5ff" font-family="monospace">Counterfactual deltas tell us</text>
+                <text x="536" y="124" font-size="11" fill="#edf5ff" font-family="monospace">which assumption flips the tree.</text>
+                <text x="536" y="146" font-size="9" fill="#7ce0be" font-family="monospace">Collapse: {{ currentValidationTree().collapseHint }}</text>
+              </g>
+              <g>
+                <rect x="520" y="190" width="204" height="188" rx="10" fill="rgba(255,255,255,0.02)" stroke="rgba(92,167,255,0.12)"/>
+                <text x="536" y="214" font-size="9" fill="rgba(156,176,199,0.7)" font-family="monospace" text-transform="uppercase">Branch ledger</text>
+                @for (branch of currentValidationTree().branches; track branch.label; let j = $index) {
+                  <rect x="536" [attr.y]="230 + (j * 48)" width="168" height="36" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(148,189,255,0.08)"/>
+                  <text x="548" [attr.y]="244 + (j * 48)" font-size="10" fill="#edf5ff" font-family="monospace" font-weight="bold">{{ branch.label }}</text>
+                  <text x="548" [attr.y]="258 + (j * 48)" font-size="9" fill="rgba(156,176,199,0.72)" font-family="monospace">p {{ branch.probability }} · score {{ branch.score }}</text>
+                }
+              </g>
+            </svg>
+          </div>
 
-            <text x="835" y="720" text-anchor="middle" font-size="22" font-family="monospace" fill="rgba(156,176,199,0.2)" font-weight="bold" letter-spacing="8">BOREALIS SUND</text>
-
-            <!-- Blue destroyer with waypoints -->
-            <polyline points="500,620 600,550 750,480 900,430" fill="none" stroke="rgba(92,167,255,0.5)" stroke-width="2" stroke-dasharray="8,5"/>
-            <!-- Blue ship 1 -->
-            <g transform="translate(500,620)">
-              <rect x="-10" y="-6" width="20" height="12" rx="2" fill="rgba(92,167,255,0.25)" stroke="#5ca7ff" stroke-width="1.5"/>
-              <line x1="0" y1="-6" x2="0" y2="-14" stroke="#5ca7ff" stroke-width="1.5"/>
-              <circle r="3" fill="#5ca7ff"/>
-            </g>
-            <!-- Waypoint dots blue -->
-            @for (wp of [[600,550],[750,480],[900,430]]; track $index) {
-              <circle [attr.cx]="wp[0]" [attr.cy]="wp[1]" r="4" fill="none" stroke="rgba(92,167,255,0.6)" stroke-width="1.5"/>
-              <circle [attr.cx]="wp[0]" [attr.cy]="wp[1]" r="1.5" fill="rgba(92,167,255,0.8)"/>
+          <div class="validation-inference-grid">
+            @for (branch of currentValidationTree().branches; track branch.label; let i = $index) {
+              <button class="validation-inference-card" type="button" [class.validation-inference-card-active]="activeValidationBranchIndex() === i">
+                <div class="validation-inference-top">
+                  <span class="validation-inference-label">{{ branch.label }}</span>
+                  <span class="validation-inference-score">{{ branch.score }}</span>
+                </div>
+                <div class="validation-inference-line">Probability {{ branch.probability }}</div>
+                <div class="validation-inference-line">Outcome {{ branch.outcome }}</div>
+                <div class="validation-inference-line">{{ branch.counterfactual }}</div>
+              </button>
             }
-
-            <!-- Blue aircraft with path -->
-            <polyline points="1158,385 1050,340 900,290 750,260" fill="none" stroke="rgba(124,224,190,0.4)" stroke-width="2" stroke-dasharray="8,5"/>
-            <g transform="translate(1158,385)">
-              <path d="M0,-11 L7,5 L0,1 L-7,5 Z" fill="rgba(124,224,190,0.25)" stroke="#7ce0be" stroke-width="1.5"/>
-              <line x1="-9" y1="0" x2="9" y2="0" stroke="#7ce0be" stroke-width="1.5"/>
-            </g>
-
-            <!-- Red ship threat from south -->
-            <polyline points="900,980 880,860 860,720" fill="none" stroke="rgba(239,68,68,0.4)" stroke-width="2" stroke-dasharray="8,5"/>
-            <g transform="translate(900,980)">
-              <rect x="-10" y="-6" width="20" height="12" rx="2" fill="rgba(239,68,68,0.25)" stroke="#ef4444" stroke-width="1.5"/>
-              <line x1="0" y1="-6" x2="0" y2="-14" stroke="#ef4444" stroke-width="1.5"/>
-            </g>
-
-            <!-- Mode indicator -->
-            <rect x="30" y="30" width="120" height="24" rx="3" fill="rgba(92,167,255,0.1)" stroke="rgba(92,167,255,0.3)" stroke-width="1"/>
-            <text x="90" y="46" text-anchor="middle" font-size="9" fill="#5ca7ff" font-family="monospace" font-weight="bold">STRESS TEST</text>
-          </svg>
+          </div>
         </div>
       </div>
     </div>
@@ -1028,33 +1202,40 @@ const BASES_NORTH = [
           <div class="ncs-badge">State re-used across all major surfaces</div>
         </div>
 
-        <!-- Sovereign deployment -->
+        <!-- BDT vs dagens system -->
         <div class="ml-card" [class.ml-card-focus]="modelFocusIndex() === 3" (click)="modelFocusIndex.set(3)">
           <div class="ml-card-header">
             <span class="ml-icon">◷</span>
-            <span class="ml-card-title">Sovereign deployment</span>
+            <span class="ml-card-title">BDT vs dagens system</span>
           </div>
-          <div class="latency-bars">
-            <div class="lat-row">
-              <span class="lat-label">Local</span>
-              <div class="lat-track"><div class="lat-fill" style="width:30%;background:#7ce0be"></div></div>
-              <span class="lat-val">NCS</span>
+          <div class="system-compare">
+            <div class="system-compare-summary">
+              Dagens system sprider läget över flera ytor. BDT samlar samma theatre state, samma beslutskedja och samma semantik i en modell.
             </div>
-            <div class="lat-row">
-              <span class="lat-label">EU cloud</span>
-              <div class="lat-track"><div class="lat-fill" style="width:50%;background:#5ca7ff"></div></div>
-              <span class="lat-val">same semantics</span>
+            <div class="system-compare-head">
+              <span>Dagens system</span>
+              <span>BDT</span>
             </div>
-            <div class="lat-row">
-              <span class="lat-label">Backend</span>
-              <div class="lat-track"><div class="lat-fill" style="width:55%;background:#9b8cff"></div></div>
-              <span class="lat-val">truth-first</span>
-            </div>
-            <div class="lat-row">
-              <span class="lat-label">Legacy</span>
-              <div class="lat-track"><div class="lat-fill" style="width:100%;background:#ef4444"></div></div>
-              <span class="lat-val">fragmented</span>
-            </div>
+            @for (row of systemComparison; track row.label) {
+              <div class="system-compare-row">
+                <div class="system-compare-legacy">
+                  <div class="system-pill system-pill-legacy">Fragmenterat</div>
+                  <div class="system-compare-text">{{ row.legacyText }}</div>
+                </div>
+                <div class="system-compare-center">
+                  <div class="system-compare-label">{{ row.label }}</div>
+                  <div class="system-compare-bridge">→</div>
+                  <div class="system-compare-benefit">{{ row.benefit }}</div>
+                </div>
+                <div class="system-compare-bdt">
+                  <div class="system-pill system-pill-bdt">Unified</div>
+                  <div class="system-compare-text">{{ row.bdtText }}</div>
+                </div>
+              </div>
+            }
+          </div>
+          <div class="system-compare-note">
+            BDT vinner eftersom samma state, samma semantik och samma kontrakt används i alla ytor. Det ger mindre drift, snabbare beslut och mindre risk för att demo, governance och operationer säger olika saker.
           </div>
         </div>
       </div>
@@ -1593,7 +1774,7 @@ const BASES_NORTH = [
     .board-feat { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border: 1px solid var(--s-border); border-radius: 6px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s; }
     .board-feat:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
     .board-feat-active { border-color: rgba(92,167,255,0.35); background: rgba(92,167,255,0.08); }
-    .validation-chain {
+  .validation-chain {
       display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
       padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(92,167,255,0.16);
       background: rgba(92,167,255,0.04); margin-bottom: 14px;
@@ -1604,9 +1785,48 @@ const BASES_NORTH = [
       background: rgba(255,255,255,0.03);
     }
     .validation-arrow { color: var(--s-blue); font-size: 12px; font-weight: 900; }
+    .validation-tree-strip {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+      margin-bottom: 12px;
+    }
+    .validation-tree-card {
+      padding: 12px; border: 1px solid var(--s-border); border-radius: 8px;
+      background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s;
+      text-align: left;
+    }
+    .validation-tree-card:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
+    .validation-tree-card-active { border-color: rgba(92,167,255,0.35); background: rgba(92,167,255,0.07); }
+    .validation-tree-card-title {
+      font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
+      color: var(--s-blue); margin-bottom: 4px;
+    }
+    .validation-tree-card-premise { font-size: 11px; line-height: 1.45; color: var(--s-text); margin-bottom: 6px; }
+    .validation-tree-card-meta { font-size: 9px; color: var(--s-muted); text-transform: uppercase; letter-spacing: 0.12em; }
     .feat-icon { font-size: 16px; color: var(--s-blue); width: 20px; flex-shrink: 0; }
     .feat-title { font-size: 12px; font-weight: 700; color: var(--s-text); }
     .feat-sub { font-size: 10px; color: var(--s-muted); margin-top: 2px; }
+    .board-demo-stage {
+      display: flex; flex-direction: column; gap: 10px; padding: 12px; background: rgba(255,255,255,0.02);
+    }
+    .board-demo-stage-head { display: flex; flex-direction: column; gap: 4px; padding: 0 2px; }
+    .board-demo-stage-title { font-size: 12px; font-weight: 800; color: var(--s-text); line-height: 1.45; }
+    .board-demo-stage-sub { font-size: 11px; color: var(--s-muted); line-height: 1.45; }
+    .validation-svg { min-height: 420px; }
+    .validation-inference-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+      padding: 12px; border-top: 1px solid var(--s-border); background: rgba(255,255,255,0.02);
+    }
+    .validation-inference-card {
+      display: flex; flex-direction: column; gap: 4px; text-align: left;
+      padding: 10px 12px; border: 1px solid var(--s-border); border-radius: 8px;
+      background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s;
+    }
+    .validation-inference-card:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
+    .validation-inference-card-active { border-color: rgba(124,224,190,0.35); background: rgba(124,224,190,0.07); }
+    .validation-inference-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .validation-inference-label { font-size: 10px; font-weight: 900; color: var(--s-blue); text-transform: uppercase; letter-spacing: 0.14em; }
+    .validation-inference-score { font-size: 10px; font-weight: 900; font-family: monospace; color: var(--s-text); }
+    .validation-inference-line { font-size: 10px; line-height: 1.45; color: var(--s-muted); }
 
     /* ── ML slide ────────────────────────────────────────────────────── */
     .slide-ml { overflow-y: auto; }
@@ -1627,6 +1847,55 @@ const BASES_NORTH = [
     .ml-lic.apache { background: rgba(92,167,255,0.15); color: var(--s-blue); }
     .ml-lic.mit { background: rgba(124,224,190,0.15); color: var(--s-green); }
     .ml-card-note { font-size: 11px; color: var(--s-muted); margin: 0; }
+    .system-compare { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+    .system-compare-summary {
+      padding: 10px 12px; border-radius: 8px;
+      border: 1px solid rgba(92,167,255,0.16); background: rgba(92,167,255,0.04);
+      font-size: 11px; line-height: 1.55; color: var(--s-muted);
+    }
+    .system-compare-head {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
+      color: var(--s-muted); padding: 0 2px;
+    }
+    .system-compare-row {
+      display: grid; grid-template-columns: minmax(0, 1fr) 108px minmax(0, 1fr); gap: 10px;
+      align-items: stretch; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .system-compare-legacy, .system-compare-bdt, .system-compare-center {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .system-compare-center {
+      align-items: center; justify-content: center; text-align: center; padding: 2px 0;
+    }
+    .system-compare-label {
+      font-size: 10px; color: var(--s-blue); font-weight: 900; line-height: 1.35;
+      text-transform: uppercase; letter-spacing: 0.14em;
+    }
+    .system-compare-bridge {
+      width: 100%; font-size: 14px; font-weight: 900; color: var(--s-green);
+      line-height: 1; padding: 4px 0;
+    }
+    .system-compare-benefit {
+      font-size: 11px; line-height: 1.45; color: var(--s-text); font-weight: 700;
+    }
+    .system-pill {
+      display: inline-flex; align-items: center; align-self: flex-start; gap: 4px;
+      font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.14em;
+      padding: 3px 8px; border-radius: 999px;
+    }
+    .system-pill-legacy { color: #ffb4b4; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.18); }
+    .system-pill-bdt { color: #c9fff0; background: rgba(124,224,190,0.12); border: 1px solid rgba(124,224,190,0.18); }
+    .system-compare-text {
+      font-size: 11px; line-height: 1.55; color: var(--s-muted);
+      padding: 10px 12px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);
+      min-height: 64px;
+    }
+    .system-compare-note {
+      font-size: 11px; line-height: 1.6; color: var(--s-muted);
+      padding-top: 4px;
+    }
     .state-explain {
       display: flex; flex-direction: column; gap: 6px;
       padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(92,167,255,0.16);
@@ -1896,11 +2165,13 @@ export class Showcase implements OnInit, OnDestroy {
   readonly coaGuide = COA_GUIDE;
   readonly operatorSteps = OPERATOR_STEPS;
   readonly validationSteps = VALIDATION_STEPS;
+  readonly validationTrees = VALIDATION_TREES;
   readonly novelMethods = NOVEL_METHODS;
   readonly ontologyDomains = ONTOLOGY_DOMAINS;
   readonly unificationEffects = UNIFICATION_EFFECTS;
   readonly slidePreviewCopy = SLIDE_PREVIEW_COPY;
   readonly scenarioStories = SCENARIO_STORIES;
+  readonly systemComparison = SYSTEM_COMPARISON;
 
   currentSlide = signal(0);
   mapScenario = signal(0);
@@ -1908,6 +2179,7 @@ export class Showcase implements OnInit, OnDestroy {
   slideDemoStarted = signal<Record<number, boolean>>({});
   selectedCoaId = signal<string>('COA-BAL');
   validationFocusIndex = signal(0);
+  validationTreeIndex = signal(0);
   modelFocusIndex = signal(0);
   ontologyFocusIndex = signal(0);
   unificationFocusIndex = signal(0);
@@ -1949,6 +2221,8 @@ export class Showcase implements OnInit, OnDestroy {
     this.animatedTracks().find(track => track.id === this.selectedScenarioTrackId()) ?? null
   );
   currentScenarioStory = computed(() => this.scenarioStories[this.mapScenario()] ?? this.scenarioStories[0]);
+  currentValidationTree = computed(() => this.validationTrees[this.validationTreeIndex()] ?? this.validationTrees[0]);
+  activeValidationBranchIndex = computed(() => this.validationFocusIndex() % Math.max(1, this.currentValidationTree().branches.length));
 
   intercepting = computed(() => this.trackPhase() === 'intercept');
 
@@ -2047,6 +2321,7 @@ export class Showcase implements OnInit, OnDestroy {
     if (slide === 3) {
       this._slideDemoTimer = setInterval(() => {
         this.validationFocusIndex.set(this._slideDemoStep % this.validationSteps.length);
+        this.validationTreeIndex.set(this._slideDemoStep % this.validationTrees.length);
         this._slideDemoStep++;
       }, 1500);
       return;
@@ -2095,6 +2370,11 @@ export class Showcase implements OnInit, OnDestroy {
 
   selectScenarioTrack(id: string): void {
     this.selectedScenarioTrackId.set(id);
+  }
+
+  selectValidationTree(index: number): void {
+    this.validationTreeIndex.set(index);
+    this.validationFocusIndex.set(0);
   }
 
   toggleTrackPlayback(): void {
@@ -2162,6 +2442,7 @@ export class Showcase implements OnInit, OnDestroy {
     this._setSlideStarted(index, false);
     if (index === 2) this.selectedCoaId.set('COA-BAL');
     if (index === 3) this.validationFocusIndex.set(0);
+    if (index === 3) this.validationTreeIndex.set(0);
     if (index === 4) this.modelFocusIndex.set(0);
     if (index === 5) this.ontologyFocusIndex.set(0);
     if (index === 6) this.unificationFocusIndex.set(0);
