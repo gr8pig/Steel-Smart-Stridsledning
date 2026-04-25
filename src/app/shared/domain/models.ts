@@ -47,6 +47,8 @@ export interface ThreatTwin {
   classificationConfidence?: number;
   sensorQuality?: number;
   jammingProbability?: number;
+  clusterId?: string;
+  densityScore?: number;
 }
 
 export type TwinDataSource = 'AUTHORITATIVE' | 'CACHED' | 'HEURISTIC';

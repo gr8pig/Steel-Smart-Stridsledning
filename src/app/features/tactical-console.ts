@@ -10,7 +10,7 @@ import { MapLayerStore } from '../core/state/map-layer.store';
 import { LogisticsStore } from '../core/state/logistics.store';
 import { CapabilityOrchestrator } from '../core/services/capability-orchestrator';
 import { AuditLogger, AuditEvent } from '../core/services/audit-logger';
-import { BdtApiService } from '../core/services/bdt-api.service';
+import { SteelApiService } from '../core/services/steel-api.service';
 import { SensorFeedStore } from '../core/state/sensor-feed.store';
 import { DecisionFabricStore } from '../core/state/decision-fabric.store';
 import { OperationalDirectiveQueueService } from '../core/services/operational-directive-queue.service';
@@ -138,7 +138,7 @@ interface DegradedHeatCell {
                         <div class="flex gap-1 items-center">
                             @if (track.publicInterpretation; as pi) {
                                 <span class="px-1.5 py-0.5 rounded bg-boreal-blue/10 text-[8px] font-black border border-boreal-blue/20 text-boreal-blue uppercase">
-                                    {{pi.bdtAbstraction}}
+                                    {{pi.steelAbstraction}}
                                 </span>
                             } @else {
                                 <span class="px-1.5 py-0.5 rounded bg-boreal-canvas/40 text-[9px] font-mono border border-boreal-border text-boreal-text-secondary uppercase">
@@ -376,6 +376,18 @@ interface DegradedHeatCell {
                                 }
                             }
                         </g>
+                    }
+
+                    <!-- Spatial Density (Convex Hull) Layer -->
+                    @if (layers.isLayerVisible('intent_halos') && tactical.activeThreats().length > 2 && !degradedMapMode()) {
+                        <polygon 
+                            [attr.points]="clusterHullPointsString()" 
+                            fill="rgba(239, 68, 68, 0.05)" 
+                            stroke="rgba(239, 68, 68, 0.3)" 
+                            stroke-width="2" 
+                            stroke-dasharray="4 4"
+                            class="pointer-events-none"
+                        />
                     }
 
                     <!-- IFZ Polygons Layer: instantaneous fire zone around each threat -->
@@ -1071,7 +1083,7 @@ export class TacticalConsole {
     orchestration = inject(OrchestrationStore);
     orchestrator = inject(CapabilityOrchestrator);
     audit      = inject(AuditLogger);
-    api        = inject(BdtApiService);
+    api        = inject(SteelApiService);
     layers     = inject(MapLayerStore);
     logistics  = inject(LogisticsStore);
     sensorFeed = inject(SensorFeedStore);
@@ -1180,6 +1192,40 @@ export class TacticalConsole {
       const tracks = this.tactical.tracks();
       if (mode === 'ENGAGED_ONLY') return tracks.filter(t => t.status === 'ENGAGED');
       return tracks.filter(t => t.status !== 'NEUTRALIZED');
+    });
+
+    clusterHullPointsString = computed(() => {
+        const threats = this.tactical.activeThreats();
+        if (threats.length < 3) return '';
+
+        const points = threats.map(t => ({ x: t.geometry.x, y: t.geometry.y }));
+        points.sort((a, b) => a.x - b.x || a.y - b.y);
+
+        const cross = (o: {x: number, y: number}, a: {x: number, y: number}, b: {x: number, y: number}) => 
+            (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+
+        const lower: {x: number, y: number}[] = [];
+        for (const p of points) {
+            while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+                lower.pop();
+            }
+            lower.push(p);
+        }
+
+        const upper: {x: number, y: number}[] = [];
+        for (let i = points.length - 1; i >= 0; i--) {
+            const p = points[i];
+            while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+                upper.pop();
+            }
+            upper.push(p);
+        }
+
+        upper.pop();
+        lower.pop();
+        const hull = lower.concat(upper);
+
+        return hull.map(p => `${p.x},${p.y}`).join(' ');
     });
 
     // ── Engagement Timeline ───────────────────────────────────────────────────
