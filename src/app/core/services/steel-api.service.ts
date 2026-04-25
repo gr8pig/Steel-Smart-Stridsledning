@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../tokens/api.token';
 import { LogisticsSnapshot } from '../../shared/domain/logistics-ontology';
 import {
   BaseTwin,
@@ -97,7 +98,7 @@ export interface ActionReplayMetadata {
 @Injectable({ providedIn: 'root' })
 export class SteelApiService {
   private http = inject(HttpClient);
-  private base = '/api';
+  private base = inject(API_BASE_URL);
 
   // ── Twin reads ──────────────────────────────────────────────────────────────
 

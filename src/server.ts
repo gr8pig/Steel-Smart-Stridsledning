@@ -1330,9 +1330,16 @@ app.post('/api/rationale/logistics', async (req, res) => {
 app.use((req, res, next) => {
   angularApp
     .handle(req)
-    .then(response =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
+    .then(async (response) => {
+      if (response && response.ok && response.headers.get('content-type')?.includes('text/html')) {
+        let html = await response.text();
+        const apiBaseUrl = process.env['FASTAPI_BASE_URL'] || 'http://127.0.0.1:8000';
+        const script = `<script>window.API_BASE_URL = "${apiBaseUrl}";</script>`;
+        html = html.replace('</body>', `${script}</body>`);
+        return writeResponseToNodeResponse(new Response(html, response), res);
+      }
+      return response ? writeResponseToNodeResponse(response, res) : next();
+    })
     .catch(next);
 });
 
