@@ -48,26 +48,6 @@ const FASTAPI_WS_URL = (() => {
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
   return url;
 })();
-const PROXIED_API_PATHS = [
-  /^\/api\/twins\/campaign$/,
-  /^\/api\/twins\/bases$/,
-  /^\/api\/twins\/threats$/,
-  /^\/api\/twins\/policy$/,
-  /^\/api\/twins\/engage$/,
-  /^\/api\/twins\/readiness\/projection$/,
-  /^\/api\/twins\/reset$/,
-  /^\/api\/twins\/inject-tracks$/,
-  /^\/api\/twins\/decision-fabric$/,
-  /^\/api\/coa\/solve$/,
-  /^\/api\/lab\/run$/,
-  /^\/api\/ml\/predict$/,
-  /^\/api\/ml\/deep-sim$/,
-  /^\/api\/ml\/deep-sim\/[^/]+\/status$/,
-  /^\/api\/rationale\/coa$/,
-  /^\/api\/rationale\/lab-result$/,
-  /^\/api\/rationale\/logistics$/,
-];
-
 // ── Mock theater state ────────────────────────────────────────────────────────
 
 interface Geometry { x: number; y: number; heading: number; velocity: number; }
@@ -109,58 +89,6 @@ function isPublicPath(pathname: string): boolean {
     pathname === '/showcase' ||
     pathname.startsWith('/showcase/')
   );
-}
-
-function shouldProxyApiPath(pathname: string): boolean {
-  return PROXIED_API_PATHS.some(pattern => pattern.test(pathname));
-}
-
-async function proxyApiRequest(req: express.Request, res: express.Response): Promise<void> {
-  const targetUrl = new URL(req.originalUrl, FASTAPI_BASE_URL);
-  const requestHeaders = new Headers();
-
-  for (const [key, value] of Object.entries(req.headers)) {
-    if (value === undefined) continue;
-    if (Array.isArray(value)) {
-      for (const item of value) requestHeaders.append(key, item);
-      continue;
-    }
-    requestHeaders.set(key, value);
-  }
-
-  requestHeaders.set('host', targetUrl.host);
-
-  const hasBody = req.method !== 'GET' && req.method !== 'HEAD';
-  const body = hasBody && req.body !== undefined
-    ? JSON.stringify(req.body)
-    : undefined;
-  if (body && !requestHeaders.has('content-type')) {
-    requestHeaders.set('content-type', 'application/json');
-  }
-
-  try {
-    const upstream = await fetch(targetUrl, {
-      method: req.method,
-      headers: requestHeaders,
-      body,
-    });
-
-    res.status(upstream.status);
-    upstream.headers.forEach((value, key) => {
-      if (key.toLowerCase() === 'transfer-encoding') return;
-      res.setHeader(key, value);
-    });
-
-    const payload = Buffer.from(await upstream.arrayBuffer());
-    res.send(payload);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : 'unknown upstream error';
-    res.status(502).json({
-      error: 'FastAPI upstream unavailable',
-      detail,
-      upstream: FASTAPI_BASE_URL,
-    });
-  }
 }
 
 function parseCookies(header: string | undefined): Record<string, string> {
@@ -837,16 +765,6 @@ app.use((req, res, next) => {
   }
 
   res.status(401).json({ error: 'Authentication required' });
-});
-
-app.use('/api', (req, res, next) => {
-  const pathname = new URL(req.originalUrl, 'http://steel.local').pathname;
-  if (!shouldProxyApiPath(pathname)) {
-    next();
-    return;
-  }
-
-  void proxyApiRequest(req, res);
 });
 
 app.get('/api/twins/campaign', (_req, res) => {
