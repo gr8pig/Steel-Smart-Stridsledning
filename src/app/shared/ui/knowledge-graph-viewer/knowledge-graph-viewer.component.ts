@@ -1,7 +1,7 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, inject, input, effect } from '@angular/core';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -18,6 +18,7 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
   @ViewChild('container', { static: true }) containerRef!: ElementRef<HTMLDivElement>;
   
   nodes = input<TechNode[]>([]);
+  nodeObjects: Map<string, THREE.Group> = new Map();
   store = inject(KnowledgeGraphStore);
 
   scene!: THREE.Scene;
@@ -28,6 +29,16 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
   controls!: OrbitControls;
   animationFrameId: number = 0;
   resizeObserver!: ResizeObserver;
+
+  constructor() {
+    effect(() => { 
+      // We must wait until the scene is initialized. 
+      // A simple check is if this.scene exists.
+      if (this.scene) {
+        this.buildNodes(this.nodes()); 
+      }
+    });
+  }
 
   ngAfterViewInit() {
     this.initScene();
@@ -77,6 +88,8 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(ambientLight);
+
+    this.buildNodes(this.nodes());
   }
 
   setupResizeObserver() {
@@ -98,5 +111,47 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
     this.controls.update();
     this.composer.render();
     this.labelRenderer.render(this.scene, this.camera);
+  }
+
+  buildNodes(nodes: TechNode[]) {
+    // Clear existing
+    this.nodeObjects.forEach(group => {
+      // Basic cleanup (in a real app, we'd dispose geometries/materials too)
+      this.scene.remove(group);
+    });
+    this.nodeObjects.clear();
+
+    const matCore = new THREE.MeshStandardMaterial({ color: 0x5ca7ff, emissive: 0x5ca7ff, emissiveIntensity: 0.5 });
+    const matDec = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.8 });
+    const matDef = new THREE.MeshStandardMaterial({ color: 0x9ab0c8, emissive: 0x9ab0c8, emissiveIntensity: 0.2 });
+
+    nodes.forEach(node => {
+      const group = new THREE.Group();
+      group.position.set(node.x, node.y, node.z);
+      group.userData = { id: node.id };
+
+      let mesh: THREE.Mesh;
+      if (node.category === 'CORE') {
+        mesh = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), matCore);
+      } else if (node.category === 'DECISION') {
+        mesh = new THREE.Mesh(new THREE.OctahedronGeometry(15), matDec);
+      } else if (node.category === 'LOGISTICS') {
+        mesh = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 10, 32), matDef);
+      } else {
+        mesh = new THREE.Mesh(new THREE.SphereGeometry(10), matDef);
+      }
+      group.add(mesh);
+
+      // Label
+      const div = document.createElement('div');
+      div.className = 'text-[9px] font-mono text-white tracking-widest uppercase pointer-events-none drop-shadow-md';
+      div.textContent = node.label;
+      const label = new CSS2DObject(div);
+      label.position.set(0, 30, 0);
+      group.add(label);
+
+      this.scene.add(group);
+      this.nodeObjects.set(node.id, group);
+    });
   }
 }
