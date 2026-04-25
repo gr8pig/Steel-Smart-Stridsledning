@@ -1787,11 +1787,11 @@ const BASES_NORTH = [
       display: grid; grid-template-columns: 320px 1fr; gap: 32px; height: 100%;
     }
     .slide-map .slide-split {
-      grid-template-columns: minmax(420px, 480px) minmax(0, 1fr);
-      gap: 24px;
+      grid-template-columns: minmax(760px, 860px) minmax(0, 1fr);
+      gap: 18px;
       align-items: start;
     }
-    .slide-map .slide-left-panel { gap: 12px; }
+    .slide-map .slide-left-panel { gap: 10px; }
     .slide-board .slide-split {
       grid-template-columns: minmax(560px, 640px) minmax(0, 1fr);
       gap: 18px;
@@ -1857,7 +1857,7 @@ const BASES_NORTH = [
     .map-container {
       position: relative; border-radius: 8px; overflow: hidden;
       border: 1px solid var(--s-border); background: rgba(3,7,12,0.8);
-      min-height: 860px;
+      min-height: 700px;
     }
     .map-svg { display: block; width: 100%; height: 100%; }
     .scenario-story {
