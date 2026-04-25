@@ -1,5 +1,5 @@
 export type NodeCategory = 'CORE' | 'DECISION' | 'LOGISTICS' | 'INTELLIGENCE' | 'GOVERNANCE' | 'SURFACE';
-export type PlatformArea = 'runtime' | 'backend' | 'docs' | 'research' | 'scaffold';
+export type PlatformArea = 'runtime' | 'backend' | 'frontend' | 'docs' | 'research' | 'scaffold';
 export type FlowType = 'DATA' | 'MATERIAL' | 'CONTROL' | 'LOGICAL' | 'DOCTRINAL';
 export type KnowledgeGraphStatus = 'implemented' | 'mock-simulation' | 'partial' | 'conceptual';
 export type KnowledgeGraphViewMode = 'GRAPH' | 'TWIN';
