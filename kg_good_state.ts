@@ -22,6 +22,10 @@ export interface GraphEdge {
   technicalSpecs: {
     inputs: string[];
     outputs: string[];
+    uncertaintySource?: string;
+    fatiguePenalty?: number;
+    policyDriftOffset?: number;
+  };
 src/app/core/models/platform-knowledge-graph.data.ts
 import { REFERENCE_DOCS } from '../../features/reference/reference.manifest';
 import {

@@ -44,22 +44,22 @@ interface DragState {
 @Component({
   selector: 'app-knowledge-graph',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule],
+  imports: [CommonModule, RouterLink, KnowledgeGraphViewerComponent, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex h-full w-full flex-col overflow-hidden bg-[#05080d] text-[#E2E8F0]" [class.dark]="isDark()">
-      <header class="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-[#080c12]/95 px-6 py-4 backdrop-blur">
+    <div class="flex h-full w-full flex-col overflow-hidden bg-[#05080d] text-[#E2E8F0]">
+      <header class="flex items-center justify-between gap-4 border-b border-white/10 bg-[#080c12]/95 px-6 py-4 backdrop-blur z-30 shrink-0">
         <div class="min-w-0">
           <div class="text-[9px] font-black uppercase tracking-[0.35em] text-sky-300/80">Boreal Info_Arch</div>
           <h1 class="mt-1 text-xl font-semibold tracking-tight text-white">Platform Knowledge Graph</h1>
           <p class="mt-1 max-w-3xl text-[11px] leading-relaxed text-slate-400">
-            A 3D-styled map of runtime UI, state, services, backend seams, docs, research, and scaffold assets.
+            A 3D WebGL map of runtime UI, state, services, backend seams, docs, research, and scaffold assets.
           </p>
         </div>
 
         <div class="flex items-center gap-2">
           <label class="hidden items-center gap-2 rounded-sm border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400 md:flex">
-            <mat-icon class="h-[14px] w-[14px] text-[14px]">search</mat-icon>
+            <mat-icon class="text-[14px] w-[14px] h-[14px]">search</mat-icon>
             <input
               type="text"
               class="w-60 bg-transparent text-[10px] uppercase tracking-[0.16em] text-slate-200 outline-none placeholder:text-slate-500"
@@ -68,648 +68,217 @@ interface DragState {
               (input)="onSearch($any($event.target).value)"
             />
           </label>
-
-          <div class="flex items-center gap-px rounded-sm border border-white/10 bg-white/5 p-0.5">
-            <button
-              type="button"
-              class="rounded-sm px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] transition-colors"
-              [class.bg-sky-500]="viewMode() === 'GRAPH'"
-              [class.text-white]="viewMode() === 'GRAPH'"
-              [class.text-slate-500]="viewMode() !== 'GRAPH'"
-              (click)="setViewMode('GRAPH')"
-            >
-              Graph
-            </button>
-            <button
-              type="button"
-              class="rounded-sm px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] transition-colors"
-              [class.bg-sky-500]="viewMode() === 'TWIN'"
-              [class.text-white]="viewMode() === 'TWIN'"
-              [class.text-slate-500]="viewMode() !== 'TWIN'"
-              (click)="setViewMode('TWIN')"
-            >
-              Twin
-            </button>
-          </div>
-
           <button
             type="button"
             class="rounded-sm border border-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-300 transition-colors hover:border-white/20 hover:bg-white/5"
             (click)="resetFilters()"
           >
-            Reset
-          </button>
-
-          <button
-            type="button"
-            class="rounded-sm border border-white/10 p-2 text-slate-300 transition-colors hover:border-white/20 hover:bg-white/5"
-            (click)="toggleTheme()"
-            [attr.aria-label]="isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
-          >
-            <mat-icon class="text-sm">{{ isDark() ? 'wb_sunny' : 'nightlight_round' }}</mat-icon>
+            Reset Camera & Filters
           </button>
         </div>
       </header>
 
-      @if (viewMode() === 'GRAPH') {
-        <section class="relative flex min-h-0 flex-1 overflow-hidden">
-          <div
-            class="relative min-w-0 flex-1 overflow-hidden border-r border-white/10"
-            [class.bg-[#050505]]="isDark()"
-            [class.bg-[#f0f2f5]]="!isDark()"
-          >
-            <div class="absolute left-6 top-6 z-20 flex flex-col gap-4">
-              <div class="flex max-w-3xl flex-wrap gap-2">
-                @for (category of categories; track category) {
-                  <button
-                    type="button"
-                    class="rounded-sm border px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.22em] transition-colors"
-                    [class.border-sky-400]="store.activeCategories().includes(category)"
-                    [class.bg-sky-400/10]="store.activeCategories().includes(category)"
-                    [class.text-sky-200]="store.activeCategories().includes(category)"
-                    [class.border-white/10]="!store.activeCategories().includes(category)"
-                    [class.text-slate-400]="!store.activeCategories().includes(category)"
-                    (click)="toggleCategory(category)"
-                  >
-                    {{ category }}
-                  </button>
-                }
-              </div>
+      <section class="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row relative">
+        <div class="relative min-w-0 flex-1 h-full w-full bg-black overflow-hidden border-r border-white/10">
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.10),transparent_28%),linear-gradient(180deg,rgba(5,8,13,0.86),rgba(5,8,13,1))] pointer-events-none z-0"></div>
 
-              <div class="flex max-w-3xl flex-wrap gap-2">
-                @for (area of areas; track area) {
-                  <button
-                    type="button"
-                    class="rounded-sm border px-3 py-1.5 text-[8px] font-black uppercase tracking-[0.22em] transition-colors"
-                    [class.border-emerald-400]="store.activeAreas().includes(area)"
-                    [class.bg-emerald-400/10]="store.activeAreas().includes(area)"
-                    [class.text-emerald-200]="store.activeAreas().includes(area)"
-                    [class.border-white/10]="!store.activeAreas().includes(area)"
-                    [class.text-slate-400]="!store.activeAreas().includes(area)"
-                    (click)="toggleArea(area)"
-                  >
-                    {{ area }}
-                  </button>
-                }
-              </div>
-            </div>
-
-            <div class="absolute bottom-6 left-6 z-20 flex items-center gap-4 text-[9px] font-mono uppercase tracking-[0.25em] text-slate-500 pointer-events-none">
-              <div class="flex flex-col gap-1">
-                <span class="text-white/40">Entities</span>
-                <span class="font-bold text-sky-300">{{ visibleNodes().length }} / {{ nodes().length }}</span>
-              </div>
-              <div class="h-6 w-px bg-white/10"></div>
-              <div class="flex flex-col gap-1">
-                <span class="text-white/40">Active_Filter</span>
-                <span class="font-bold text-emerald-300">{{ hasFilters() ? 'ON' : 'OFF' }}</span>
-              </div>
-              @if (selectedNode(); as node) {
-                <div class="h-6 w-px bg-white/10"></div>
-                <div class="flex flex-col gap-1">
-                  <span class="text-white/40">Selection</span>
-                  <span class="font-bold text-white">{{ node.label }}</span>
-                </div>
-              }
-            </div>
-
-            <div class="absolute bottom-8 right-8 z-20 flex gap-2">
-              <button
-                type="button"
-                class="rounded-sm border px-3 py-2 text-[8px] uppercase tracking-widest transition-colors"
-                (click)="resetView()"
-                [class.bg-white/5]="isDark()"
-                [class.border-white/10]="isDark()"
-                [class.text-white]="isDark()"
-                [class.bg-white]="!isDark()"
-                [class.border-slate-200]="!isDark()"
-                [class.text-slate-600]="!isDark()"
-              >
-                Reset_View
-              </button>
-              <div class="flex border" [class.border-white/10]="isDark()" [class.border-slate-200]="!isDark()">
-                <button
-                  type="button"
-                  class="border-r p-2 transition-colors"
-                  (click)="zoomIn()"
-                  [class.text-white]="isDark()"
-                  [class.hover:bg-white/5]="isDark()"
-                  [class.border-white/10]="isDark()"
-                  [class.text-slate-600]="!isDark()"
-                  [class.hover:bg-slate-50]="!isDark()"
-                  [class.border-slate-200]="!isDark()"
-                >
-                  <mat-icon class="text-sm">add</mat-icon>
-                </button>
-                <button
-                  type="button"
-                  class="p-2 transition-colors"
-                  (click)="zoomOut()"
-                  [class.text-white]="isDark()"
-                  [class.hover:bg-white/5]="isDark()"
-                  [class.text-slate-600]="!isDark()"
-                  [class.hover:bg-slate-50]="!isDark()"
-                >
-                  <mat-icon class="text-sm">remove</mat-icon>
-                </button>
-              </div>
-            </div>
-
-            <div
-              class="absolute inset-0 pointer-events-none opacity-20"
-              [style.background-image]="isDark() ? 'radial-gradient(#ffffff 1px, transparent 1px)' : 'radial-gradient(#000000 1px, transparent 1px)'"
-              [style.background-size]="'40px 40px'"
-            ></div>
-            @if (isDark()) {
-              <div class="absolute inset-0 z-10 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%)] bg-[length:100%_4px] opacity-10"></div>
-            }
-
-            <div class="absolute inset-0 z-10 transition-transform duration-700 ease-out preserve-3d" [style.transform]="graphPerspective()">
-              <svg
-                class="h-full w-full select-none cursor-grab active:cursor-grabbing"
-                (mousedown)="onMouseDown($event)"
-                (mousemove)="onMouseMove($event)"
-                (mouseup)="onMouseUp()"
-                (mouseleave)="onMouseUp()"
-                (wheel)="onWheel($event)"
-              >
-                <defs>
-                  <marker id="arrowhead-dark" markerWidth="8" markerHeight="6" refX="18" refY="3" orient="auto">
-                    <path d="M0,0 L8,3 L0,6 Z" fill="#fbbf24" opacity="0.8" />
-                  </marker>
-                  <marker id="arrowhead-light" markerWidth="8" markerHeight="6" refX="18" refY="3" orient="auto">
-                    <path d="M0,0 L8,3 L0,6 Z" fill="#2563eb" opacity="0.8" />
-                  </marker>
-                </defs>
-
-                <g [attr.transform]="'translate(' + panX() + ',' + panY() + ') scale(' + zoom() + ')'">
-                  <g class="transition-opacity duration-700">
-                    @for (line of graphLines(); track line.id) {
-                      <path
-                        [attr.d]="'M' + line.x1 + ',' + line.y1 + ' L' + line.x2 + ',' + line.y2"
-                        [attr.stroke]="lineStroke(line)"
-                        fill="none"
-                        [attr.stroke-width]="line.highlighted ? 2 : line.active ? 1.5 : 1"
-                        [attr.stroke-dasharray]="line.active ? 'none' : '4 4'"
-                        [attr.marker-end]="line.highlighted ? (isDark() ? 'url(#arrowhead-dark)' : 'url(#arrowhead-light)') : 'none'"
-                        [style.opacity]="lineOpacity(line)"
-                        class="transition-all duration-500"
-                      />
-
-                      @if (line.active || line.highlighted) {
-                        <circle
-                          r="1.5"
-                          [attr.fill]="isDark() ? '#fbbf24' : '#2563eb'"
-                          class="animate-flow-particle"
-                          [style.opacity]="line.highlighted ? 1 : 0.6"
-                        >
-                          <animateMotion
-                            [attr.path]="'M' + line.x1 + ',' + line.y1 + ' L' + line.x2 + ',' + line.y2"
-                            [attr.dur]="line.highlighted ? '1.2s' : '3s'"
-                            repeatCount="indefinite"
-                          />
-                        </circle>
-                      }
-                    }
-                  </g>
-
-                  @for (node of nodes(); track node.id) {
-                    @let isDimmed = isNodeDimmed(node.id);
-                    @let isHovered = hoveredNodeId() === node.id;
-                    @let isSelected = selectedNode()?.id === node.id;
-
-                    <g
-                      class="cursor-pointer group outline-none transition-all duration-500 preserve-3d"
-                      tabindex="0"
-                      [class.opacity-20]="isDimmed"
-                      [class.opacity-100]="!isDimmed"
-                      [style.transform]="'translateZ(' + (node.z + (isHovered ? 40 : 0)) + 'px)'"
-                      (mouseenter)="hoveredNodeId.set(node.id)"
-                      (mouseleave)="hoveredNodeId.set(null)"
-                      (click)="selectNode(node); $event.stopPropagation()"
-                      (keydown.enter)="selectNode(node)"
-                    >
-                      <line
-                        [attr.x1]="node.x"
-                        [attr.y1]="node.y"
-                        [attr.x2]="node.x"
-                        [attr.y2]="node.y"
-                        stroke-width="0.5"
-                        stroke-dasharray="2 4"
-                        [attr.stroke]="isDark() ? '#ffffff08' : '#00000008'"
-                        [style.transform]="'translateZ(' + (-node.z - 200) + 'px)'"
-                      ></line>
-
-                      <circle
-                        [attr.cx]="node.x"
-                        [attr.cy]="node.y"
-                        r="40"
-                        class="transition-all duration-700 opacity-0 group-hover:opacity-100"
-                        [class.fill-amber-500/5]="isDark()"
-                        [class.fill-blue-500/5]="!isDark()"
-                      ></circle>
-
-                      <g transform-origin="center" [style.transform]="isHovered ? 'scale(1.2)' : 'scale(1)'" class="transition-transform duration-300">
-                        @switch (node.category) {
-                          @case ('DECISION') {
-                            <rect
-                              [attr.x]="node.x - 5"
-                              [attr.y]="node.y - 5"
-                              width="10"
-                              height="10"
-                              class="rotate-45 fill-none"
-                              [attr.stroke]="nodeStroke(node, isSelected, isHovered)"
-                              stroke-width="1.5"
-                            ></rect>
-                            <circle
-                              [attr.cx]="node.x"
-                              [attr.cy]="node.y"
-                              r="1.5"
-                              [attr.fill]="nodeStroke(node, isSelected, isHovered)"
-                            ></circle>
-                          }
-                          @case ('CORE') {
-                            <rect
-                              [attr.x]="node.x - 5"
-                              [attr.y]="node.y - 5"
-                              width="10"
-                              height="10"
-                              class="fill-none"
-                              [attr.stroke]="nodeStroke(node, isSelected, isHovered)"
-                              stroke-width="1.5"
-                            ></rect>
-                            <rect
-                              [attr.x]="node.x - 1.5"
-                              [attr.y]="node.y - 1.5"
-                              width="3"
-                              height="3"
-                              [attr.fill]="nodeStroke(node, isSelected, isHovered)"
-                            ></rect>
-                          }
-                          @case ('LOGISTICS') {
-                            <path
-                              [attr.d]="'M' + node.x + ',' + (node.y - 6) + ' L' + (node.x + 6) + ',' + (node.y + 4) + ' L' + (node.x - 6) + ',' + (node.y + 4) + ' Z'"
-                              class="fill-none"
-                              [attr.stroke]="nodeStroke(node, isSelected, isHovered)"
-                              stroke-width="1.5"
-                            ></path>
-                          }
-                          @case ('INTELLIGENCE') {
-                            <path
-                              [attr.d]="'M' + node.x + ',' + (node.y - 6) + ' L' + (node.x + 6) + ',' + (node.y - 2) + ' L' + (node.x + 6) + ',' + (node.y + 2) + ' L' + (node.x) + ',' + (node.y + 6) + ' L' + (node.x - 6) + ',' + (node.y + 2) + ' L' + (node.x - 6) + ',' + (node.y - 2) + ' Z'"
-                              class="fill-none"
-                              [attr.stroke]="nodeStroke(node, isSelected, isHovered)"
-                              stroke-width="1.4"
-                            ></path>
-                          }
-                          @case ('GOVERNANCE') {
-                            <rect
-                              [attr.x]="node.x - 3"
-                              [attr.y]="node.y - 7"
-                              width="6"
-                              height="14"
-                              rx="3"
-                              class="fill-none"
-                              [attr.stroke]="nodeStroke(node, isSelected, isHovered)"
-                              stroke-width="1.4"
-                            ></rect>
-                          }
-                          @default {
-                            <line [attr.x1]="node.x - 4" [attr.y1]="node.y" [attr.x2]="node.x + 4" [attr.y2]="node.y" [attr.stroke]="nodeStroke(node, isSelected, isHovered)" stroke-width="1"></line>
-                            <line [attr.x1]="node.x" [attr.y1]="node.y - 4" [attr.x2]="node.x" [attr.y2]="node.y + 4" [attr.stroke]="nodeStroke(node, isSelected, isHovered)" stroke-width="1"></line>
-                          }
-                        }
-                      </g>
-
-                      <text
-                        [attr.x]="node.x + 16"
-                        [attr.y]="node.y + 4"
-                        class="pointer-events-none text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300"
-                        [class.fill-white]="isDark()"
-                        [class.fill-slate-900]="!isDark()"
-                        [class.opacity-40]="selectedNode() && !isSelected && !isRelatedToFocus(node.id)"
-                        [class.opacity-100]="!selectedNode() || isSelected || isRelatedToFocus(node.id)"
-                      >
-                        {{ node.label }}
-                      </text>
-
-                      <text
-                        [attr.x]="node.x + 16"
-                        [attr.y]="node.y + 16"
-                        class="pointer-events-none text-[7px] font-mono uppercase tracking-widest opacity-40"
-                        [class.fill-slate-400]="isDark()"
-                        [class.fill-slate-500]="!isDark()"
-                      >
-                        {{ node.category }} / {{ node.area ?? 'UNSPECIFIED' }}
-                      </text>
-                    </g>
-                  }
-                </g>
-              </svg>
-            </div>
+          <div class="absolute inset-0 z-10">
+            <app-knowledge-graph-viewer 
+               [nodes]="visibleNodes()"
+               [edges]="visibleEdges()"
+               [selectedNodeId]="store.selectedNodeId()"
+               (nodeSelected)="store.selectNode($event)">
+            </app-knowledge-graph-viewer>
           </div>
 
-          @if (selectedNode(); as node) {
-            <aside class="absolute right-0 top-0 bottom-0 z-40 flex w-[450px] flex-col overflow-hidden border-l border-white/10 bg-[#080b11]/95 backdrop-blur shadow-2xl animate-in slide-in-from-right">
-              <div class="shrink-0 border-b border-white/10 px-8 py-8">
-                <div class="flex items-start justify-between gap-4">
-                  <div class="min-w-0">
-                    <div class="text-[8px] font-black uppercase tracking-[0.4em] text-sky-400/70">Structural_Metadata</div>
-                    <h2 class="mt-2 truncate text-3xl font-light uppercase tracking-tighter text-white">{{ node.label }}</h2>
-                  </div>
-                  <button (click)="clearSelection()" class="rounded-full p-2 text-slate-500 transition-colors hover:bg-white/5">
-                    <mat-icon class="text-sm">close</mat-icon>
-                  </button>
+          <div class="absolute left-4 top-4 z-20 flex max-w-[70%] flex-wrap gap-2 pointer-events-none">
+            @for (category of categories; track category) {
+              <button
+                type="button"
+                class="rounded-sm border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] transition-colors pointer-events-auto"
+                [class.border-sky-400]="store.activeCategories().includes(category)"
+                [class.bg-sky-400/10]="store.activeCategories().includes(category)"
+                [class.text-sky-200]="store.activeCategories().includes(category)"
+                [class.border-white/10]="!store.activeCategories().includes(category)"
+                [class.text-slate-400]="!store.activeCategories().includes(category)"
+                (click)="toggleCategory(category)"
+              >
+                {{ category }}
+              </button>
+            }
+          </div>
+
+          <div class="absolute right-4 top-4 z-20 flex max-w-[30%] flex-wrap justify-end gap-2 pointer-events-none">
+            @for (area of areas; track area) {
+              <button
+                type="button"
+                class="rounded-sm border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] transition-colors pointer-events-auto"
+                [class.border-sky-400]="store.activeAreas().includes(area)"
+                [class.bg-sky-400/10]="store.activeAreas().includes(area)"
+                [class.text-sky-200]="store.activeAreas().includes(area)"
+                [class.border-white/10]="!store.activeAreas().includes(area)"
+                [class.text-slate-400]="!store.activeAreas().includes(area)"
+                (click)="toggleArea(area)"
+              >
+                {{ area }}
+              </button>
+            }
+          </div>
+
+          <div class="absolute bottom-4 left-4 z-20 flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.22em] text-slate-400 pointer-events-none">
+            <span>Nodes {{ visibleNodes().length }} / {{ store.nodes().length }}</span>
+            <span>Edges {{ visibleEdges().length }}</span>
+            @if (selectedNode(); as node) {
+               <span>Selected {{ node.label }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Detail Drawer Overlay -->
+        @if (selectedNode(); as node) {
+        <aside class="absolute top-0 right-0 bottom-0 z-40 flex w-full flex-col border-l border-white/10 bg-[#080b11]/95 backdrop-blur-md md:w-[450px] shadow-2xl">
+            <div class="flex h-full min-h-0 flex-col overflow-hidden">
+              <div class="border-b border-white/10 px-6 py-6 flex justify-between items-start">
+                <div>
+                    <div class="text-[9px] font-black uppercase tracking-[0.32em] text-sky-300/80">Node Details</div>
+                    <h2 class="mt-2 text-2xl font-semibold tracking-tight text-white">{{ node.label }}</h2>
                 </div>
-                <p class="mt-4 text-[12px] leading-relaxed text-slate-300 font-light">{{ node.description }}</p>
+                <button (click)="clearSelection()" class="text-slate-400 hover:text-white">
+                    <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              <div class="px-6 py-2">
+                 <p class="text-[12px] leading-relaxed text-slate-300">{{ node.description }}</p>
               </div>
 
-              <div class="custom-scrollbar flex-1 overflow-y-auto px-8 py-6 space-y-8">
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                    <div class="mb-1 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Status</div>
-                    <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-200">{{ node.status }}</div>
+              <div class="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-3">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Status</div>
+                    <div class="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">{{ node.status }}</div>
                   </div>
-                  <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                    <div class="mb-1 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Platform_Area</div>
-                    <div class="text-[10px] font-bold uppercase tracking-[0.2em]" [style.color]="areaText(node.area)">{{ node.area ?? 'UNSPECIFIED' }}</div>
-                  </div>
-                </div>
-
-                @if (node.what || node.why) {
-                  <div class="space-y-4">
-                    @if (node.what) {
-                      <div class="rounded-sm border border-white/5 bg-white/2 p-5">
-                        <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Technical_Purpose</div>
-                        <p class="text-[11px] leading-relaxed text-slate-200">{{ node.what }}</p>
-                      </div>
-                    }
-                    @if (node.why) {
-                      <div class="rounded-sm border border-white/5 bg-white/2 p-5">
-                        <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Architectural_Rationale</div>
-                        <p class="text-[11px] leading-relaxed italic text-slate-300">{{ node.why }}</p>
-                      </div>
-                    }
-                  </div>
-                }
-
-                <div class="rounded-sm border border-white/10 bg-white/2 p-5 space-y-6">
-                  <div class="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400">Computational_Interface</div>
-                  <div class="grid grid-cols-2 gap-6">
-                    <div>
-                      <div class="mb-3 text-[7px] font-black uppercase tracking-[0.3em] text-sky-400/50">Inputs</div>
-                      <div class="flex flex-wrap gap-2">
-                        @for (input of node.technicalSpecs.inputs; track input) {
-                          <span class="border-b border-sky-500/20 pb-0.5 text-[9px] font-mono text-sky-200">{{ input }}</span>
-                        }
-                      </div>
-                    </div>
-                    <div>
-                      <div class="mb-3 text-[7px] font-black uppercase tracking-[0.3em] text-emerald-400/50">Outputs</div>
-                      <div class="flex flex-wrap gap-2">
-                        @for (output of node.technicalSpecs.outputs; track output) {
-                          <span class="border-b border-emerald-500/20 pb-0.5 text-[9px] font-mono text-emerald-200">{{ output }}</span>
-                        }
-                      </div>
-                    </div>
-                  </div>
-
-                  @if (node.technicalSpecs.logic) {
-                    <div class="border-t border-white/5 pt-4">
-                      <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-600">Process_Logic</div>
-                      <p class="text-[10px] leading-relaxed text-slate-400">{{ node.technicalSpecs.logic }}</p>
-                    </div>
-                  }
-
-                  @if (node.technicalSpecs.math) {
-                    <div class="border-t border-white/5 pt-4">
-                      <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-600">Mathematical_Grounding</div>
-                      <p class="whitespace-pre-wrap font-mono text-[10px] text-amber-500/80">{{ node.technicalSpecs.math }}</p>
-                    </div>
-                  }
-
-                  @if (node.technicalSpecs.doctrine) {
-                    <div class="border-t border-white/5 pt-4">
-                      <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-600">Doctrinal_Mapping</div>
-                      <p class="text-[10px] italic text-slate-300">"{{ node.technicalSpecs.doctrine }}"</p>
-                    </div>
-                  }
-
-                  @if (node.technicalSpecs.verif) {
-                    <div class="border-t border-white/5 pt-4">
-                      <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-600">Verification_Signals</div>
-                      <p class="text-[10px] leading-relaxed text-slate-400">{{ node.technicalSpecs.verif }}</p>
-                    </div>
-                  }
-                </div>
-
-                <div class="rounded-sm border border-white/5 bg-white/2 p-5">
-                  <div class="mb-3 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Repository_Seams</div>
-                  <div class="flex flex-col gap-2">
-                    <code class="break-all rounded-sm border border-white/5 bg-black/40 p-2 text-[9px] text-sky-300">{{ node.sourcePath }}</code>
-                    @if (node.route) {
-                      <a [routerLink]="node.route" class="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-sky-400 transition-colors hover:text-sky-300">
-                        Navigate_To_Surface
-                        <mat-icon class="text-[12px]">open_in_new</mat-icon>
-                      </a>
-                    }
-                    @if (node.where) {
-                      <p class="text-[10px] leading-relaxed text-slate-400">{{ node.where }}</p>
-                    }
-                    @if (node.who) {
-                      <p class="text-[10px] leading-relaxed text-slate-400">Who: {{ node.who }}</p>
-                    }
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-3">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Area</div>
+                    <div class="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-sky-300">{{ node.area }}</div>
                   </div>
                 </div>
 
-                <div class="pb-8">
-                  <div class="mb-4 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Topology_Neighborhood</div>
-                  <div class="flex flex-wrap gap-2">
-                    @for (related of relatedNodes(); track related.id) {
-                      <button
-                        type="button"
-                        (click)="selectNode(related)"
-                        class="rounded-sm border border-white/5 bg-white/3 px-3 py-1.5 text-[9px] uppercase tracking-widest text-slate-400 transition-all hover:border-sky-500/40 hover:text-sky-200"
-                      >
-                        {{ related.label }}
-                      </button>
-                    }
+                <div class="mt-4 space-y-4">
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-4">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">What</div>
+                    <p class="mt-2 text-[12px] leading-relaxed text-slate-200">{{ node.what }}</p>
+                  </div>
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-4">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Why</div>
+                    <p class="mt-2 text-[12px] leading-relaxed text-slate-200">{{ node.why }}</p>
+                  </div>
+                  <div class="rounded-sm border border-white/10 bg-white/5 p-4">
+                    <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Who</div>
+                    <p class="mt-2 text-[12px] leading-relaxed text-slate-200">{{ node.who }}</p>
                   </div>
                 </div>
-              </div>
-            </aside>
-          }
-        </section>
-      }
 
-      @if (viewMode() === 'TWIN') {
-        @if (twinNode(); as node) {
-          <div class="relative flex flex-1 flex-col overflow-hidden p-12 transition-colors duration-500" [class.bg-[#050505]]="isDark()" [class.bg-slate-50]="!isDark()">
-            <button
-              type="button"
-              (click)="viewMode.set('GRAPH')"
-              class="absolute left-12 top-12 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-all hover:translate-x-[-4px]"
-              [class.text-white/40]="isDark()"
-              [class.text-slate-400]="!isDark()"
-              [class.hover:text-amber-500]="isDark()"
-              [class.hover:text-blue-600]="!isDark()"
-            >
-              <mat-icon class="text-sm">arrow_back</mat-icon>
-              Return_To_Mesh
-            </button>
-
-            <div class="mx-auto flex w-full max-w-6xl flex-1 flex-col pt-12">
-              <div class="mb-12 flex items-end justify-between gap-8">
-                <div class="space-y-2">
-                  <div class="flex items-center gap-4">
-                    <span
-                      class="border px-2 py-0.5 text-[10px] uppercase tracking-widest opacity-50"
-                      [class.border-white/10]="isDark()"
-                      [class.border-slate-200]="!isDark()"
-                      [class.text-white]="isDark()"
-                      [class.text-slate-900]="!isDark()"
+                <div class="mt-4 rounded-sm border border-white/10 bg-white/5 p-4">
+                  <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Where</div>
+                  <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.where }}</p>
+                  @if (node.route) {
+                    <a
+                      [routerLink]="node.route"
+                      class="mt-3 inline-flex rounded-sm border border-sky-400/30 bg-sky-400/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.24em] text-sky-200 transition-colors hover:bg-sky-400/15"
                     >
-                      LIVE_INSTANCE :: {{ node.id }}
-                    </span>
-                  </div>
-                  <h1
-                    class="text-6xl font-light uppercase tracking-[2px] transition-colors"
-                    [class.text-white]="isDark()"
-                    [class.text-slate-900]="!isDark()"
-                  >
-                    {{ node.label }}
-                  </h1>
+                      Open Route
+                    </a>
+                  }
                 </div>
 
-                <div class="text-right">
-                  <div class="text-[9px] uppercase tracking-[0.3em] text-slate-500">Twin_Portal</div>
-                  <div class="mt-2 text-[11px] uppercase tracking-[0.18em] text-sky-300">Status :: {{ node.status }}</div>
+                <div class="mt-4 rounded-sm border border-white/10 bg-white/5 p-4">
+                  <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Source</div>
+                  <code class="mt-2 block break-all text-[10px] text-sky-200">{{ node.sourcePath ?? 'No explicit source path' }}</code>
                 </div>
-              </div>
 
-              <div class="grid flex-1 gap-6 lg:grid-cols-[1.2fr_0.9fr]">
-                <section
-                  class="rounded-md border p-6 shadow-2xl"
-                  [class.border-white/10]="isDark()"
-                  [class.bg-black/40]="isDark()"
-                  [class.border-slate-200]="!isDark()"
-                  [class.bg-white]="!isDark()"
-                >
-                  <div class="mb-6 flex flex-wrap items-center gap-3">
-                    <span class="rounded-sm border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-sky-200">
-                      {{ node.category }}
-                    </span>
-                    <span class="rounded-sm border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-emerald-200">
-                      {{ node.area ?? 'UNSPECIFIED' }}
-                    </span>
-                    @if (node.route) {
-                      <a [routerLink]="node.route" class="rounded-sm border border-white/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.22em] text-slate-300 transition-colors hover:border-white/20 hover:bg-white/5">
-                        Route
-                      </a>
-                    }
-                  </div>
-
-                  <p class="max-w-3xl text-[12px] leading-relaxed text-slate-300">{{ node.description }}</p>
-
-                  <div class="mt-8 grid gap-4 md:grid-cols-2">
-                    <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                      <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">What</div>
-                      <p class="text-[11px] leading-relaxed text-slate-200">{{ node.what ?? 'No explicit what field.' }}</p>
-                    </div>
-                    <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                      <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Why</div>
-                      <p class="text-[11px] leading-relaxed italic text-slate-300">{{ node.why ?? 'No explicit why field.' }}</p>
-                    </div>
-                  </div>
-
-                  <div class="mt-4 rounded-sm border border-white/5 bg-white/2 p-5">
-                    <div class="mb-3 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Interface</div>
-                    <div class="grid gap-6 md:grid-cols-2">
-                      <div>
-                        <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-sky-400/50">Inputs</div>
-                        <div class="flex flex-wrap gap-2">
-                          @for (input of node.technicalSpecs.inputs; track input) {
-                            <span class="rounded-sm border border-sky-500/20 px-2 py-1 text-[9px] font-mono text-sky-200">{{ input }}</span>
-                          }
-                        </div>
-                      </div>
-                      <div>
-                        <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-emerald-400/50">Outputs</div>
-                        <div class="flex flex-wrap gap-2">
-                          @for (output of node.technicalSpecs.outputs; track output) {
-                            <span class="rounded-sm border border-emerald-500/20 px-2 py-1 text-[9px] font-mono text-emerald-200">{{ output }}</span>
-                          }
-                        </div>
+                <div class="mt-4 rounded-sm border border-white/10 bg-white/5 p-4">
+                  <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Technical Spec</div>
+                  <div class="mt-3 grid gap-3">
+                    <div>
+                      <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Inputs</div>
+                      <div class="mt-2 flex flex-wrap gap-2">
+                        @for (input of node.technicalSpecs.inputs; track input) {
+                          <span class="rounded-sm border border-sky-400/20 bg-sky-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-sky-200">{{ input }}</span>
+                        }
                       </div>
                     </div>
-                  </div>
-
-                  <div class="mt-4 rounded-sm border border-white/5 bg-white/2 p-5">
-                    <div class="mb-3 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Repository_Seams</div>
-                    <code class="block break-all rounded-sm border border-white/5 bg-black/40 p-2 text-[9px] text-sky-300">{{ node.sourcePath }}</code>
-                    @if (node.where) {
-                      <p class="mt-3 text-[10px] leading-relaxed text-slate-400">{{ node.where }}</p>
-                    }
-                    @if (node.who) {
-                      <p class="mt-2 text-[10px] leading-relaxed text-slate-400">Who: {{ node.who }}</p>
-                    }
-                  </div>
-                </section>
-
-                <section
-                  class="rounded-md border p-6 shadow-2xl"
-                  [class.border-white/10]="isDark()"
-                  [class.bg-black/40]="isDark()"
-                  [class.border-slate-200]="!isDark()"
-                  [class.bg-white]="!isDark()"
-                >
-                  <div class="text-[9px] uppercase tracking-[0.3em] text-slate-500">Twin_Neighborhood</div>
-                  <div class="mt-5 flex flex-wrap gap-2">
-                    @for (related of relatedNodes(); track related.id) {
-                      <button
-                        type="button"
-                        (click)="selectNode(related)"
-                        class="rounded-sm border border-white/10 px-3 py-1.5 text-[9px] uppercase tracking-widest text-slate-300 transition-colors hover:border-sky-500/40 hover:text-sky-200"
-                      >
-                        {{ related.label }}
-                      </button>
-                    }
-                  </div>
-
-                  <div class="mt-8 space-y-4">
-                    <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                      <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Status</div>
-                      <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-200">{{ node.status }}</div>
-                    </div>
-                    <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                      <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Area</div>
-                      <div class="text-[10px] font-bold uppercase tracking-[0.2em]" [style.color]="areaText(node.area)">{{ node.area ?? 'UNSPECIFIED' }}</div>
+                    <div>
+                      <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Outputs</div>
+                      <div class="mt-2 flex flex-wrap gap-2">
+                        @for (output of node.technicalSpecs.outputs; track output) {
+                          <span class="rounded-sm border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-200">{{ output }}</span>
+                        }
+                      </div>
                     </div>
                     @if (node.technicalSpecs.logic) {
-                      <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                        <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Logic</div>
-                        <p class="text-[10px] leading-relaxed text-slate-400">{{ node.technicalSpecs.logic }}</p>
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Logic</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.logic }}</p>
+                      </div>
+                    }
+                    @if (node.technicalSpecs.math) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Math</div>
+                        <p class="mt-2 whitespace-pre-line font-mono text-[10px] leading-relaxed text-slate-300">{{ node.technicalSpecs.math }}</p>
                       </div>
                     }
                     @if (node.technicalSpecs.doctrine) {
-                      <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                        <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Doctrine</div>
-                        <p class="text-[10px] italic text-slate-300">"{{ node.technicalSpecs.doctrine }}"</p>
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Doctrine</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.doctrine }}</p>
                       </div>
                     }
                     @if (node.technicalSpecs.verif) {
-                      <div class="rounded-sm border border-white/5 bg-white/2 p-4">
-                        <div class="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-500">Verification</div>
-                        <p class="text-[10px] leading-relaxed text-slate-400">{{ node.technicalSpecs.verif }}</p>
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Verification</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.verif }}</p>
+                      </div>
+                    }
+                    @if (node.technicalSpecs.uncertaintySource) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Uncertainty Source</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.uncertaintySource }}</p>
+                      </div>
+                    }
+                    @if (node.technicalSpecs.fatiguePenalty) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Fatigue Penalty</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.fatiguePenalty }}</p>
+                      </div>
+                    }
+                    @if (node.technicalSpecs.policyDriftOffset) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Policy Drift Offset</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.policyDriftOffset }}</p>
                       </div>
                     }
                   </div>
-                </section>
+                </div>
+
+                <div class="mt-4 rounded-sm border border-white/10 bg-white/5 p-4 mb-8">
+                  <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Related Nodes</div>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    @for (related of relatedNodes(); track related.id) {
+                      <button
+                        type="button"
+                        class="rounded-sm border border-white/10 bg-black/20 px-2 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-slate-200 transition-colors hover:border-sky-400/30 hover:bg-sky-400/10"
+                        (click)="selectNode(related)"
+                      >
+                        {{ related.label }}
+                      </button>
+                    }
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+        </aside>
         }
-      }
+      </section>
     </div>
   `,
 })

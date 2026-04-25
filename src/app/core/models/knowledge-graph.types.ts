@@ -41,6 +41,9 @@ export interface TechNode {
     math?: string;
     doctrine?: string;
     verif?: string;
+    uncertaintySource?: string;
+    fatiguePenalty?: number;
+    policyDriftOffset?: number;
   };
   connectedTo: string[]; // Keep for simple traversal
   flows?: GraphEdge[]; // Explicit definitions of relationships and flows

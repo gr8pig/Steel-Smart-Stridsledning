@@ -201,6 +201,24 @@ new_template = """@Component({
                         <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.verif }}</p>
                       </div>
                     }
+                    @if (node.technicalSpecs.uncertaintySource) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Uncertainty Source</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.uncertaintySource }}</p>
+                      </div>
+                    }
+                    @if (node.technicalSpecs.fatiguePenalty) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Fatigue Penalty</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.fatiguePenalty }}</p>
+                      </div>
+                    }
+                    @if (node.technicalSpecs.policyDriftOffset) {
+                      <div>
+                        <div class="text-[8px] font-black uppercase tracking-[0.24em] text-slate-500">Policy Drift Offset</div>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-300">{{ node.technicalSpecs.policyDriftOffset }}</p>
+                      </div>
+                    }
                   </div>
                 </div>
 
@@ -226,7 +244,7 @@ new_template = """@Component({
     </div>
   `"""
 
-new_content = re.sub(r'@Component\(\{.*?styles: \[`', new_template + '\n  styles: [`', content, flags=re.DOTALL)
+new_content = re.sub(r'@Component\(\{.*?template: `.*?`', new_template, content, flags=re.DOTALL)
 
 with open('src/app/features/knowledge-graph.ts', 'w') as f:
     f.write(new_content)
