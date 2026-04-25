@@ -11,7 +11,7 @@ REPOSITORY="${REPOSITORY:-steel-smart-stridsledning-web}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 MIN_INSTANCES="${MIN_INSTANCES:-0}"
 MAX_INSTANCES="${MAX_INSTANCES:-1}"
-CONCURRENCY="${CONCURRENCY:-20}"
+CONCURRENCY="${CONCURRENCY:-250}"
 CPU="${CPU:-1}"
 MEMORY="${MEMORY:-512Mi}"
 
@@ -55,7 +55,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --cpu-boost \
   --cpu-throttling \
   --port 8080 \
-  --set-env-vars NODE_ENV=production \
+  --set-env-vars NODE_ENV=production,OPENROUTER_API_KEY=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,RUNPOD_API_KEY=rpa_PAWQUYLZKHCHZIPHA6S88RNX3LLYVZVO8KLZHOPLihko27,RUNPOD_ENDPOINT_ID=v2-deep-sim-boreal-001 \
   --project "${PROJECT_ID}"
 
 echo "Deployed to Cloud Run in ${REGION}:"
