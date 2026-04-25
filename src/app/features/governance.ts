@@ -341,7 +341,7 @@ export class Governance {
                 this.audit.log({
                     actor: 'SYSTEM',
                     action: 'Decision Advisory Generated',
-                    rationale: `Advisory for COA: ${coa.name}. Model: ${res.model ?? res.source}.`,
+                    rationale: `Advisory for COA: ${coa.name}. Model: ${res.model}.`,
                     category: 'POLICY',
                 });
             },

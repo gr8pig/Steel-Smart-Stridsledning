@@ -42,6 +42,13 @@ gcloud builds submit "${API_DIR}" \
 # Fetch Web URL to configure CORS
 WEB_URL=$(gcloud run services describe steel-web --region "${REGION}" --project "${PROJECT_ID}" --format='value(status.url)' 2>/dev/null || echo "http://localhost:4200")
 
+cat <<EOF > env.yaml
+OPENROUTER_API_KEY: "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"
+RUNPOD_API_KEY: "rpa_PAWQUYLZKHCHZIPHA6S88RNX3LLYVZVO8KLZHOPLihko27"
+RUNPOD_ENDPOINT_ID: "v2-deep-sim-boreal-001"
+CORS_ORIGINS: "http://localhost:4200,http://localhost:4000,${WEB_URL}"
+EOF
+
 gcloud run deploy "${SERVICE_NAME}" \
   --image "${IMAGE_URI}" \
   --region "${REGION}" \
@@ -54,8 +61,10 @@ gcloud run deploy "${SERVICE_NAME}" \
   --memory "${MEMORY}" \
   --timeout 3600 \
   --port 8080 \
-  --set-env-vars "OPENROUTER_API_KEY=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,RUNPOD_API_KEY=rpa_PAWQUYLZKHCHZIPHA6S88RNX3LLYVZVO8KLZHOPLihko27,RUNPOD_ENDPOINT_ID=v2-deep-sim-boreal-001,CORS_ORIGINS=http://localhost:4200,http://localhost:4000,${WEB_URL}" \
+  --env-vars-file env.yaml \
   --project "${PROJECT_ID}"
+
+rm env.yaml
 
 echo "Deployed to Cloud Run in ${REGION}:"
 gcloud run services describe "${SERVICE_NAME}" \

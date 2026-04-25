@@ -7,13 +7,25 @@ import { API_BASE_URL } from '../tokens/api.token';
 
 export type WsConnectionStatus = 'CONNECTED' | 'CONNECTING' | 'DISCONNECTED';
 // ... (TheaterDelta interface)
+export interface TheaterDelta {
+  type: string;
+  simTime: number;
+  threats: any[];
+  bases: any[];
+  phase: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TheaterWsService implements OnDestroy {
   private zone = inject(NgZone);
   private platformId = inject(PLATFORM_ID);
   private apiBase = inject(API_BASE_URL);
   private socket: WebSocket | null = null;
-  // ... (private fields)
+  private _messages$ = new Subject<TheaterDelta>();
+  private _connectionStatus = signal<WsConnectionStatus>('DISCONNECTED');
+  private _destroyed = false;
+  private _reconnectTimer: any = null;
+
   readonly messages$: Observable<TheaterDelta> = this._messages$.pipe(share());
   readonly connectionStatus = this._connectionStatus.asReadonly();
 
