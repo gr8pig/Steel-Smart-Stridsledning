@@ -6,7 +6,7 @@ import { TacticalStore } from '../core/state/tactical.store';
 import { LabStore } from '../core/state/lab.store';
 import { OrchestrationStore } from '../core/state/orchestration.store';
 import { CapabilityOrchestrator } from '../core/services/capability-orchestrator';
-import { BdtApiService, LabRunResult } from '../core/services/bdt-api.service';
+import { SteelApiService, LabRunResult } from '../core/services/steel-api.service';
 
 @Component({
   selector: 'app-robustness-lab',
@@ -257,7 +257,7 @@ import { BdtApiService, LabRunResult } from '../core/services/bdt-api.service';
                             <div class="space-y-6">
                                 <div class="flex flex-col gap-2.5">
                                     <div class="flex justify-between items-center text-[10px] font-mono">
-                                        <span class="text-boreal-text-primary uppercase tracking-tighter font-bold">Active BDT Policy</span>
+                                        <span class="text-boreal-text-primary uppercase tracking-tighter font-bold">Active SSS Policy</span>
                                         <span class="text-boreal-blue font-black tracking-widest uppercase">{{ (res.robustnessScore * 100).toFixed(0) }}%</span>
                                     </div>
                                     <div class="h-1.5 bg-boreal-canvas rounded-full shadow-inner overflow-hidden border border-boreal-border">
@@ -276,7 +276,7 @@ import { BdtApiService, LabRunResult } from '../core/services/bdt-api.service';
                             </div>
                             <!-- Delta callout — always visible -->
                             <div class="mt-4 p-3 bg-boreal-green/5 border border-boreal-green/30 rounded-sm flex items-center justify-between">
-                                <span class="text-[9px] text-boreal-text-muted uppercase font-bold tracking-widest">BDT Resilience Gain</span>
+                                <span class="text-[9px] text-boreal-text-muted uppercase font-bold tracking-widest">SSS Resilience Gain</span>
                                 <span class="text-lg font-black text-boreal-green tracking-tighter">+{{ ((res.robustnessScore - res.legacyScore) * 100).toFixed(0) }}pp</span>
                             </div>
                         </div>
@@ -330,7 +330,7 @@ import { BdtApiService, LabRunResult } from '../core/services/bdt-api.service';
                     >
                         Export Lab Audit Report
                     </button>
-                    <p class="text-[8px] text-center text-boreal-text-muted font-mono tracking-widest uppercase mt-3">Analytical Signature: BDT-LAB-V9.2 // CONVERGED</p>
+                    <p class="text-[8px] text-center text-boreal-text-muted font-mono tracking-widest uppercase mt-3">Analytical Signature: SSS-LAB-V9.2 // CONVERGED</p>
                 </div>
              </section>
         </div>
@@ -354,7 +354,7 @@ export class RobustnessLab {
     lab          = inject(LabStore);
     orchestration= inject(OrchestrationStore);
     orchestrator = inject(CapabilityOrchestrator);
-    api          = inject(BdtApiService);
+    api          = inject(SteelApiService);
 
     selectedRedModel  = signal<'DECEPTIVE' | 'SATURATION' | 'KINETIC'>('DECEPTIVE');
     jammerSeverity    = signal(2);

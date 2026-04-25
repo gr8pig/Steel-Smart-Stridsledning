@@ -1,5 +1,5 @@
 """
-Boreal Decision Twin — initial scenario state.
+Steel Smart Stridsledning — initial scenario state.
 
 Five bases per the implementation plan, plus 3 starter threat tracks.
 Call seed() once at startup from main.py.

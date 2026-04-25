@@ -46,7 +46,7 @@ async def generate_coa_rationale(coa: dict, campaign: CampaignTwin) -> str:
     po = coa.get('projectedOutcome', {}) or coa.get('projected_outcome', {})
     assignments = coa.get('assignments', [])
 
-    prompt = f"""You are the AI rationale engine for the Boreal Decision Twin air defense command system.
+    prompt = f"""You are the AI rationale engine for the Steel Smart Stridsledning air defense command system.
 Explain in exactly 3-4 sentences why the {coa.get('type','BALANCED')} course of action is recommended, given:
 - Active threats: {len(active)} tracks, dominant intent: {dominant}
 - Blue resource state: {base_summary}
@@ -67,8 +67,8 @@ Emphasise: what makes this COA better than a simple "engage everything" legacy a
                 OPENROUTER_API_URL,
                 headers={
                     "Authorization":  f"Bearer {key}",
-                    "HTTP-Referer":   "https://bdt.boreal.demo",
-                    "X-Title":        "Boreal Decision Twin",
+                    "HTTP-Referer":   "https://steel.boreal.demo",
+                    "X-Title":        "Steel Smart Stridsledning",
                     "Content-Type":   "application/json",
                 },
                 json={
@@ -129,7 +129,7 @@ async def generate_lab_rationale(run_result: dict, campaign: CampaignTwin) -> st
     correction = run_result.get('correctionRecommendation', '')
     fail_p     = run_result.get('failureProbability', 0.0)
 
-    prompt = f"""You are the AI analysis engine for the Boreal Decision Twin robustness lab.
+    prompt = f"""You are the AI analysis engine for the Steel Smart Stridsledning robustness lab.
 In exactly 2 concise sentences, explain the brittleness finding:
 - Robustness score: {robustness:.0%}
 - Primary fragility point: {fragility}
@@ -148,8 +148,8 @@ Write from the perspective of an intelligence analyst briefing a commander. Be d
                 OPENROUTER_API_URL,
                 headers={
                     "Authorization": f"Bearer {key}",
-                    "HTTP-Referer":  "https://bdt.boreal.demo",
-                    "X-Title":       "Boreal Decision Twin",
+                    "HTTP-Referer":  "https://steel.boreal.demo",
+                    "X-Title":       "Steel Smart Stridsledning",
                     "Content-Type":  "application/json",
                 },
                 json={

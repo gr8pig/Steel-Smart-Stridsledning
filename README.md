@@ -1,7 +1,7 @@
 # Steel
 **Smart Stridsledning | Command Support Fabric**
 
-Steel is the production-ready decision support surface for the Boreal Decision Twin (BDT) environment. It provides a real-time, signal-based interface for complex air defense orchestration.
+Steel is the production-ready decision support surface for the Steel Smart Stridsledning (SSS) environment. It provides a real-time, signal-based interface for complex air defense orchestration.
 
 ---
 

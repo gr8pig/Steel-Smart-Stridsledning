@@ -171,3 +171,19 @@
     }
   }
 }
+
+/* Boreal System Shell - Unified Layout */
+.boreal-content-shell {
+  height: 100%;
+  width: 100%;
+  padding: 1.5rem; 
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.boreal-scroll-region {
+  flex-grow: 1;
+  overflow-y: auto;
+}

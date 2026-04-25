@@ -13,7 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
         <div class="flex items-center gap-5 text-[8px] uppercase tracking-[0.2em]">
           <div class="flex items-center gap-2">
             <svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="var(--boreal-blue, #3b82f6)" stroke-width="2"/></svg>
-            <span class="font-black text-boreal-blue">BDT Policy</span>
+            <span class="font-black text-boreal-blue">SSS Policy</span>
           </div>
           <div class="flex items-center gap-2">
             <svg width="22" height="8" aria-hidden="true"><line x1="0" y1="4" x2="22" y2="4" stroke="var(--boreal-red, #ef4444)" stroke-width="2" stroke-dasharray="4,2"/></svg>
@@ -81,7 +81,7 @@ import { MatIconModule } from '@angular/material/icon';
               <p class="mt-1 text-[8px] uppercase tracking-[0.18em] text-boreal-text-muted">Wave-2 opening posture</p>
             </div>
             <div class="rounded-sm border border-boreal-border bg-boreal-canvas/70 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-              <span class="text-[8px] uppercase tracking-widest text-boreal-text-muted font-black block">BDT T+12</span>
+              <span class="text-[8px] uppercase tracking-widest text-boreal-text-muted font-black block">SSS T+12</span>
               <span class="mt-1 block text-[1.9rem] font-mono font-bold text-boreal-blue leading-none">62%</span>
               <p class="mt-1 text-[8px] uppercase tracking-[0.18em] text-boreal-text-muted">Projected readiness</p>
             </div>

@@ -2,6 +2,17 @@
   "hosting": {
     "site": "steel-stridsledning-260424",
     "public": "dist/app/browser",
+    "headers": [
+      {
+        "source": "**/*.@(js|css|json|png|svg|webp|woff|woff2)",
+        "headers": [
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      }
+    ],
     "ignore": [
       "firebase.json",
       "**/.*",

@@ -42,7 +42,7 @@ class TestCleanupManager(unittest.TestCase):
             manager.perform_cleanup()
 
             # Assertions
-            # 1. Verify BDT API call
+            # 1. Verify SSS API call
             mock_httpx.assert_called_once()
             
             # 2. Verify local file write (checkpoint)

@@ -44,10 +44,10 @@ export class CapabilityLayerStore {
       }
 
       if (!interpretation && availableCards.length > 0) {
-        // "Best Fit" heuristic: matching bdtAbstraction or tags vs track.class
+        // "Best Fit" heuristic: matching steelAbstraction or tags vs track.class
         interpretation = availableCards.find(c => 
-          c.bdtAbstraction.toLowerCase().includes(track.class.toLowerCase()) ||
-          track.class.toLowerCase().includes(c.bdtAbstraction.toLowerCase()) ||
+          c.steelAbstraction.toLowerCase().includes(track.class.toLowerCase()) ||
+          track.class.toLowerCase().includes(c.steelAbstraction.toLowerCase()) ||
           c.tags.some(t => t.toLowerCase().includes(track.class.toLowerCase()))
         ) || availableCards[0];
       }

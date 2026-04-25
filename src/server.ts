@@ -24,7 +24,7 @@ if (!process.env['APP_LOCK_PASSWORD']) {
 }
 const LOCK_PASSWORD = process.env['APP_LOCK_PASSWORD'] ?? 'dev-only-unlock';
 const LOCK_TOKEN_TTL_SECONDS = Number(process.env['APP_LOCK_TOKEN_TTL_SECONDS'] ?? 60 * 60);
-const LOCK_COOKIE_NAME = 'bdt_access';
+const LOCK_COOKIE_NAME = 'steel_access';
 const FASTAPI_BASE_URL = process.env['FASTAPI_BASE_URL'] ?? 'http://127.0.0.1:8000';
 const FASTAPI_WS_URL = (() => {
   const url = new URL(FASTAPI_BASE_URL);
@@ -1015,7 +1015,7 @@ async function callMistral(system: string, user: string, maxTokens = 280): Promi
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type':  'application/json',
-        'HTTP-Referer':  'https://bdt.boreal.demo',
+        'HTTP-Referer':  'https://steel.boreal.demo',
         'X-Title':       'Steel - Smart Stridsledning',
       },
       body: JSON.stringify({
@@ -1030,7 +1030,7 @@ async function callMistral(system: string, user: string, maxTokens = 280): Promi
       signal: AbortSignal.timeout(12_000),
     });
     if (!res.ok) return null;
-    const data = await res.json() as { choices: Array<{ message: { content: string } }> };
+    const data = await res.json() as { choices: { message: { content: string } }[] };
     return data.choices?.[0]?.message?.content?.trim() ?? null;
   } catch {
     return null;

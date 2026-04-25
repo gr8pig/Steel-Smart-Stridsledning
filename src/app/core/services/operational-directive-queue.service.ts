@@ -1,6 +1,6 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { AuditLogger } from './audit-logger';
-import { BdtApiService } from './bdt-api.service';
+import { SteelApiService } from './steel-api.service';
 import { SteelLocalPersistenceService } from './steel-local-persistence.service';
 import { SensorFeedStore } from '../state/sensor-feed.store';
 import { TacticalStore } from '../state/tactical.store';
@@ -10,7 +10,7 @@ type EngageDirectiveInput = Pick<OperationalDirective, 'trackId' | 'baseId' | 'e
 
 @Injectable({ providedIn: 'root' })
 export class OperationalDirectiveQueueService {
-  private api = inject(BdtApiService);
+  private api = inject(SteelApiService);
   private audit = inject(AuditLogger);
   private persistence = inject(SteelLocalPersistenceService);
   private sensorFeed = inject(SensorFeedStore);

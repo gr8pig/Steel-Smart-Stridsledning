@@ -95,7 +95,7 @@ export class ReplaySensorAdapter implements SensorAdapter {
 
   constructor(
     private readonly scenario: ReplayScenario,
-    private readonly speedMultiplier: number = 1,
+    private readonly speedMultiplier = 1,
   ) {}
 
   connect(): Observable<TheaterDelta> {

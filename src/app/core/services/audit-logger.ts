@@ -21,7 +21,7 @@ export class AuditLogger {
       time: new Date(Date.now() - 3600000).toLocaleTimeString(),
       actor: 'SYSTEM',
       action: 'System Initialization',
-      rationale: 'Boreal Decision Twin baseline policies and twins synchronized.',
+      rationale: 'Steel Smart Stridsledning baseline policies and twins synchronized.',
       category: 'SYSTEM'
     }
   ]);

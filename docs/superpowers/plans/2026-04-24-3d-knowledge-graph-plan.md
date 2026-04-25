@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement an interactive 3D WebGL knowledge graph visualization of the Boreal Decision Twin architecture.
+**Goal:** Implement an interactive 3D WebGL knowledge graph visualization of the Steel Smart Stridsledning architecture.
 
 **Architecture:** A standalone Angular component managing a Three.js scene with `OrbitControls`, `UnrealBloomPass` for visual glow, and `CSS2DRenderer` for crisp HTML labels. Nodes are distinct 3D geometries, edges are lines with instanced particle flows, and state is managed via `@ngrx/signals`.
 

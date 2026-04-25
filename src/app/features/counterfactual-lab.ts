@@ -3,7 +3,7 @@ import { Component, DestroyRef, computed, effect, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, firstValueFrom, switchMap, tap, catchError, EMPTY } from 'rxjs';
 
-import { BdtApiService } from '../core/services/bdt-api.service';
+import { SteelApiService } from '../core/services/steel-api.service';
 import { CounterfactualLabStore } from '../core/ml/counterfactual-lab.store';
 import {
   CounterfactualAsset,
@@ -432,7 +432,7 @@ const FALLBACK_ASSETS: CounterfactualAsset[] = [
 })
 export class CounterfactualLab {
   readonly store = inject(CounterfactualLabStore);
-  private readonly api = inject(BdtApiService);
+  private readonly api = inject(SteelApiService);
   private readonly drawingBoard = inject(DrawingBoardStore);
   private readonly scenario = inject(ScenarioStore);
   private readonly tactical = inject(TacticalStore);

@@ -131,9 +131,9 @@ export class ReferencePage {
     const doc = getReferenceDoc(slug);
     if (doc) {
       this.doc = doc;
-      this.title.setTitle(`BDT Reference · ${doc.title}`);
+      this.title.setTitle(`SSS Reference · ${doc.title}`);
     } else {
-      this.title.setTitle('BDT Reference');
+      this.title.setTitle('SSS Reference');
     }
   }
 

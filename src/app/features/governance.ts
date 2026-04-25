@@ -13,7 +13,7 @@ import { LLMService } from '../core/services/llm.service';
   standalone: true,
   imports: [CommonModule, MatIconModule],
   template: `
-    <div class="h-full w-full p-6 flex flex-col gap-6 overflow-hidden text-boreal-text-secondary bg-boreal-canvas">
+    <div class="boreal-content-shell">
       <header class="flex flex-col gap-1 border-b border-boreal-border pb-4">
         <h1 class="text-3xl font-light tracking-tight text-boreal-text-primary uppercase tracking-[0.2em] mb-1">Rationale & Governance</h1>
         <div class="flex items-center gap-4">
@@ -38,7 +38,7 @@ import { LLMService } from '../core/services/llm.service';
         </div>
       </header>
 
-      <div class="grid grid-cols-12 gap-6 flex-grow min-h-0">
+      <div class="grid grid-cols-12 gap-6 boreal-scroll-region">
         <!-- Dashboard / Summary Column -->
         <div class="col-span-12 lg:col-span-4 flex flex-col gap-6 overflow-hidden">
              
@@ -238,7 +238,7 @@ import { LLMService } from '../core/services/llm.service';
                 <span>Log Trace & Rationale Consistency Audit</span>
                 <div class="flex gap-4">
                     <button (click)="audit.clear()" class="text-[9px] text-boreal-text-muted hover:text-boreal-text-primary uppercase font-bold transition-colors">Clear Log</button>
-                    <span class="text-boreal-text-muted/40 font-mono text-[10px]">V-AUDIT: BDT_9.0</span>
+                    <span class="text-boreal-text-muted/40 font-mono text-[10px]">V-AUDIT: SSS_9.0</span>
                 </div>
             </div>
 
@@ -385,7 +385,7 @@ export class Governance {
             source: selectedTrack.uncertaintySource || 'Classification Ambiguity',
             confidence: (selectedTrack.confidence * 100).toFixed(0) + '%',
             trackId: selectedTrack.id,
-            description: `Decision logic inhibited by ${selectedTrack.intent} profile signature mismatch. BDT recommending high-dwell verification.`
+            description: `Decision logic inhibited by ${selectedTrack.intent} profile signature mismatch. SSS recommending high-dwell verification.`
         } : (latestLab ? {
             source: `Lab Insight: ${latestLab.fragilityPoint}`,
             confidence: (latestLab.robustnessScore * 100).toFixed(0) + '% Robust',

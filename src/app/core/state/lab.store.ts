@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { AuditLogger } from '../services/audit-logger';
-import { LabRunResult } from '../services/bdt-api.service';
+import { LabRunResult } from '../services/steel-api.service';
 
 export interface LabInsight {
   id: string;

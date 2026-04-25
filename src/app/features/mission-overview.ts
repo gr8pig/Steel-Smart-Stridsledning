@@ -147,7 +147,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                             </div>
                             <div class="text-boreal-text-muted text-[10px]">vs</div>
                             <div class="flex flex-col">
-                                <span class="text-[7px] text-boreal-text-muted uppercase tracking-widest">BDT @ T+12</span>
+                                <span class="text-[7px] text-boreal-text-muted uppercase tracking-widest">SSS @ T+12</span>
                                 <span class="text-base font-black text-boreal-blue font-mono tracking-tighter">62%</span>
                             </div>
                             <div class="ml-auto text-right">
@@ -179,7 +179,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                     <div class="flex flex-col">
                         <h2 class="text-sm font-bold text-boreal-text-primary uppercase tracking-tight">Wave-2 Readiness Projection</h2>
                         <p class="text-[10px] text-boreal-text-muted mt-1 leading-relaxed italic">
-                            BDT holds 62% readiness at T+12. Legacy depletes to 8%. Select COA and see the divergence curve live.
+                            SSS holds 62% readiness at T+12. Legacy depletes to 8%. Select COA and see the divergence curve live.
                         </p>
                     </div>
                 </div>
@@ -197,7 +197,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
                     <div class="flex flex-col">
                         <h2 class="text-sm font-bold text-boreal-text-primary uppercase tracking-tight">Monte Carlo Stress Test</h2>
                         <p class="text-[10px] text-boreal-text-muted mt-1 leading-relaxed italic">
-                            BDT: 73% robustness against SATURATION. Legacy: 18%. Run 500 iterations and watch the heatmap converge.
+                            SSS: 73% robustness against SATURATION. Legacy: 18%. Run 500 iterations and watch the heatmap converge.
                         </p>
                     </div>
                 </div>

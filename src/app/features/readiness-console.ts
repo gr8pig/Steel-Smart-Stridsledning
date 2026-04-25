@@ -5,7 +5,7 @@ import { ReadinessStore } from '../core/state/readiness.store';
 import { PolicyStore } from '../core/state/policy.store';
 import { OrchestrationStore } from '../core/state/orchestration.store';
 import { CapabilityOrchestrator } from '../core/services/capability-orchestrator';
-import { BdtApiService, ReadinessProjection } from '../core/services/bdt-api.service';
+import { SteelApiService, ReadinessProjection } from '../core/services/steel-api.service';
 
 @Component({
   selector: 'app-readiness-console',
@@ -143,7 +143,7 @@ import { BdtApiService, ReadinessProjection } from '../core/services/bdt-api.ser
                         <div class="flex flex-col text-right">
                             <span class="text-[8px] text-boreal-text-muted uppercase font-black tracking-widest mb-1">Life Expectancy</span>
                             <div class="flex items-baseline justify-end gap-1">
-                                @if (base.lifeExpectancyHours != null) {
+                                @if (base.lifeExpectancyHours !== null) {
                                     <span class="text-xs font-black font-mono tracking-tighter"
                                           [class.text-boreal-red]="base.lifeExpectancyHours < 24"
                                           [class.text-boreal-amber]="base.lifeExpectancyHours < 48 && base.lifeExpectancyHours >= 24"
@@ -362,7 +362,7 @@ export class ReadinessConsole {
     policy = inject(PolicyStore);
     orchestration = inject(OrchestrationStore);
     orchestrator = inject(CapabilityOrchestrator);
-    private api = inject(BdtApiService);
+    private api = inject(SteelApiService);
 
     private _projectionMap = signal<Record<string, ReadinessProjection>>({});
 

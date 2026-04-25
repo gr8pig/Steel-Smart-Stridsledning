@@ -47,10 +47,10 @@ class TestTrainWorker(unittest.TestCase):
         mock_bucket.list_blobs.return_value = [mock_blob1, mock_blob2]
         
         from scripts.ml.train_worker import download_datasets
-        downloaded_files = download_datasets("bdt-ml-data", "training_data/", "/tmp/bdt_data")
+        downloaded_files = download_datasets("steel-ml-data", "training_data/", "/tmp/steel_data")
         
         self.assertEqual(len(downloaded_files), 2)
-        mock_blob1.download_to_filename.assert_called_once_with("/tmp/bdt_data/seed.parquet")
+        mock_blob1.download_to_filename.assert_called_once_with("/tmp/steel_data/seed.parquet")
 
     @patch("scripts.ml.train_worker.lgb.train")
     @patch("scripts.ml.train_worker.pd.read_parquet")
@@ -67,7 +67,7 @@ class TestTrainWorker(unittest.TestCase):
         mock_lgb_train.return_value = mock_model
         
         from scripts.ml.train_worker import train_models
-        models = train_models(["/tmp/bdt_data/seed.parquet"])
+        models = train_models(["/tmp/steel_data/seed.parquet"])
         
         self.assertEqual(len(models), 3) # Expect 3 quantile models (p10, p50, p90)
         mock_lgb_train.assert_called()

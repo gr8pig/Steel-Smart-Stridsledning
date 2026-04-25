@@ -11,10 +11,10 @@ from google.cloud import storage
 
 # Configuration
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-GCP_BUCKET_NAME = os.getenv("GCP_BUCKET_NAME", "bdt-ml-data")
+GCP_BUCKET_NAME = os.getenv("GCP_BUCKET_NAME", "steel-ml-data")
 GCP_CHECKPOINT_PATH = os.getenv("GCP_CHECKPOINT_PATH", "checkpoint/")
 LOCAL_RESULTS_DIR = os.getenv("LOCAL_RESULTS_DIR", ".")
-BDT_API_URL = os.getenv("BDT_API_URL", "http://localhost:8000")
+SSS_API_URL = os.getenv("SSS_API_URL", "http://localhost:8000")
 TERMINATION_CHECK_INTERVAL = int(os.getenv("TERMINATION_CHECK_INTERVAL", "5"))
 
 # Logging setup
@@ -46,13 +46,13 @@ class CleanupManager:
 
     def flush_in_memory_results(self):
         """
-        Attempts to trigger a data flush from the main BDT API.
+        Attempts to trigger a data flush from the main SSS API.
         Saves the current campaign state to a local file.
         """
-        logger.info("Attempting to flush in-memory results via BDT API...")
+        logger.info("Attempting to flush in-memory results via SSS API...")
         try:
             # We try to get the full campaign snapshot
-            response = httpx.get(f"{BDT_API_URL}/api/twins/campaign", timeout=2.0)
+            response = httpx.get(f"{SSS_API_URL}/api/twins/campaign", timeout=2.0)
             if response.status_code == 200:
                 snapshot = response.json()
                 filename = f"preemption_checkpoint_{int(time.time())}.json"

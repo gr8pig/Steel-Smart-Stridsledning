@@ -385,7 +385,7 @@ export class ThreatInspector {
 
         // Intent Distribution — prefer live Bayesian data from backend, fall back to heuristics
         const liveDistrib = track.intentDistribution;
-        const intents: Array<{ label: string; value: number; isPrimary: boolean }> = liveDistrib
+        const intents: { label: string; value: number; isPrimary: boolean }[] = liveDistrib
             ? Object.entries(liveDistrib).map(([label, value]) => ({
                 label: label.toUpperCase(),
                 value: value as number,

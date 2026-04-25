@@ -74,7 +74,7 @@ def run_monte_carlo(
         scenario_tag = "SATURATION"
 
     else:  # KINETIC
-        # Single high-value direct strike; BDT is good at this
+        # Single high-value direct strike; SSS is good at this
         feint_waste = np.zeros(n_runs)
         volume_mult = np.ones(n_runs)
         effective_assignments = len(assignments)
@@ -167,13 +167,13 @@ def run_monte_carlo(
         - ETA[3] * fail_p
     )
 
-    # BDT structural advantage over legacy rule-based systems: the Pareto optimizer
+    # SSS structural advantage over legacy rule-based systems: the Pareto optimizer
     # and digital twin provide a consistent edge, modulated by scenario severity.
     severity = (jam_factor + deg_factor) / 2.0
-    bdt_edge = 0.30 * (1.0 - 0.25 * severity)   # 0.225 – 0.30 advantage
-    robustness = round(max(0.05, min(0.98, robustness_raw + bdt_edge)), 3)
+    steel_edge = 0.30 * (1.0 - 0.25 * severity)   # 0.225 – 0.30 advantage
+    robustness = round(max(0.05, min(0.98, robustness_raw + steel_edge)), 3)
 
-    # Legacy baseline: always 0.35–0.45 (BDT vs legacy narrative per spec)
+    # Legacy baseline: always 0.35–0.45 (SSS vs legacy narrative per spec)
     legacy_score = round(
         max(0.30, min(0.45,
             0.38 + 0.04 * (1.0 - jam_factor)

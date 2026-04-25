@@ -77,7 +77,7 @@ export const KnowledgeGraphStore = signalStore(
         activeAreas: toggleEntry(store.activeAreas(), area),
       });
     },
-    setViewMode(_mode: KnowledgeGraphViewMode) {
+    setViewMode() {
       // Kept for API symmetry with the scaffold-style component.
     },
     selectOnlyCategories(categories: NodeCategory[]) {

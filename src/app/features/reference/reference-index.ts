@@ -28,7 +28,7 @@ import { Title } from '@angular/platform-browser';
               </div>
               <h2 class="text-3xl font-semibold tracking-tight text-boreal-text-primary">Reference</h2>
               <p class="mt-3 max-w-2xl text-[12px] leading-relaxed text-boreal-text-secondary">
-                A truth-first docs surface for BDT. Each node maps to a page in the 00-12 backbone and points back to the actual repo files that justify its status.
+                A truth-first docs surface for SSS. Each node maps to a page in the 00-12 backbone and points back to the actual repo files that justify its status.
               </p>
             </div>
             <div class="bg-boreal-panel px-5 py-5">
@@ -59,7 +59,7 @@ import { Title } from '@angular/platform-browser';
             </div>
 
             <div class="relative overflow-hidden p-4">
-              <svg class="h-[760px] w-full" viewBox="0 0 1200 860" role="img" aria-label="BDT documentation graph">
+              <svg class="h-[760px] w-full" viewBox="0 0 1200 860" role="img" aria-label="SSS documentation graph">
                 <defs>
                   <marker id="refArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
                     <path d="M0,0 L8,4 L0,8 z" fill="currentColor"></path>
@@ -139,7 +139,7 @@ export class ReferenceIndexPage {
   title = inject(Title);
 
   constructor() {
-    this.title.setTitle('BDT Reference');
+    this.title.setTitle('SSS Reference');
   }
 
   graphEdges = computed(() => buildReferenceGraphEdges(this.docs));

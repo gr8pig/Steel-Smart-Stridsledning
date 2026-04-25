@@ -24,7 +24,7 @@ import {
                 <mat-icon class="!text-[12px] !w-3 !h-3">menu_book</mat-icon>
                 Reference Graph
               </div>
-              <h1 class="text-2xl font-semibold tracking-tight text-boreal-text-primary">BDT Documentation</h1>
+              <h1 class="text-2xl font-semibold tracking-tight text-boreal-text-primary">SSS Documentation</h1>
               <p class="mt-2 text-[11px] leading-relaxed text-boreal-text-muted">
                 Truth-first documentation mapped from the actual repo, not the aspirational backbone.
               </p>

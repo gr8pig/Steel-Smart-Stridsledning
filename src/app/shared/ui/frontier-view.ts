@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Out
 import { CommonModule } from '@angular/common';
 import { CounterfactualAsset, CounterfactualPrediction, ForecastMetric } from '../../core/ml/counterfactual-lab.models';
 
-type PathPoint = { x: number; y: number };
+interface PathPoint { x: number; y: number }
 
 @Component({
   selector: 'app-frontier-view',
@@ -183,7 +183,7 @@ export class FrontierViewComponent implements OnChanges {
   bandPath = '';
   medianPath = '';
   latestPoint: PathPoint | null = null;
-  memberPaths: Array<{ id: string; label: string; d: string; agreement: number; variance: number; color: string; opacity: number }> = [];
+  memberPaths: { id: string; label: string; d: string; agreement: number; variance: number; color: string; opacity: number }[] = [];
   metricSummary: ForecastMetric[] = [];
   selectedMetric: ForecastMetric | null = null;
   ensembleAgreement = 0;

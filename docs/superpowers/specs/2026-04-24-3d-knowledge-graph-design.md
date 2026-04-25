@@ -1,11 +1,11 @@
-# Design Spec: BDT 3D Knowledge Graph (Steel)
+# Design Spec: SSS 3D Knowledge Graph (Steel)
 
 **Topic:** 3D Information Architecture Visualization
 **Date:** 2026-04-24
 **Status:** Draft (Approved)
 
 ## 1. Vision & Purpose
-The Knowledge Graph in the "Steel" command surface transforms the static, pseudo-3D information architecture diagram into a fully immersive, interactive 3D WebGL environment. It serves as a visual index of the Boreal Decision Twin's subsystems, data flows, and doctrinal mappings, allowing commanders and analysts to explore the system's topology organically.
+The Knowledge Graph in the "Steel" command surface transforms the static, pseudo-3D information architecture diagram into a fully immersive, interactive 3D WebGL environment. It serves as a visual index of the Steel Smart Stridsledning's subsystems, data flows, and doctrinal mappings, allowing commanders and analysts to explore the system's topology organically.
 
 ## 2. Architecture: Pure Three.js + Angular
 

@@ -7,7 +7,7 @@ import { PolicyStore } from '../core/state/policy.store';
 import { OrchestrationStore } from '../core/state/orchestration.store';
 import { Router } from '@angular/router';
 import { AuditLogger } from '../core/services/audit-logger';
-import { BdtApiService } from '../core/services/bdt-api.service';
+import { SteelApiService } from '../core/services/steel-api.service';
 
 @Component({
   selector: 'app-demo-director',
@@ -215,7 +215,7 @@ export class DemoDirector {
     orchestration = inject(OrchestrationStore);
     router = inject(Router);
     audit = inject(AuditLogger);
-    api = inject(BdtApiService);
+    api = inject(SteelApiService);
 
     simTimeFormatted = computed(() => {
         const totalSecs = this.scenario.simTime();

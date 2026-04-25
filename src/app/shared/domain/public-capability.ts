@@ -13,7 +13,7 @@ export interface PublicCapabilityCard {
   layer: CapabilityLayerMode;
   category: 'C2' | 'SENSOR' | 'EFFECTOR' | 'AIRCRAFT' | 'GBAD' | 'LOGISTICS' | 'THREAT_ARCHETYPE';
   mappedTwin: 'ThreatTwin' | 'BaseTwin' | 'PolicyTwin' | 'COATwin' | 'LogisticsSnapshot' | 'KgsaNode';
-  bdtAbstraction: string;
+  steelAbstraction: string;
   publicSourceName: string;
   publicSourceUrl: string;
   confidence: 'HIGH' | 'MEDIUM' | 'LOW';

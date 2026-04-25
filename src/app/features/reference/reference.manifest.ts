@@ -44,20 +44,20 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     order: 0,
     title: 'Documentation Backbone',
     status: 'conceptual',
-    summary: 'The index page that defines the docs backbone, publication stance, and safety framing for the BDT reference graph.',
+    summary: 'The index page that defines the docs backbone, publication stance, and safety framing for the SSS reference graph.',
     graph: { x: 560, y: 120, links: ['01-product-overview', '03-information-architecture', '10-deployment-operations', '11-known-gaps-roadmap', '12-documentation-style-guide'] },
     sources: [
       { label: 'README', path: 'README.md', note: 'Current repo description and scope framing.' },
-      { label: 'Feature pack', path: 'bdt_merged_feature_knowledge_pack/00-index.md', note: 'Repo-grounded implementation pack index.' },
+      { label: 'Feature pack', path: 'steel_merged_feature_knowledge_pack/00-index.md', note: 'Repo-grounded implementation pack index.' },
       { label: 'App routes', path: 'src/app/app.routes.ts', note: 'Current route surface that the docs should describe truthfully.' },
     ],
     sections: [
       {
         title: 'Purpose',
-        summary: 'This page is the contract for the documentation system: describe BDT from the code outward, not from aspirational architecture inward.',
+        summary: 'This page is the contract for the documentation system: describe SSS from the code outward, not from aspirational architecture inward.',
         bullets: [
           'Use the app shell, stores, services, and route surfaces as the source of truth.',
-          'Keep the BDT docs graph aligned with the actual Angular/SSR repo structure.',
+          'Keep the SSS docs graph aligned with the actual Angular/SSR repo structure.',
           'Treat mismatches with the boreal-info-arch backbone as status downgrades, not as implementation claims.',
         ],
       },
@@ -73,7 +73,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
       },
       {
         title: 'Safety and accuracy',
-        summary: 'BDT should be documented as a decision-support prototype, not as a verified operational command system.',
+        summary: 'SSS should be documented as a decision-support prototype, not as a verified operational command system.',
         bullets: [
           'Avoid claiming real-world Swedish system parity unless the repo explicitly maps it.',
           'Document the limits of mock state, in-memory flows, and fallback logic.',
@@ -88,7 +88,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     order: 1,
     title: 'Product Overview',
     status: 'partial',
-    summary: 'A truthful summary of BDT as a routed Angular SSR command-surface with strong UI, signal-backed state, and still-partial backend execution.',
+    summary: 'A truthful summary of SSS as a routed Angular SSR command-surface with strong UI, signal-backed state, and still-partial backend execution.',
     graph: { x: 240, y: 250, links: ['00-index', '02-feature-catalog', '04-system-architecture'] },
     sources: [
       { label: 'README', path: 'README.md', note: 'Current product framing and scope language.' },
@@ -97,8 +97,8 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     ],
     sections: [
       {
-        title: 'What BDT is',
-        summary: 'BDT is already more than a mockup: it has real routes, a shared shell, Signal-based stores, and live-style decision surfaces.',
+        title: 'What SSS is',
+        summary: 'SSS is already more than a mockup: it has real routes, a shared shell, Signal-based stores, and live-style decision surfaces.',
         bullets: [
           'Angular 21 + SSR + Express app shell.',
           'Operational views for overview, tactical, commander, readiness, logistics, robustness, governance, demo, and KGSA.',
@@ -106,7 +106,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
         ],
       },
       {
-        title: 'What BDT is not',
+        title: 'What SSS is not',
         summary: 'The repo is not a fully validated operational C2 system and not a full real-world order-of-battle simulator.',
         bullets: [
           'Several backend seams are still partial or fallback-driven.',
@@ -131,7 +131,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     order: 2,
     title: 'Feature Catalog',
     status: 'partial',
-    summary: 'A route-by-route catalog of what is already built, what is mock-backed, and what is still thin in the BDT app.',
+    summary: 'A route-by-route catalog of what is already built, what is mock-backed, and what is still thin in the SSS app.',
     graph: { x: 180, y: 430, links: ['01-product-overview', '03-information-architecture', '05-domain-models', '06-math-logic'] },
     sources: [
       { label: 'App routes', path: 'src/app/app.routes.ts', note: 'Actual route table in the app.' },
@@ -146,7 +146,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
       { label: 'Sensor feed store', path: 'src/app/core/state/sensor-feed.store.ts', note: 'Live/mock/replay theater feed adapter.' },
       { label: 'Audit logger', path: 'src/app/core/services/audit-logger.ts', note: 'Shared audit sink for route and store actions.' },
       { label: 'Sensor adapter', path: 'src/app/core/services/sensor-adapter.ts', note: 'Mock, replay, and live feed adapters.' },
-      { label: 'Research plan', path: 'research/BDT_Master_Plan.md', note: 'Earlier implementation breakdown and feature intent.' },
+      { label: 'Research plan', path: 'research/SSS_Master_Plan.md', note: 'Earlier implementation breakdown and feature intent.' },
     ],
     sections: [
       {
@@ -192,14 +192,14 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     summary: 'The original documentation site map is useful, but the actual app has a much flatter route tree than the backbone implies.',
     graph: { x: 320, y: 610, links: ['00-index', '02-feature-catalog', '04-system-architecture', '11-known-gaps-roadmap'] },
     sources: [
-      { label: 'Nav rail', path: 'src/app/shared/ui/nav-rail.ts', note: 'Real operator navigation in the BDT shell.' },
+      { label: 'Nav rail', path: 'src/app/shared/ui/nav-rail.ts', note: 'Real operator navigation in the SSS shell.' },
       { label: 'Routes', path: 'src/app/app.routes.ts', note: 'Actual route tree exposed by the app.' },
       { label: 'Reference graph', path: 'src/app/features/reference/reference.routes.ts', note: 'This new docs subtree becomes the truthful IA for the docs themselves.' },
     ],
     sections: [
       {
         title: 'Current truth',
-        summary: 'BDT has an operational route set, but not the broad multi-page documentation site described in the backbone.',
+        summary: 'SSS has an operational route set, but not the broad multi-page documentation site described in the backbone.',
         bullets: [
           'The app has a real top-level shell and route list.',
           'The reference docs are now the place to describe route structure accurately.',
@@ -269,7 +269,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
           'The capability layer store remaps tracks to public-source cards and logs every mode or override change.',
           'The sensor feed store arbitrates the live/mock/replay adapters that feed tactical state and scenario time.',
           'The audit logger captures the important state transitions used by tactical, policy, KGSA, and decision fabric flows.',
-          'The Python ML workers support the counterfactual lab and deep-sim pipeline at the BDT root, not inside the Angular subrepo.',
+          'The Python ML workers support the counterfactual lab and deep-sim pipeline at the SSS root, not inside the Angular subrepo.',
         ],
       },
       {
@@ -351,13 +351,13 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     order: 6,
     title: 'Mathematics and Logic',
     status: 'partial',
-    summary: 'BDT uses explainable heuristics, posterior-style intent estimation, and fallback-heavy solver logic rather than a fully formal optimizer.',
+    summary: 'SSS uses explainable heuristics, posterior-style intent estimation, and fallback-heavy solver logic rather than a fully formal optimizer.',
     graph: { x: 980, y: 420, links: ['05-domain-models', '07-swedish-doctrine-grounding', '08-sweden-risk-profile', '11-known-gaps-roadmap'] },
     sources: [
       { label: 'Intent estimator', path: 'src/app/core/services/intent-estimator.service.ts', note: 'Posterior update over track features.' },
       { label: 'Policy store', path: 'src/app/core/state/policy.store.ts', note: 'Debounced COA solve and fallback logic.' },
       { label: 'Lab store', path: 'src/app/core/state/lab.store.ts', note: 'Robustness result storage and heatmap.' },
-      { label: 'BDT API service', path: 'src/app/core/services/bdt-api.service.ts', note: 'Solver, lab, and rationale contracts.' },
+      { label: 'SSS API service', path: 'src/app/core/services/steel-api.service.ts', note: 'Solver, lab, and rationale contracts.' },
       { label: 'Command friction engine', path: 'src/app/core/sim/command-friction-engine.ts', note: 'Resilience weighting and collapse projection heuristics.' },
     ],
     sections: [
@@ -401,13 +401,13 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     graph: { x: 920, y: 610, links: ['05-domain-models', '06-math-logic', '08-sweden-risk-profile', '09-simulated-forces-and-systems'] },
     sources: [
       { label: 'README', path: 'README.md', note: 'Safe framing and product language.' },
-      { label: 'Doctrine mapping guidance', path: 'bdt_merged_feature_knowledge_pack/06-task-governance-safety-and-verification.md', note: 'Earlier review and wording constraints.' },
+      { label: 'Doctrine mapping guidance', path: 'steel_merged_feature_knowledge_pack/06-task-governance-safety-and-verification.md', note: 'Earlier review and wording constraints.' },
       { label: 'Knowledge graph seed', path: 'src/app/shared/domain/kgsa.ts', note: 'Conceptual doctrine terms show up as graph labels, not as operational doctrine enforcement.' },
     ],
     sections: [
       {
         title: 'Functional mapping',
-        summary: 'The docs can map BDT to command, intelligence, protection, fires, movement, sustainment, and civil-military continuity.',
+        summary: 'The docs can map SSS to command, intelligence, protection, fires, movement, sustainment, and civil-military continuity.',
         bullets: [
           'Mission command and delegated execution.',
           'Total defence and resilience as a planning lens.',
@@ -431,7 +431,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     order: 8,
     title: 'Sweden Risk Profile',
     status: 'conceptual',
-    summary: 'The risk-profile page is a scenario and narrative guide for the kinds of threats BDT models, not a live intelligence assessment.',
+    summary: 'The risk-profile page is a scenario and narrative guide for the kinds of threats SSS models, not a live intelligence assessment.',
     graph: { x: 1060, y: 760, links: ['02-feature-catalog', '06-math-logic', '09-simulated-forces-and-systems', '10-deployment-operations'] },
     sources: [
       { label: 'Scenario store', path: 'src/app/core/state/scenario.store.ts', note: 'Scenario phase and jamming state.' },
@@ -442,7 +442,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     sections: [
       {
         title: 'Threat families',
-        summary: 'BDT already maps well to the main threat families the backbone described.',
+        summary: 'SSS already maps well to the main threat families the backbone described.',
         bullets: [
           'Air and missile threats.',
           'Drone, decoy, and saturation threats.',
@@ -467,7 +467,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     order: 9,
     title: 'Simulated Forces and Weapon-System Abstractions',
     status: 'mock-simulation',
-    summary: 'BDT explicitly models abstract capability classes and seeded synthetic examples rather than verified real-world Swedish systems.',
+    summary: 'SSS explicitly models abstract capability classes and seeded synthetic examples rather than verified real-world Swedish systems.',
     graph: { x: 760, y: 830, links: ['05-domain-models', '08-sweden-risk-profile', '10-deployment-operations', '11-known-gaps-roadmap'] },
     sources: [
       { label: 'Domain models', path: 'src/app/shared/domain/models.ts', note: 'Abstract classes for threats, bases, sensors, and effectors.' },
@@ -541,8 +541,8 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     graph: { x: 260, y: 750, links: ['00-index', '04-system-architecture', '09-simulated-forces-and-systems', '12-documentation-style-guide'] },
     sources: [
       { label: 'README', path: 'README.md', note: 'Current repo-state narrative and limitations.' },
-      { label: 'Master plan', path: 'research/BDT_Master_Plan.md', note: 'Older implementation plan and explicit gaps.' },
-      { label: 'Scope cuts', path: 'research/files/BDT_Scope_Cuts.md', note: 'Deferred feature list and reasoning.' },
+      { label: 'Master plan', path: 'research/SSS_Master_Plan.md', note: 'Older implementation plan and explicit gaps.' },
+      { label: 'Scope cuts', path: 'research/files/SSS_Scope_Cuts.md', note: 'Deferred feature list and reasoning.' },
       { label: 'Counterfactual lab', path: 'src/app/features/counterfactual-lab.ts', note: 'Frontend lab that currently calls an external ML endpoint.' },
     ],
     sections: [
@@ -573,19 +573,19 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     order: 12,
     title: 'Documentation Style Guide',
     status: 'conceptual',
-    summary: 'A compact style guide for keeping the BDT docs precise, calm, and honest about simulation boundaries.',
+    summary: 'A compact style guide for keeping the SSS docs precise, calm, and honest about simulation boundaries.',
     graph: { x: 520, y: 760, links: ['00-index', '10-deployment-operations', '11-known-gaps-roadmap'] },
     sources: [
       { label: 'Style guide', path: 'boreal-info-arch/12-documentation-style-guide.md', note: 'Existing wording guide to preserve and refine.' },
       { label: 'README', path: 'README.md', note: 'Current product voice and limits.' },
-      { label: 'Feature catalog', path: 'bdt_merged_feature_knowledge_pack/02-task-public-capability-layer.md', note: 'Earlier documentation style from the planning pack.' },
+      { label: 'Feature catalog', path: 'steel_merged_feature_knowledge_pack/02-task-public-capability-layer.md', note: 'Earlier documentation style from the planning pack.' },
     ],
     sections: [
       {
         title: 'Voice',
         summary: 'Use precise, calm, operationally literate language.',
         bullets: [
-          'Say what BDT models, exposes, or supports.',
+          'Say what SSS models, exposes, or supports.',
           'Avoid hype, certainty theater, and claims of operational validation.',
           'State limitations directly when a flow is synthetic or partial.',
         ],
@@ -640,9 +640,9 @@ export function getReferenceDoc(slug: string): ReferenceDoc | undefined {
   return REFERENCE_DOCS_BY_SLUG.get(slug);
 }
 
-export function buildReferenceGraphEdges(docs: ReferenceDoc[]): Array<{ from: ReferenceDoc; to: ReferenceDoc }> {
+export function buildReferenceGraphEdges(docs: ReferenceDoc[]): { from: ReferenceDoc; to: ReferenceDoc }[] {
   const seen = new Set<string>();
-  const edges: Array<{ from: ReferenceDoc; to: ReferenceDoc }> = [];
+  const edges: { from: ReferenceDoc; to: ReferenceDoc }[] = [];
 
   for (const doc of docs) {
     for (const linkedSlug of doc.graph.links) {

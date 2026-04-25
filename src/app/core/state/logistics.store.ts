@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { AuditLogger } from '../services/audit-logger';
-import { BdtApiService } from '../services/bdt-api.service';
+import { SteelApiService } from '../services/steel-api.service';
 import {
   SupplyNode, SupplyCorridor, ReinforcementGroup,
   SEED_SUPPLY_NODES, SEED_CORRIDORS, SEED_REINFORCEMENTS,
@@ -9,7 +9,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class LogisticsStore {
   private audit = inject(AuditLogger);
-  private api   = inject(BdtApiService);
+  private api   = inject(SteelApiService);
 
   private _supplyNodes     = signal<SupplyNode[]>(SEED_SUPPLY_NODES.map(n => ({ ...n })));
   private _corridors       = signal<SupplyCorridor[]>(SEED_CORRIDORS.map(c => ({ ...c })));
