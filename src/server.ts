@@ -485,33 +485,33 @@ function renderLockPage(message = ''): string {
     <div class="hero">
       <div>
         <div class="lock-mark">◌</div>
-        <div class="eyebrow">Team Steel</div>
-        <h1 class="title">Saab Smart Stridsledning</h1>
-        <p class="subtitle">Hackathon Hackathon Command Support Fabric. Powered by BDT.</p>
+        <div class="eyebrow">Team Steel // Hackathon</div>
+        <h1 class="title">Smart Stridsledning</h1>
+        <p class="subtitle">Boreal Decision Twin Command Support Fabric. Secure operational interface.</p>
         <div class="meta-row">
-          <span class="chip"><b>1h</b> access window</span>
-          <span class="chip"><b>Production-Ready</b> surface</span>
-          <span class="chip"><b>Command-Fabric</b> ready</span>
+          <span class="chip"><b>1h</b> token</span>
+          <span class="chip"><b>Production</b> build</span>
+          <span class="chip"><b>Audit</b> enabled</span>
         </div>
       </div>
       <div class="status">
-        <span class="status-label">Operational Security</span>
-        <p>This is a tactical decision surface. Unauthorized access is audited.</p>
+        <span class="status-label">Access Protocol</span>
+        <p>Operational access is restricted. All authentication attempts and session activities are recorded.</p>
       </div>
     </div>
     <div class="form-panel">
-      <div class="eyebrow">Unlock Command Surface</div>
+      <div class="eyebrow">Authenticate Console</div>
       ${notice}
       <form method="post" action="/unlock">
         <input type="password" name="password" placeholder="ENTER ACCESS KEY" autocomplete="current-password" autofocus />
-        <button type="submit">AUTHENTICATE</button>
+        <button type="submit">INITIALIZE SESSION</button>
       </form>
       <a href="/showcase" style="display:block;text-align:center;margin-top:12px;padding:12px 20px;border:1px solid rgba(148,189,255,0.2);border-radius:14px;color:rgba(156,176,199,0.8);font-size:13px;text-decoration:none;letter-spacing:0.04em;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(92,167,255,0.5)';this.style.color='#edf5ff'" onmouseout="this.style.borderColor='rgba(148,189,255,0.2)';this.style.color='rgba(156,176,199,0.8)'">Visa presentation →</a>
       <div class="hint">The command fabric is locked pending authentication.</div>
-      <div class="tiny">Access token is issued server-side and applies to the SSR app, API, and WebSocket feed.</div>
+      <div class="tiny">Access token applies to SSR, API, and WebSocket channels.</div>
       <div class="footer">
-        <span>Steel | Saab Smart Stridsledning</span>
-        <span>Powered by BDT</span>
+        <span>Steel | Saab Hackathon</span>
+        <span>BDT Engine 2.0.0</span>
       </div>
     </div>
   </section>
