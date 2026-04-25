@@ -87,6 +87,7 @@ interface OntologyDomainCard {
   id: string;
   title: string;
   summary: string;
+  datapoints: string;
   why: string;
 }
 
@@ -300,30 +301,35 @@ const ONTOLOGY_DOMAINS: OntologyDomainCard[] = [
     id: 'domain-1',
     title: 'Beslutsstöd & analys',
     summary: 'COA, rationale, Monte Carlo och counterfactuals.',
+    datapoints: '4 inputs · 3 scores · 1 recommendation',
     why: 'Gör osäkerhet handlingsbar och låter operatören förstå valet.',
   },
   {
     id: 'domain-2',
     title: 'Taktisk lägesbild',
     summary: 'Tracks, intent och sensorfusion i realtid.',
+    datapoints: '6 track-signaler · 1 RAP · 3 prioriteringar',
     why: 'Ger samma bild av hotet som operatören behöver för att agera.',
   },
   {
     id: 'domain-3',
     title: 'Logistik & uthållighet',
     summary: 'Supply nodes, corridors och reinforcements.',
+    datapoints: '4 logistics-signaler · 2 corridors · 1 threshold',
     why: 'Håller nästa våg möjlig genom att visa vad som kan upprätthållas.',
   },
   {
     id: 'domain-4',
     title: 'Operatörsytor',
     summary: 'Command surfaces, field view och governance UI.',
+    datapoints: '3 surfaces · 1 interaction model · 0 drift',
     why: 'Gör att människan kan förstå, justera och godkänna beslutet.',
   },
   {
     id: 'domain-5',
     title: 'Infrastruktur',
     summary: 'State, SSR, transport och API-seams.',
+    datapoints: '5 shared seams · 1 state backbone · 1 contract',
     why: 'Håller allt kopplat till samma källa och samma semantik.',
   },
 ];
@@ -404,8 +410,8 @@ const SLIDE_PREVIEW_COPY: SlidePreviewCopy[] = [
   },
   {
     lead: 'Svar på frågan',
-    detail: 'Hackathonet bad inte om ett helt system, men ontologin visar varför ett smart C2-system går att bygga: causal intent, konkreta förslag och lägre kognitiv belastning.',
-    bullets: ['Varför inte hela systemet', 'Vad ontologin möjliggör', 'Hur C2-belastningen sänks'],
+    detail: 'Hackathonet bad inte om ett helt system, men ontologin visar varför ett smart C2-system går att bygga: causal intent, konkreta förslag, lägre kognitiv belastning och snabb closed-loop evaluation mot verklig sensordata.',
+    bullets: ['Varför inte hela systemet', 'Vad ontologin möjliggör', 'Hur systemet lär sig av verklig data'],
   },
 ];
 
@@ -465,7 +471,7 @@ const SLIDES: SlideConfig[] = [
     id: 'summary',
     eyebrow: 'Slutsats',
     title: 'Svaret på hackathonfrågan',
-    subtitle: 'Hackathonet bad inte om ett helt system, utan om den del som gör smart stridsledning möjlig: ontologin som ger causal intent och tydliga förslag',
+    subtitle: 'Hackathonet bad inte om ett helt system, utan om den del som gör smart stridsledning möjlig: ontologin som ger causal intent, tydliga förslag och snabb utvärdering mot verklig sensordata',
   },
 ];
 
@@ -475,6 +481,7 @@ interface MapTrack { id: string; x: number; y: number; tx: number; ty: number; t
 interface AnimatedTrack extends MapTrack { cx: number; cy: number; }
 interface DemoCue { scenarioIndex: number; trackId: string; }
 interface TrackFact { label: string; value: string; }
+interface TrackDecisionSupport { label: string; value: string; detail: string; }
 interface ScenarioStory {
   title: string;
   lead: string;
@@ -799,6 +806,17 @@ const BASES_NORTH = [
             <div class="scenario-story-decision">Beslutspunkt: {{ currentScenarioStory().decision }}</div>
           </div>
 
+          <div class="recommendation-panel">
+            <div class="recommendation-panel-head">
+              <span class="recommendation-panel-kicker">Rekommendation</span>
+              <span class="recommendation-panel-meta">{{ currentRecommendation().title }}</span>
+            </div>
+            <div class="recommendation-panel-current">
+              <div class="recommendation-panel-decision">{{ currentRecommendation().decision }}</div>
+              <div class="recommendation-panel-impact">{{ currentRecommendation().impact }}</div>
+            </div>
+          </div>
+
           <div class="board-features">
             @for (step of operatorSteps; track step.id) {
               <div class="board-feat">
@@ -868,13 +886,25 @@ const BASES_NORTH = [
           </div>
 
           @if (selectedScenarioTrack(); as selectedTrack) {
-            <div class="board-feat">
-              <div class="feat-icon">◉</div>
-              <div class="feat-text">
-                <div class="feat-title">{{ selectedTrack.id }} · {{ selectedTrack.type.toUpperCase() }}</div>
-                <div class="feat-sub">{{ trackSummary(selectedTrack) }}</div>
-                <div class="feat-sub">{{ scenarioLabels[mapScenario()] }}</div>
+            <div class="track-decision-card">
+              <div class="track-decision-head">
+                <div>
+                  <div class="track-decision-kicker">Valt objekt</div>
+                  <div class="track-decision-title">{{ selectedTrack.id }} · {{ selectedTrack.type.toUpperCase() }}</div>
+                </div>
+                <div class="track-decision-badge">{{ mapScenario() === 2 ? 'Supply' : selectedTrack.type === 'missile' ? 'Threat' : 'Track' }}</div>
               </div>
+              <div class="track-decision-summary">{{ trackSummary(selectedTrack) }}</div>
+              <div class="decision-support-grid">
+                @for (point of trackDecisionSupport(selectedTrack); track point.label) {
+                  <div class="decision-support-card">
+                    <div class="decision-support-label">{{ point.label }}</div>
+                    <div class="decision-support-value">{{ point.value }}</div>
+                    <div class="decision-support-detail">{{ point.detail }}</div>
+                  </div>
+                }
+              </div>
+              <div class="track-decision-foot">{{ scenarioLabels[mapScenario()] }}</div>
             </div>
             <div class="track-facts">
               @for (fact of trackFacts(selectedTrack); track fact.label) {
@@ -907,7 +937,7 @@ const BASES_NORTH = [
 
         <!-- SVG map -->
         <div class="map-container">
-          <svg viewBox="0 0 1670 1300" preserveAspectRatio="xMidYMid slice" class="map-svg" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="-90 -70 1840 1440" preserveAspectRatio="xMidYMid slice" class="map-svg" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <filter id="sc-glow-r"><feGaussianBlur stdDeviation="3" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
               <filter id="sc-glow-b"><feGaussianBlur stdDeviation="2" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
@@ -1016,6 +1046,13 @@ const BASES_NORTH = [
       <h2 class="slide-title">{{ slides[2].title }}</h2>
       <p class="slide-sub">{{ slides[2].subtitle }}</p>
 
+      <div class="data-strip">
+        <div class="data-pill"><span class="data-pill-num">3</span><span class="data-pill-label">COA-grenar</span><span class="data-pill-text">MAX, BAL, DST</span></div>
+        <div class="data-pill"><span class="data-pill-num">4</span><span class="data-pill-label">Policy inputs</span><span class="data-pill-text">posture, reserve, threat, wave 2</span></div>
+        <div class="data-pill"><span class="data-pill-num">9</span><span class="data-pill-label">Scorefält</span><span class="data-pill-text">3 metrics per alternativ</span></div>
+        <div class="data-pill"><span class="data-pill-num">1</span><span class="data-pill-label">Rekommendation</span><span class="data-pill-text">balanserat val med motivering</span></div>
+      </div>
+
       <div class="coa-primer-grid">
         @for (item of coaGuide; track item.id) {
           <div class="coa-primer-card" [class.coa-primer-active]="selectedCoaId() === item.title">
@@ -1096,7 +1133,7 @@ const BASES_NORTH = [
         <div class="ai-rationale">
           <div class="card-label">Policy tradeoff</div>
           <p class="rationale-text">
-            COA-MAX ger mest effekt nu, COA-BAL ger bäst balans och COA-DST skyddar mest uthållighet. Steel räknar först commander posture och reserve floor, scorer alternativen och väljer det som bäst passar missionen.
+            COA-MAX ger mest effekt nu, COA-BAL ger bäst balans och COA-DST skyddar mest uthållighet. Steel väger fyra inputs och nio scorevärden per beslut: commander posture, reserve floor, hottryck och wave 2-beredskap.
           </p>
           <div class="rationale-meta">
             <span class="r-tag">Commander posture</span>
@@ -1118,6 +1155,13 @@ const BASES_NORTH = [
           <h2 class="slide-title">{{ slides[3].title }}</h2>
           <p class="slide-sub">{{ slides[3].subtitle }}</p>
 
+          <div class="validation-explain">
+            <div class="validation-explain-kicker">Vad som utvärderas</div>
+            <div class="validation-explain-body">{{ currentValidationTree().premise }}</div>
+            <div class="validation-explain-meta">{{ currentValidationTree().modelHint }}</div>
+            <div class="validation-explain-note">{{ currentValidationTree().collapseHint }}</div>
+          </div>
+
           <div class="validation-chain">
             <span class="validation-chip">Decision tree</span>
             <span class="validation-arrow">→</span>
@@ -1136,6 +1180,13 @@ const BASES_NORTH = [
                 <div class="validation-tree-card-meta">{{ tree.branches.length }} inferensgrenar</div>
               </button>
             }
+          </div>
+
+          <div class="data-strip data-strip-tight">
+            <div class="data-pill"><span class="data-pill-num">3</span><span class="data-pill-label">Trees</span><span class="data-pill-text">intercept, balance, corridor</span></div>
+            <div class="data-pill"><span class="data-pill-num">4</span><span class="data-pill-label">Stages</span><span class="data-pill-text">tree, ML, Monte Carlo, lab</span></div>
+            <div class="data-pill"><span class="data-pill-num">9</span><span class="data-pill-label">Branches</span><span class="data-pill-text">scored and traced live</span></div>
+            <div class="data-pill"><span class="data-pill-num">1</span><span class="data-pill-label">Horizon</span><span class="data-pill-text">collapse threshold per tree</span></div>
           </div>
 
           <div class="board-features">
@@ -1234,6 +1285,13 @@ const BASES_NORTH = [
         <div class="state-explain-body">Utan ett gemensamt theatre state får policy, readiness, logistics och governance egna versioner av sanningen. Med en gemensam modell kan alla ytor läsa samma sak och fatta beslut på samma grund.</div>
       </div>
 
+      <div class="data-strip data-strip-tight">
+        <div class="data-pill"><span class="data-pill-num">5</span><span class="data-pill-label">Domäner</span><span class="data-pill-text">policy, readiness, logistics, governance, labs</span></div>
+        <div class="data-pill"><span class="data-pill-num">3</span><span class="data-pill-label">Ytor</span><span class="data-pill-text">API, state backbone, domain models</span></div>
+        <div class="data-pill"><span class="data-pill-num">1</span><span class="data-pill-label">Sanning</span><span class="data-pill-text">samma semantik överallt</span></div>
+        <div class="data-pill"><span class="data-pill-num">0</span><span class="data-pill-label">Drift</span><span class="data-pill-text">inga kopierade snapshots</span></div>
+      </div>
+
       <div class="ml-grid">
         <!-- Single source of truth -->
         <div class="ml-card ml-card-primary" [class.ml-card-focus]="modelFocusIndex() === 0" (click)="modelFocusIndex.set(0)">
@@ -1258,6 +1316,7 @@ const BASES_NORTH = [
               <span class="ml-lib">Labs</span><span class="ml-lic mit">same model</span>
             </div>
           </div>
+          <div class="ml-card-note">5 domäner, 4 typer av dataflöden och 1 gemensam semantik driver samma beslutsyta.</div>
           <p class="ml-card-note">Det som skiljer Steel från en UI-demo är att samma state driver flera ytor samtidigt.</p>
         </div>
 
@@ -1290,6 +1349,7 @@ const BASES_NORTH = [
               </div>
             </div>
           </div>
+          <div class="ml-card-note">3 lager, 2 lagringsled och 1 gemensamt kontrakt håller betydelsen stabil.</div>
           <p class="ml-card-note">Semantiken flyttas inte runt som kopior. Den läses från samma källa av varje yta.</p>
         </div>
 
@@ -1306,6 +1366,7 @@ const BASES_NORTH = [
             <div class="ncs-spec"><span class="ncs-k">Governance</span><span class="ncs-v">same state</span></div>
             <div class="ncs-spec"><span class="ncs-k">Labs</span><span class="ncs-v">same state</span></div>
           </div>
+          <div class="ncs-badge">5 ytor · 1 semantic contract</div>
           <div class="ncs-badge">State re-used across all major surfaces</div>
         </div>
 
@@ -1358,6 +1419,13 @@ const BASES_NORTH = [
           <h2 class="slide-title">{{ slides[5].title }}</h2>
           <p class="slide-sub">{{ slides[5].subtitle }}</p>
 
+          <div class="data-strip data-strip-tight">
+            <div class="data-pill"><span class="data-pill-num">5</span><span class="data-pill-label">Domäner</span><span class="data-pill-text">ett språk för hela systemet</span></div>
+            <div class="data-pill"><span class="data-pill-num">14</span><span class="data-pill-label">Inputs</span><span class="data-pill-text">policy, tracks, logistics, UI, infra</span></div>
+            <div class="data-pill"><span class="data-pill-num">1</span><span class="data-pill-label">Ontology</span><span class="data-pill-text">en modell, många vyer</span></div>
+            <div class="data-pill"><span class="data-pill-num">0</span><span class="data-pill-label">Dubbeltydlighet</span><span class="data-pill-text">samma betydelse överallt</span></div>
+          </div>
+
           <div class="gov-authority-levels">
             @for (domain of ontologyDomains; track domain.id; let i = $index) {
               <div class="auth-level" [class.active-auth]="ontologyFocusIndex() === i" (click)="ontologyFocusIndex.set(i)">
@@ -1365,6 +1433,7 @@ const BASES_NORTH = [
                 <div class="auth-info">
                   <div class="auth-name">{{ domain.title }}</div>
                   <div class="auth-desc">{{ domain.summary }}</div>
+                  <div class="auth-data">{{ domain.datapoints }}</div>
                 </div>
               </div>
             }
@@ -1379,12 +1448,16 @@ const BASES_NORTH = [
               <span class="kf-l">Domäner</span>
             </div>
             <div class="kg-fact">
+              <span class="kf-v">14</span>
+              <span class="kf-l">Inputs</span>
+            </div>
+            <div class="kg-fact">
               <span class="kf-v">1</span>
-              <span class="kf-l">Operativ modell</span>
+              <span class="kf-l">Ontologi</span>
             </div>
             <div class="kg-fact">
               <span class="kf-v">0</span>
-              <span class="kf-l">Feature-islands</span>
+              <span class="kf-l">Dubbeltydighet</span>
             </div>
           </div>
           <div class="gov-factors">
@@ -1507,20 +1580,27 @@ const BASES_NORTH = [
       <div class="summary-grid">
         <div class="sum-card">
           <div class="sum-num blue">Användarmål</div>
-          <div class="sum-label">Fatta rätt beslut under tidspress och bevara nästa våg</div>
+          <div class="sum-label">1 operatörsmål, 3 roller och 1 tydlig beslutspunkt</div>
         </div>
         <div class="sum-card">
           <div class="sum-num green">Påverkan</div>
-          <div class="sum-label">Verksamhetskritiskt eftersom fel beslut förbrukar förmåga för tidigt</div>
+          <div class="sum-label">2 risker: fel prioritering nu eller förlorad uthållighet sen</div>
         </div>
         <div class="sum-card">
           <div class="sum-num purple">Oundvikliga aktiviteter</div>
-          <div class="sum-label">Samla, fusionera, välja, validera och skydda uthållighet</div>
+          <div class="sum-label">5 steg: samla, fusionera, välja, validera, skydda</div>
         </div>
         <div class="sum-card">
           <div class="sum-num amber">Lösningsstruktur</div>
-          <div class="sum-label">Policy-driven COA, kontrafaktisk validation och ontologi i ett state</div>
+          <div class="sum-label">3 metoder, 5 domäner och 1 delad state</div>
         </div>
+      </div>
+
+      <div class="data-strip data-strip-tight">
+        <div class="data-pill"><span class="data-pill-num">3</span><span class="data-pill-label">Novel metoder</span><span class="data-pill-text">COA, validation, ontology</span></div>
+        <div class="data-pill"><span class="data-pill-num">5</span><span class="data-pill-label">Domäner</span><span class="data-pill-text">beslut, läge, logistik, yta, infra</span></div>
+        <div class="data-pill"><span class="data-pill-num">7</span><span class="data-pill-label">Surfaces</span><span class="data-pill-text">allt från field console till knowledge graph</span></div>
+        <div class="data-pill"><span class="data-pill-num">1</span><span class="data-pill-label">State</span><span class="data-pill-text">en källa, en semantik</span></div>
       </div>
 
       <div class="summary-pillars">
@@ -1534,7 +1614,7 @@ const BASES_NORTH = [
       </div>
 
       <div class="summary-answer">
-        Hackathonet bad inte om ett helt system. Steel visar den del som måste vara rätt först: en ontologi som binder ihop data, beräknar causal intent, ger konkreta förslag och sänker den kognitiva belastningen för C2-personal.
+        Hackathonet bad inte om ett helt system. Steel visar den del som måste vara rätt först: en ontologi som binder ihop data, beräknar causal intent, ger konkreta förslag, sänker kognitiv belastning i C2 och går att utvärdera mot faktisk sensordata nära realtid för att förbättra inferenskedjan efter att händelser utspelat sig.
       </div>
 
       <div class="summary-cta">
@@ -1692,6 +1772,17 @@ const BASES_NORTH = [
     .slide-split {
       display: grid; grid-template-columns: 320px 1fr; gap: 32px; height: 100%;
     }
+    .slide-map .slide-split {
+      grid-template-columns: minmax(420px, 480px) minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+    .slide-map .slide-left-panel { gap: 12px; }
+    .slide-board .slide-split {
+      grid-template-columns: minmax(560px, 640px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
     .slide-left-panel {
       display: flex; flex-direction: column; gap: 16px; overflow-y: auto;
     }
@@ -1752,6 +1843,7 @@ const BASES_NORTH = [
     .map-container {
       position: relative; border-radius: 8px; overflow: hidden;
       border: 1px solid var(--s-border); background: rgba(3,7,12,0.8);
+      min-height: 860px;
     }
     .map-svg { display: block; width: 100%; height: 100%; }
     .scenario-story {
@@ -1770,6 +1862,26 @@ const BASES_NORTH = [
       font-size: 10px; text-transform: uppercase; letter-spacing: 0.16em;
       color: var(--s-blue); font-weight: 900;
     }
+    .data-strip {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
+    }
+    .data-strip-tight { margin-top: 12px; }
+    .data-pill {
+      display: flex; flex-direction: column; gap: 4px;
+      padding: 10px 12px; border-radius: 10px;
+      border: 1px solid rgba(92,167,255,0.14); background: rgba(255,255,255,0.02);
+    }
+    .data-pill-num {
+      font-size: 18px; line-height: 1; font-weight: 300; color: var(--s-text);
+      font-family: monospace;
+    }
+    .data-pill-label {
+      font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--s-blue);
+    }
+    .data-pill-text {
+      font-size: 10px; line-height: 1.45; color: var(--s-muted);
+    }
     .scenario-tabs { display: flex; flex-direction: column; gap: 4px; }
     .recommendation-panel {
       display: flex; flex-direction: column; gap: 8px;
@@ -1783,6 +1895,20 @@ const BASES_NORTH = [
       font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em;
       color: var(--s-blue);
     }
+    .recommendation-panel-meta {
+      font-size: 10px; font-weight: 700; color: var(--s-muted); text-align: right;
+    }
+    .recommendation-panel-current {
+      display: flex; flex-direction: column; gap: 4px;
+      padding: 10px 12px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.03);
+    }
+    .recommendation-panel-decision {
+      font-size: 11px; font-weight: 900; color: var(--s-text); text-transform: uppercase; letter-spacing: 0.12em;
+    }
+    .recommendation-panel-impact {
+      font-size: 11px; line-height: 1.5; color: var(--s-muted);
+    }
     .recommendation-tabs { display: flex; flex-direction: column; gap: 6px; }
     .recommendation-card {
       display: flex; flex-direction: column; gap: 4px; text-align: left;
@@ -1795,7 +1921,12 @@ const BASES_NORTH = [
     .recommendation-card-index {
       font-size: 9px; font-weight: 900; color: var(--s-blue); font-family: monospace; letter-spacing: 0.14em;
     }
+    .recommendation-card-flag {
+      font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
+      padding: 2px 6px; border-radius: 999px; background: rgba(255,255,255,0.04); color: var(--s-muted);
+    }
     .recommendation-card-title { font-size: 11px; font-weight: 800; color: var(--s-text); }
+    .recommendation-card-summary { font-size: 10px; line-height: 1.45; color: var(--s-muted); }
     .s-tab {
       display: flex; align-items: center; gap: 8px; padding: 8px 12px;
       border-radius: 6px; border: 1px solid var(--s-border);
@@ -1881,6 +2012,40 @@ const BASES_NORTH = [
     .track-fact-value {
       font-size: 12px; color: var(--s-text); line-height: 1.4;
     }
+    .track-decision-card {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 14px; border-radius: 10px;
+      border: 1px solid rgba(92,167,255,0.16); background: rgba(92,167,255,0.04);
+    }
+    .track-decision-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .track-decision-kicker {
+      font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em;
+      color: var(--s-blue);
+    }
+    .track-decision-title { font-size: 14px; font-weight: 800; color: var(--s-text); line-height: 1.3; }
+    .track-decision-badge {
+      font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
+      padding: 3px 8px; border-radius: 999px; background: rgba(124,224,190,0.12); color: var(--s-green);
+    }
+    .track-decision-summary { font-size: 12px; line-height: 1.6; color: var(--s-muted); }
+    .decision-support-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+    }
+    .decision-support-card {
+      padding: 10px 12px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .decision-support-label {
+      font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
+      color: var(--s-muted);
+    }
+    .decision-support-value { font-size: 12px; font-weight: 800; color: var(--s-text); line-height: 1.35; }
+    .decision-support-detail { font-size: 10px; line-height: 1.45; color: var(--s-muted); }
+    .track-decision-foot {
+      font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em;
+      color: var(--s-blue);
+    }
 
     /* ── AI slide ───────────────────────────────────────────────────── */
     .slide-ai { overflow-y: auto; }
@@ -1931,41 +2096,35 @@ const BASES_NORTH = [
       background: rgba(255,255,255,0.02); flex-shrink: 0;
     }
     .board-svg { flex: 1; display: block; }
-    .board-features { display: flex; flex-direction: column; gap: 10px; }
-    .board-feat { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border: 1px solid var(--s-border); border-radius: 6px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s; }
-    .board-feat:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
     .board-feat-active { border-color: rgba(92,167,255,0.35); background: rgba(92,167,255,0.08); }
-  .validation-chain {
+    .validation-chain {
       display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-      padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(92,167,255,0.16);
+      padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(92,167,255,0.16);
       background: rgba(92,167,255,0.04); margin-bottom: 14px;
     }
     .validation-chip {
-      font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
-      color: var(--s-text); padding: 4px 8px; border: 1px solid rgba(92,167,255,0.18); border-radius: 999px;
+      font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
+      color: var(--s-text); padding: 5px 10px; border: 1px solid rgba(92,167,255,0.18); border-radius: 999px;
       background: rgba(255,255,255,0.03);
     }
-    .validation-arrow { color: var(--s-blue); font-size: 12px; font-weight: 900; }
+    .validation-arrow { color: var(--s-blue); font-size: 14px; font-weight: 900; }
     .validation-tree-strip {
-      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
       margin-bottom: 12px;
     }
     .validation-tree-card {
-      padding: 12px; border: 1px solid var(--s-border); border-radius: 8px;
+      padding: 16px; border: 1px solid var(--s-border); border-radius: 10px;
       background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s;
       text-align: left;
     }
     .validation-tree-card:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
     .validation-tree-card-active { border-color: rgba(92,167,255,0.35); background: rgba(92,167,255,0.07); }
     .validation-tree-card-title {
-      font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.16em;
-      color: var(--s-blue); margin-bottom: 4px;
+      font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--s-blue); margin-bottom: 6px;
     }
-    .validation-tree-card-premise { font-size: 11px; line-height: 1.45; color: var(--s-text); margin-bottom: 6px; }
-    .validation-tree-card-meta { font-size: 9px; color: var(--s-muted); text-transform: uppercase; letter-spacing: 0.12em; }
-    .feat-icon { font-size: 16px; color: var(--s-blue); width: 20px; flex-shrink: 0; }
-    .feat-title { font-size: 12px; font-weight: 700; color: var(--s-text); }
-    .feat-sub { font-size: 10px; color: var(--s-muted); margin-top: 2px; }
+    .validation-tree-card-premise { font-size: 13px; line-height: 1.6; color: var(--s-text); margin-bottom: 8px; }
+    .validation-tree-card-meta { font-size: 11px; color: var(--s-muted); text-transform: uppercase; letter-spacing: 0.12em; }
     .board-demo-stage {
       display: flex; flex-direction: column; gap: 10px; padding: 12px; background: rgba(255,255,255,0.02);
     }
@@ -1979,15 +2138,47 @@ const BASES_NORTH = [
     }
     .validation-inference-card {
       display: flex; flex-direction: column; gap: 4px; text-align: left;
-      padding: 10px 12px; border: 1px solid var(--s-border); border-radius: 8px;
+      padding: 12px 14px; border: 1px solid var(--s-border); border-radius: 10px;
       background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s;
     }
     .validation-inference-card:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
     .validation-inference-card-active { border-color: rgba(124,224,190,0.35); background: rgba(124,224,190,0.07); }
     .validation-inference-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .validation-inference-label { font-size: 10px; font-weight: 900; color: var(--s-blue); text-transform: uppercase; letter-spacing: 0.14em; }
-    .validation-inference-score { font-size: 10px; font-weight: 900; font-family: monospace; color: var(--s-text); }
-    .validation-inference-line { font-size: 10px; line-height: 1.45; color: var(--s-muted); }
+    .validation-inference-label { font-size: 11px; font-weight: 900; color: var(--s-blue); text-transform: uppercase; letter-spacing: 0.14em; }
+    .validation-inference-score { font-size: 11px; font-weight: 900; font-family: monospace; color: var(--s-text); }
+    .validation-inference-line { font-size: 11px; line-height: 1.55; color: var(--s-muted); }
+    .validation-explain {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 18px 20px; border-radius: 12px; border: 1px solid rgba(92,167,255,0.16);
+      background: rgba(92,167,255,0.04);
+    }
+    .validation-explain-kicker {
+      font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em;
+      color: var(--s-blue);
+    }
+    .validation-explain-body {
+      font-size: 15px; line-height: 1.7; color: var(--s-text); font-weight: 700;
+    }
+    .validation-explain-meta {
+      font-size: 13px; line-height: 1.6; color: var(--s-muted);
+    }
+    .validation-explain-note {
+      font-size: 11px; line-height: 1.5; color: var(--s-green);
+    }
+    .board-features {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+    }
+    .board-feat {
+      display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1px solid var(--s-border);
+      border-radius: 10px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s;
+    }
+    .feat-title { font-size: 13px; font-weight: 800; color: var(--s-text); }
+    .feat-sub { font-size: 11px; color: var(--s-muted); margin-top: 3px; line-height: 1.45; }
+    .board-feat .feat-icon { font-size: 17px; width: 22px; }
+    .board-feat .feat-text { min-width: 0; }
+    .board-feat .feat-sub {
+      overflow-wrap: anywhere;
+    }
 
     /* ── ML slide ────────────────────────────────────────────────────── */
     .slide-ml { overflow-y: auto; }
@@ -2085,12 +2276,6 @@ const BASES_NORTH = [
     .ncs-k { font-size: 10px; color: var(--s-muted); font-family: monospace; }
     .ncs-v { font-size: 11px; color: var(--s-green); font-family: monospace; font-weight: 700; }
     .ncs-badge { font-size: 9px; padding: 4px 10px; border-radius: 4px; background: rgba(124,224,190,0.15); color: var(--s-green); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; display: inline-block; }
-    .latency-bars { display: flex; flex-direction: column; gap: 10px; }
-    .lat-row { display: flex; align-items: center; gap: 8px; }
-    .lat-label { font-size: 10px; color: var(--s-muted); width: 80px; flex-shrink: 0; }
-    .lat-track { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
-    .lat-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
-    .lat-val { font-size: 10px; color: var(--s-text); font-family: monospace; font-weight: 700; width: 52px; text-align: right; }
 
     /* ── Governance slide ────────────────────────────────────────────── */
     .gov-authority-levels { display: flex; flex-direction: column; gap: 6px; }
@@ -2103,21 +2288,14 @@ const BASES_NORTH = [
     .manual .auth-badge { background: rgba(245,158,11,0.2); color: var(--s-amber); }
     .auth-name { font-size: 11px; font-weight: 700; color: var(--s-text); margin-bottom: 2px; }
     .auth-desc { font-size: 10px; color: var(--s-muted); }
-    .gov-metrics { display: flex; gap: 8px; }
-    .gov-metric { flex: 1; padding: 8px; border: 1px solid var(--s-border); border-radius: 6px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 2px; }
-    .gm-v { font-size: 20px; font-weight: 700; font-family: monospace; color: var(--s-text); }
-    .gm-g { color: var(--s-green); }
-    .gm-b { color: var(--s-blue); }
-    .gm-l { font-size: 8px; color: var(--s-muted); text-transform: uppercase; letter-spacing: 0.1em; }
     .gov-right { display: flex; flex-direction: column; align-items: stretch; gap: 16px; padding: 16px; overflow-y: auto; }
-    .gov-gauge-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: var(--s-muted); }
-    .gauge-svg { width: 240px; height: 180px; }
     .gov-factors { width: 100%; display: flex; flex-direction: column; gap: 8px; }
     .gov-factor { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--s-border); background: rgba(255,255,255,0.02); }
     .gov-factor-active { border-color: rgba(92,167,255,0.25); background: rgba(92,167,255,0.05); }
     .gf-top { display: flex; flex-direction: column; gap: 3px; }
     .gf-label { font-size: 10px; color: var(--s-muted); text-transform: uppercase; letter-spacing: 0.14em; }
     .gf-summary { font-size: 11px; color: var(--s-text); }
+    .auth-data { font-size: 9px; color: var(--s-green); font-family: monospace; }
     .gf-why { font-size: 11px; color: var(--s-muted); line-height: 1.5; }
 
     /* ── Summary slide ───────────────────────────────────────────────── */
@@ -2247,7 +2425,7 @@ const BASES_NORTH = [
       font-size: 11px; color: var(--s-text);
     }
     .kg-cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .kg-facts { display: flex; gap: 10px; }
+    .kg-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
     .kg-fact { flex: 1; padding: 8px; border: 1px solid var(--s-border); border-radius: 6px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 2px; }
     .kf-v { font-size: 22px; font-weight: 700; font-family: monospace; color: rgba(96,165,250,0.9); }
     .kf-l { font-size: 9px; color: var(--s-muted); text-transform: uppercase; letter-spacing: 0.1em; }
@@ -2652,6 +2830,31 @@ export class Showcase implements OnInit, OnDestroy {
       { label: 'Tid', value: `${secondsLeft}s` },
       { label: 'Beslut', value: this.intercepting() ? 'Commit interceptors' : 'Hold reserve' },
       { label: 'Risk', value: track.type === 'air' ? 'Fast-changing' : 'Persistent' },
+    ];
+  }
+
+  trackDecisionSupport(track: AnimatedTrack): TrackDecisionSupport[] {
+    const scenario = this.mapScenario();
+    const secondsLeft = Math.max(6, Math.round((1 - this.trackProgress()) * 52));
+    if (scenario === 2) {
+      const corridor = track.id === 'S1' ? 'Supply line' : track.id === 'S2' ? 'Escort' : track.id === 'S3' ? 'Threat' : 'Air cover';
+      return [
+        { label: 'Data', value: '4 logistics signals', detail: 'Last, corridor pressure, escort and runway status.' },
+        { label: 'Recommendation', value: track.id === 'S3' ? 'Intercept now' : 'Protect corridor', detail: 'Tidigt beslut behövs innan linjen bryts.' },
+        { label: 'Why now', value: `${secondsLeft}s decision window`, detail: `${corridor} påverkar samma state som COA och validation.` },
+      ];
+    }
+    if (scenario === 1) {
+      return [
+        { label: 'Data', value: track.type === 'missile' ? '3 inbound cues' : '2 support cues', detail: 'Speed, bearing and approach shape the picture.' },
+        { label: 'Recommendation', value: this.intercepting() ? 'Commit intercept' : 'Track and wait', detail: 'Valet skiftar när hotet går in i fönstret.' },
+        { label: 'Why now', value: `${secondsLeft}s decision window`, detail: 'Antagandet måste låsas före salvo splittrar sig.' },
+      ];
+    }
+    return [
+      { label: 'Data', value: track.type === 'ship' ? '2 surface cues' : '2 air cues', detail: 'Track speed, route and intent signal the branch.' },
+      { label: 'Recommendation', value: this.intercepting() ? 'Commit interceptors' : 'Hold reserve', detail: 'Rekommendationen bevarar nästa våg.' },
+      { label: 'Why now', value: `${secondsLeft}s decision window`, detail: 'Objektet visar var beslutet måste tas först.' },
     ];
   }
 
