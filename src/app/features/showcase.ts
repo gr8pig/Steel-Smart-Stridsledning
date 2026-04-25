@@ -1064,6 +1064,20 @@ const BASES_NORTH = [
         }
       </div>
 
+      <div class="intent-card">
+        <div class="intent-card-head">
+          <div class="intent-card-title">intent_distribution</div>
+          <div class="intent-card-meta">1 track · 5 sannolikhetsklasser</div>
+        </div>
+        <div class="intent-card-grid">
+          <div class="intent-card-item"><span>probe</span><strong>0.08</strong></div>
+          <div class="intent-card-item"><span>feint</span><strong>0.18</strong></div>
+          <div class="intent-card-item"><span>strike</span><strong>0.52</strong></div>
+          <div class="intent-card-item"><span>saturation</span><strong>0.17</strong></div>
+          <div class="intent-card-item"><span>decoy</span><strong>0.05</strong></div>
+        </div>
+      </div>
+
       <div class="ai-grid">
         <!-- Pareto scatter (SVG mini) -->
         <div class="ai-pareto-card">
@@ -1133,7 +1147,7 @@ const BASES_NORTH = [
         <div class="ai-rationale">
           <div class="card-label">Policy tradeoff</div>
           <p class="rationale-text">
-            COA-MAX ger mest effekt nu, COA-BAL ger bäst balans och COA-DST skyddar mest uthållighet. Steel väger fyra inputs och nio scorevärden per beslut: commander posture, reserve floor, hottryck och wave 2-beredskap.
+            COA-MAX ger mest effekt nu, COA-BAL ger bäst balans och COA-DST skyddar mest uthållighet. Steel väger fyra inputs och nio scorevärden per beslut: commander posture, reserve floor, hottryck och wave 2-beredskap. Beslutet styrs inte bara av position, utan av sannolik avsikt: sondering, skenanfall, verkligt anfall, mättnadsattack eller vilseledning.
           </p>
           <div class="rationale-meta">
             <span class="r-tag">Commander posture</span>
@@ -2063,6 +2077,64 @@ const BASES_NORTH = [
     .coa-primer-meaning { font-size: 12px; font-weight: 700; color: var(--s-text); }
     .coa-primer-when { font-size: 11px; color: var(--s-muted); line-height: 1.5; }
     .coa-primer-tradeoff { font-size: 10px; color: var(--s-green); line-height: 1.5; }
+    .intent-card {
+      grid-column: 1 / -1;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(92,167,255,0.16);
+      border-radius: 10px;
+      background: rgba(92,167,255,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .intent-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .intent-card-title {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--s-blue);
+      font-family: monospace;
+    }
+    .intent-card-meta {
+      font-size: 10px;
+      color: var(--s-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .intent-card-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .intent-card-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.02);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .intent-card-item span {
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--s-muted);
+    }
+    .intent-card-item strong {
+      font-size: 16px;
+      line-height: 1;
+      color: var(--s-text);
+      font-family: monospace;
+    }
     .card-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: var(--s-muted); margin-bottom: 10px; }
     .pareto-svg { width: 100%; height: 200px; }
     .pulse-ring { animation: pulseRing 2s ease-in-out infinite; }
