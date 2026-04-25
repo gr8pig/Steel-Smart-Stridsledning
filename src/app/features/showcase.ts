@@ -9,89 +9,236 @@ import { KnowledgeGraphViewerComponent } from '../shared/ui/knowledge-graph-view
 // ─── Console log lines per slide ─────────────────────────────────────────────
 
 const CONSOLE_SEQUENCES: string[][] = [
-  // Slide 0 – Welcome
+  // Slide 0 – Hook
   [
-    '> Initierar Boreal Decision Twin v2.4.1...',
-    '> Laddar ML-modeller: mistral-large-2411 [OK]',
-    '> Ansluter till teaterflöde via WebSocket...',
-    '> Synkroniserar baslägen × 5 [OK]',
-    '> Stridsledningssystem: REDO',
+    '> Hackathon brief: luftbevakning under tidspress',
+    '> Användare: luftbevakare / flygstridsledare / befäl',
+    '> Problem: nästa våg måste fortfarande kunna mötas',
+    '> Metod: policy + robusthet + ontologi',
+    '> Steel visar den mest intressanta delen av helheten',
   ],
-  // Slide 1 – Borealis Sund map
+  // Slide 1 – Operator flow
   [
-    '> Scenario 1: Marinträssning Borealis Sund',
-    '> Hotdetektering: 3 ytfarkoster klassificerade',
-    '> Intent-estimering: FEINT 68%, STRIKE 22%...',
-    '> Kör COA-lösare: 3 alternativ genererade',
-    '> Rekommendation: COA-BAL [conf=0.81]',
-    '> Scenario 2: Missilsalva – 7 spår detekterade',
-    '> Interceptor-allokering: 14 missiler [READY]',
-    '> Scenario 3: Kombinerat anfall – AI-analys...',
-    '> Beslutsstödssvar: 142 ms (OpenRouter)',
+    '> Samlar sensordata från flera källor',
+    '> Fusionerar RAP: en gemensam lägesbild',
+    '> Intent och hot klassificeras under friktion',
+    '> Väljer bas, last och effektor enligt policy',
+    '> Skyddar readiness för nästa våg',
   ],
-  // Slide 2 – AI Decision Support
+  // Slide 2 – Policy-driven COA
   [
     '> POST /api/coa/solve  [200 OK | 108ms]',
-    '> Viktning: Hållbarhet=0.62 Förmåga=0.38',
-    '> Pareto-front: 3 icke-dominerade COA:er',
-    '> COA-MAX: intercept=94% beredskap=38%',
-    '> COA-BAL: intercept=81% beredskap=61%',
-    '> COA-DST: intercept=71% beredskap=91%',
-    '> Rationale genererad via Mistral-large-2411',
-    '> HITL-godkännande begärt: operator väntar...',
+    '> Commander posture uppdaterad',
+    '> Reserve floor låst för wave-2-beredskap',
+    '> Pareto-front visar tre giltiga COA:er',
+    '> COA-BAL bevarar djup utan att tappa effekt',
+    '> Legacy regelverk engagerar i detekteringsordning',
   ],
-  // Slide 3 – Drawing Board
+  // Slide 3 – Robustness validation
   [
-    '> Ritbordsmodul initierad',
-    '> Enhet placerad: SHIP_DESTROYER [BLUE] @ (835,630)',
-    '> Waypoints lagda: 4 punkter',
-    '> Rörelsesimulering: 2.3 knop, 47s till mål',
-    '> Kollisionskontroll: KLAR',
-    '> Exporterar manöverplan till C2-systemet...',
-    '> Plan godkänd av befälhavaren [SEMI-AUTO]',
+    '> Monte Carlo: 10 000 körningar',
+    '> Counterfactual handoff till labbet',
+    '> Deception och saturation injiceras i modellen',
+    '> Command friction ger collapse horizon',
+    '> Beslutet låses först när robustheten håller',
   ],
-  // Slide 4 – ML Infrastructure
+  // Slide 4 – Ontology and unification
   [
-    '> ML-stack: 100% öppen källkod',
-    '> Modell: Mistral-large-2411 (Paris, Frankrike)',
-    '> Inferens: RunPod EU (GDPR-kompatibel)',
-    '> Alternativ: lokal deploy @ NCS Linköping',
-    '> GPU-krav: A100 40GB / H100 (vHPT)',
-    '> Latens lokal: ~80ms | Remote: ~140ms',
-    '> Driftsäkerhet: air-gapped möjlig',
-    '> Licens: Apache 2.0 + Mistral AI Commercial',
+    '> Single source of truth för theater state',
+    '> Policy, readiness, logistics och labs läser samma modell',
+    '> FastAPI fungerar som backend-autoritet',
+    '> Shared domain models binder ytorna samman',
+    '> Truth-first, inte feature-islands',
   ],
-  // Slide 5 – Governance
+  // Slide 5 – Ontology summary
   [
-    '> Styrningsläge: HITL (manuellt godkännande)',
-    '> Auktoritetsnivå: OPERATOR → BEFÄLHAVARE',
-    '> Revisionsspår: 847 händelser loggas',
-    '> Beslutssäker: rationale knyts till COA-val',
-    '> Policy-kongruens: 0.94 [GRÖN]',
-    '> Förtroendepoäng: 0.87 ↑ (senaste 10 min)',
-    '> Regelefterlevnad: NATO STANAG 4586 [OK]',
+    '> MECE-ontologi laddad: 5 domäner',
+    '> Beslutsstöd, lägesbild, logistik, HMI, infrastruktur',
+    '> Varje domän har ett eget ansvar men samma källa',
+    '> Ontologin gör systemet operativt begripligt',
   ],
-  // Slide 6 – Knowledge Graph
+  // Slide 6 – Unification effects
   [
-    '> Laddar plattformsgraf: 89 noder',
-    '> WebGL-renderer: Three.js r165 [OK]',
-    '> Bloom-pass aktiv: UnrealBloomPass',
-    '> Dataflödespartiklar: 30/kant [OK]',
-    '> Kategorier: UI · State · Service · ML · Docs',
-    '> Nodkluster: 6 plattformsområden identifierade',
-    '> Grafen uppdateras vid varje commit automatiskt',
+    '> Governance, logistics och field console delar samma state',
+    '> C2 resilience och threat inspector läser samma semantik',
+    '> Demo director och scenario injection följer samma kontrakt',
+    '> Sovereign deployment kan ske utan att byta betydelse',
   ],
-  // Slide 7 – Summary
+  // Slide 7 – Closing
   [
-    '> BDT SYSTEMÖVERSIKT KOMPLETT',
-    '> Moduler: 14 aktiva vyer',
-    '> API-slutpunkter: 13 REST + 1 WebSocket',
-    '> ML-svarstid: Ø 127ms',
-    '> Beredskapsvinst vs. äldre system: +54pp',
-    '> Öppen källkod · Europeisk · NCS-kapabel',
-    '> Team Steel | Saab Hackathon 2025',
-    '> BDT är redo för operativ validering.',
+    '> Användarmål, påverkan och oundvikliga aktiviteter är täckta',
+    '> Banbrytande struktur: policy + robusthet + ontologi',
+    '> Visa den intressantaste delen, inte hela plattformen',
+    '> Steel matchar kickoffens scope och bedömningsfrågor',
   ],
+];
+
+interface NarrativeCard {
+  id: string;
+  tag: string;
+  title: string;
+  body: string;
+}
+
+interface OntologyDomainCard {
+  id: string;
+  title: string;
+  summary: string;
+  why: string;
+}
+
+interface UnificationEffect {
+  id: string;
+  title: string;
+  body: string;
+}
+
+const OPERATOR_STEPS: NarrativeCard[] = [
+  {
+    id: 'step-1',
+    tag: '01',
+    title: 'Samla sensordata',
+    body: 'Bygg RAP från flera källor i realtid, inte från en isolerad vy.',
+  },
+  {
+    id: 'step-2',
+    tag: '02',
+    title: 'Fusionera lägesbilden',
+    body: 'Intent, spår och friktion måste sammanfalla innan beslutet får en riktning.',
+  },
+  {
+    id: 'step-3',
+    tag: '03',
+    title: 'Välj bas och effektor',
+    body: 'Beredskap, räckvidd och eldkraft måste vägas mot varandra för nästa våg.',
+  },
+  {
+    id: 'step-4',
+    tag: '04',
+    title: 'Skydda uthålligheten',
+    body: 'Reserven får inte tömmas nu om systemet ska klara uppföljande anfall.',
+  },
+];
+
+const VALIDATION_STEPS: NarrativeCard[] = [
+  {
+    id: 'val-1',
+    tag: 'MC',
+    title: 'Monte Carlo',
+    body: 'Stresstesta COA:n mot tusentals variationer i hot, friktion och beredskap.',
+  },
+  {
+    id: 'val-2',
+    tag: 'CF',
+    title: 'Counterfactual handoff',
+    body: 'Skicka samma beslut till labbet och se vad som händer om antagandena vrids.',
+  },
+  {
+    id: 'val-3',
+    tag: 'FR',
+    title: 'Command friction',
+    body: 'Mät var kedjan bryts, inte bara hur bra den ser ut i ett idealfall.',
+  },
+  {
+    id: 'val-4',
+    tag: 'CH',
+    title: 'Collapse horizon',
+    body: 'Se när uthålligheten faller under den nivå som krävs för nästa våg.',
+  },
+];
+
+const NOVEL_METHODS: NarrativeCard[] = [
+  {
+    id: 'method-1',
+    tag: 'M1',
+    title: 'Policy-driven multi-wave COA',
+    body: 'Commander posture och reserve floor styr valet så att wave-2-beredskap bevaras.',
+  },
+  {
+    id: 'method-2',
+    tag: 'M2',
+    title: 'Robusthet och kontrafaktik',
+    body: 'Beslutet låses först efter Monte Carlo, labbhandoff och stress mot osäkerhet.',
+  },
+  {
+    id: 'method-3',
+    tag: 'M3',
+    title: 'Funktionell ontologi',
+    body: 'Samma theater state matar policy, readiness, logistics, governance och labs.',
+  },
+];
+
+const COA_CYCLE = ['COA-MAX', 'COA-BAL', 'COA-DST'] as const;
+
+const ONTOLOGY_DOMAINS: OntologyDomainCard[] = [
+  {
+    id: 'domain-1',
+    title: 'Beslutsstöd & analys',
+    summary: 'COA, rationale, Monte Carlo och counterfactuals.',
+    why: 'Gör osäkerhet handlingsbar och låter operatören förstå valet.',
+  },
+  {
+    id: 'domain-2',
+    title: 'Taktisk lägesbild',
+    summary: 'Tracks, intent och sensorfusion i realtid.',
+    why: 'Ger samma bild av hotet som operatören behöver för att agera.',
+  },
+  {
+    id: 'domain-3',
+    title: 'Logistik & uthållighet',
+    summary: 'Supply nodes, corridors och reinforcements.',
+    why: 'Håller nästa våg möjlig genom att visa vad som kan upprätthållas.',
+  },
+  {
+    id: 'domain-4',
+    title: 'Operatörsytor',
+    summary: 'Command surfaces, field view och governance UI.',
+    why: 'Gör att människan kan förstå, justera och godkänna beslutet.',
+  },
+  {
+    id: 'domain-5',
+    title: 'Infrastruktur',
+    summary: 'State, SSR, transport och API-seams.',
+    why: 'Håller allt kopplat till samma källa och samma semantik.',
+  },
+];
+
+const UNIFICATION_EFFECTS: UnificationEffect[] = [
+  {
+    id: 'effect-1',
+    title: 'Governance',
+    body: 'Policy trace, audit och auktoritet kan följa samma state istället för kopierade snapshots.',
+  },
+  {
+    id: 'effect-2',
+    title: 'Logistics',
+    body: 'Försörjningsvägar, readiness och reinforcement-planer använder samma domänmodell.',
+  },
+  {
+    id: 'effect-3',
+    title: 'Field console',
+    body: 'Operatören ser samma theater context genom en annan yta, inte en annan sanning.',
+  },
+  {
+    id: 'effect-4',
+    title: 'C2 resilience',
+    body: 'Command friction och collapse horizon kan räknas från samma backbone som besluten.',
+  },
+  {
+    id: 'effect-5',
+    title: 'Threat inspector',
+    body: 'Intent och osäkerhet förblir bundna till de tracks som skapade dem.',
+  },
+  {
+    id: 'effect-6',
+    title: 'Demo director',
+    body: 'Scenario injection följer samma kontrakt som operativ drift och labbflöden.',
+  },
+  {
+    id: 'effect-7',
+    title: 'Sovereign deployment',
+    body: 'Samma modell kan köras lokalt eller i EU-miljö utan att betydelsen ändras.',
+  },
 ];
 
 // ─── Slide definitions ────────────────────────────────────────────────────────
@@ -108,49 +255,49 @@ const SLIDES: SlideConfig[] = [
     id: 'welcome',
     eyebrow: 'Boreal Decision Twin',
     title: 'STEEL',
-    subtitle: 'AI-driven stridsledning för framtidens försvar',
+    subtitle: 'Steel visar hur nästa våg kan mötas utan att bränna uthållighet för den som kommer efter',
   },
   {
     id: 'map',
-    eyebrow: 'Situationsmedvetenhet',
-    title: 'Borealis Sund',
-    subtitle: 'Realtids lägesbild med hotbedömning och intentanalys',
+    eyebrow: 'Operatörens flöde',
+    title: 'Fyra steg som alltid måste fungera',
+    subtitle: 'Klicka på objekten och spola tiden för att se hur lägesbild, intent och beredskap skiftar',
   },
   {
     id: 'ai',
-    eyebrow: 'Beslutsstöd',
-    title: 'AI-driven COA-analys',
-    subtitle: 'Pareto-optimal manöverplanering med förklarbar AI',
+    eyebrow: 'Novel metodik 1',
+    title: 'Policy-driven COA',
+    subtitle: 'Commander posture, reserve floor och wave-2 readiness styr valet bättre än regelbaserad eldledning',
   },
   {
     id: 'board',
-    eyebrow: 'Operationsplanering',
-    title: 'Ritbordet',
-    subtitle: 'Interaktiv manöverplanering med rörelsesimulering',
+    eyebrow: 'Novel metodik 2',
+    title: 'Kontrafaktisk validering',
+    subtitle: 'Vi låser inte beslut förrän de har stressats mot osäkerhet, deception, saturation och friction',
   },
   {
     id: 'ml',
-    eyebrow: 'Teknisk infrastruktur',
-    title: 'Öppen källkod · Europeisk',
-    subtitle: 'Driftsäker ML-stack hostbar vid NCS i Linköping',
+    eyebrow: 'Novel metodik 3',
+    title: 'Delad theater state',
+    subtitle: 'Samma data måste bära policy, readiness, logistik, governance och labs för att helheten ska hålla',
   },
   {
     id: 'governance',
-    eyebrow: 'Styrning & Kontroll',
-    title: 'HITL-auktoritet',
-    subtitle: 'Operator-i-loopen med fullständigt revisionsspår',
+    eyebrow: 'Ontologi',
+    title: 'Fem domäner, en modell',
+    subtitle: 'Ontologin är den minsta operativa modell som räcker för att samordna hela systemet',
   },
   {
     id: 'kg',
-    eyebrow: 'Plattformsarkitektur',
-    title: 'Kunskapsgraf',
-    subtitle: 'Interaktiv 3D-karta över plattformens alla komponenter och kopplingar',
+    eyebrow: 'Unification',
+    title: 'Möjliggjorda ytor',
+    subtitle: 'Kunskapsgrafen visar vad som blir möjligt när alla ytor läser samma state och semantik',
   },
   {
     id: 'summary',
-    eyebrow: 'Systemöversikt',
-    title: 'BDT är redo',
-    subtitle: 'Komplett plattform för AI-stödd stridsledning',
+    eyebrow: 'Slutsats',
+    title: 'Det här matchar hackathonet',
+    subtitle: 'Vi visar den mest intressanta delen av en större lösning, precis inom scope för kickoffen',
   },
 ];
 
@@ -158,6 +305,14 @@ const SLIDES: SlideConfig[] = [
 
 interface MapTrack { id: string; x: number; y: number; tx: number; ty: number; type: 'missile' | 'ship' | 'air'; }
 interface AnimatedTrack extends MapTrack { cx: number; cy: number; }
+interface DemoCue { scenarioIndex: number; trackId: string; }
+
+const DEMO_CUES: DemoCue[] = [
+  { scenarioIndex: 0, trackId: 'N1' },
+  { scenarioIndex: 1, trackId: 'M2' },
+  { scenarioIndex: 2, trackId: 'C4' },
+  { scenarioIndex: 0, trackId: 'N3' },
+];
 
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -197,9 +352,9 @@ const SCENARIO_LABELS = [
 // ─── COA data for slide 3 ─────────────────────────────────────────────────────
 
 const COAS = [
-  { id: 'COA-MAX', label: 'Maximal Bekämpning', intercept: 94, readiness: 38, robustness: 0.61, color: '#ef4444' },
-  { id: 'COA-BAL', label: 'Balanserad', intercept: 81, readiness: 61, robustness: 0.79, color: '#5ca7ff', selected: true },
-  { id: 'COA-DST', label: 'Djup Hållbarhet', intercept: 71, readiness: 91, robustness: 0.91, color: '#7ce0be' },
+  { id: 'COA-MAX', label: 'Maximal effekt nu', intercept: 94, readiness: 38, robustness: 0.61, color: '#ef4444' },
+  { id: 'COA-BAL', label: 'Balans med reserve', intercept: 81, readiness: 61, robustness: 0.79, color: '#5ca7ff', selected: true },
+  { id: 'COA-DST', label: 'Djup uthållighet', intercept: 71, readiness: 91, robustness: 0.91, color: '#7ce0be' },
 ];
 
 // ─── Terrain helpers ──────────────────────────────────────────────────────────
@@ -259,28 +414,27 @@ const BASES_NORTH = [
         <p class="slide-hero-sub">{{ slides[0].subtitle }}</p>
 
         <div class="welcome-chips">
-          <div class="w-chip"><span class="w-chip-dot blue"></span>AI-driven beslutsoptimering</div>
-          <div class="w-chip"><span class="w-chip-dot green"></span>Öppen källkod · Europeisk stack</div>
-          <div class="w-chip"><span class="w-chip-dot purple"></span>HITL styrning och auktoritet</div>
-          <div class="w-chip"><span class="w-chip-dot amber"></span>Driftsättbar i Linköping vid NCS</div>
+          <div class="w-chip"><span class="w-chip-dot blue"></span>Sensorfusion måste bli RAP, inte bara en vy</div>
+          <div class="w-chip"><span class="w-chip-dot green"></span>Resursallokering måste ta nästa våg i beräkning</div>
+          <div class="w-chip"><span class="w-chip-dot purple"></span>Uthållighet måste skyddas när hoten eskalerar</div>
         </div>
 
         <div class="welcome-stack">
           <div class="stack-row">
-            <span class="stack-label">Frontend</span>
-            <span class="stack-value">Angular 21 SSR · TailwindCSS · NgRx Signals</span>
+            <span class="stack-label">Användare</span>
+            <span class="stack-value">Luftbevakare, flygstridsledare och command authority</span>
           </div>
           <div class="stack-row">
-            <span class="stack-label">Backend</span>
-            <span class="stack-value">FastAPI · Python · Express SSR</span>
+            <span class="stack-label">Problem</span>
+            <span class="stack-value">Fatta rätt beslut under sekundnivå-friktion och osäkerhet</span>
           </div>
           <div class="stack-row">
-            <span class="stack-label">ML-modell</span>
-            <span class="stack-value">Mistral-large-2411 (FR) · OpenRouter · RunPod EU</span>
+            <span class="stack-label">Metod</span>
+            <span class="stack-value">Policy, robusthet och ontologi i ett delat theater state</span>
           </div>
           <div class="stack-row">
-            <span class="stack-label">Simulering</span>
-            <span class="stack-value">Twin Engine · Red Adversary · Command Friction</span>
+            <span class="stack-label">Mål</span>
+            <span class="stack-value">Nästa våg ska fortfarande kunna mötas med styrka kvar</span>
           </div>
         </div>
       </div>
@@ -296,6 +450,18 @@ const BASES_NORTH = [
           <h2 class="slide-title">{{ slides[1].title }}</h2>
           <p class="slide-sub">{{ slides[1].subtitle }}</p>
 
+          <div class="board-features">
+            @for (step of operatorSteps; track step.id) {
+              <div class="board-feat">
+                <div class="feat-icon">{{ step.tag }}</div>
+                <div class="feat-text">
+                  <div class="feat-title">{{ step.title }}</div>
+                  <div class="feat-sub">{{ step.body }}</div>
+                </div>
+              </div>
+            }
+          </div>
+
           <div class="scenario-tabs">
             @for (s of scenarioLabels; track $index) {
               <button class="s-tab" [class.active]="mapScenario() === $index" (click)="selectScenario($index)">
@@ -306,27 +472,56 @@ const BASES_NORTH = [
           </div>
 
           <div class="map-legend">
-            <div class="legend-row"><span class="legend-dot blue"></span> Egna styrkor (blå)</div>
-            <div class="legend-row"><span class="legend-dot red"></span> Hotsignatur (röd)</div>
-            <div class="legend-row"><span class="legend-dot amber"></span> Sensorräckvidd</div>
-            <div class="legend-row"><span class="legend-dot white"></span> Intresse-zon (IFZ)</div>
+            <div class="legend-row"><span class="legend-dot blue"></span> Egna styrkor och egna baser</div>
+            <div class="legend-row"><span class="legend-dot red"></span> Hotsignatur och inkommande tryck</div>
+            <div class="legend-row"><span class="legend-dot amber"></span> Sensor- och intressezoner</div>
+            <div class="legend-row"><span class="legend-dot white"></span> Lägesbilden som ska bli RAP</div>
           </div>
 
           <div class="map-stats">
-            <div class="stat"><span class="stat-v">{{ animatedTracks().length }}</span><span class="stat-l">Detekterade hot</span></div>
+            <div class="stat"><span class="stat-v">{{ animatedTracks().length }}</span><span class="stat-l">Spår i den aktuella vågen</span></div>
             <div class="stat">
-              <span class="stat-v" [class.stat-g]="!intercepting()" [class.stat-r]="intercepting()">{{ intercepting() ? 'INTERCEPT' : '0.81' }}</span>
-              <span class="stat-l">{{ intercepting() ? 'Bekämpning' : 'Beslutssäkerhet' }}</span>
+              <span class="stat-v" [class.stat-g]="!intercepting()" [class.stat-r]="intercepting()">{{ intercepting() ? 'HOLD' : '0.81' }}</span>
+              <span class="stat-l">{{ intercepting() ? 'Skyddad beredskap' : 'Beslutssäkerhet' }}</span>
             </div>
-            <div class="stat"><span class="stat-v stat-a">127ms</span><span class="stat-l">AI-svarstid</span></div>
+            <div class="stat"><span class="stat-v stat-a">127ms</span><span class="stat-l">Svarstid till operatören</span></div>
           </div>
           <div class="map-phase-bar">
             <div class="map-phase-label" [class.phase-intercept]="intercepting()">
-              {{ intercepting() ? '⬡ INTERCEPT AKTIVT' : '→ SPÅR ANALYSERAS' }}
+              {{ intercepting() ? '⬡ RESERV SKYDDAS' : '→ RAP BYGGS' }}
             </div>
             <div class="phase-bar-track">
               <div class="phase-bar-fill" [style.width]="(trackProgress() * 100) + '%'" [class.phase-fill-intercept]="intercepting()"></div>
             </div>
+          </div>
+
+          @if (selectedScenarioTrack(); as selectedTrack) {
+            <div class="board-feat">
+              <div class="feat-icon">◉</div>
+              <div class="feat-text">
+                <div class="feat-title">{{ selectedTrack.id }} · {{ selectedTrack.type.toUpperCase() }}</div>
+                <div class="feat-sub">{{ trackSummary(selectedTrack) }}</div>
+                <div class="feat-sub">{{ scenarioLabels[mapScenario()] }}</div>
+              </div>
+            </div>
+          }
+
+          <div class="timeline-control">
+            <div class="timeline-top">
+              <button class="s-tab" type="button" (click)="toggleTrackPlayback()">
+                <span class="s-tab-num">{{ trackPlaying() ? 'II' : '▶' }}</span>
+                <span class="s-tab-label">{{ trackPlaying() ? 'Pausa demo' : 'Spela demo' }}</span>
+              </button>
+              <span class="timeline-label">Demo {{ (trackProgress() * 100) | number:'1.0-0' }}%</span>
+            </div>
+            <input
+              class="timeline-slider"
+              type="range"
+              min="0"
+              max="100"
+              [value]="trackProgress() * 100"
+              (input)="onTrackScrub($event)"
+            />
           </div>
         </div>
 
@@ -377,6 +572,7 @@ const BASES_NORTH = [
 
             <!-- Threat tracks (animated) -->
             @for (track of animatedTracks(); track track.id) {
+              <g class="cursor-pointer" (click)="selectScenarioTrack(track.id)">
               <!-- Full path line (faint ghost) -->
               <line
                 [attr.x1]="track.x" [attr.y1]="track.y" [attr.x2]="track.tx" [attr.y2]="track.ty"
@@ -421,6 +617,11 @@ const BASES_NORTH = [
                   <line x1="-8" y1="0" x2="8" y2="0" stroke="#ef4444" stroke-width="1.5"/>
                 }
               </g>
+              @if (selectedScenarioTrackId() === track.id) {
+                <circle [attr.cx]="track.cx" [attr.cy]="track.cy" r="24" fill="none" stroke="#5ca7ff" stroke-width="1.2" stroke-dasharray="4,3"/>
+                <text [attr.x]="track.cx + 14" [attr.y]="track.cy - 12" font-size="9" font-family="monospace" fill="#5ca7ff" font-weight="bold">{{ track.id }}</text>
+              }
+              </g>
             }
           </svg>
         </div>
@@ -452,8 +653,8 @@ const BASES_NORTH = [
             <!-- COA points -->
             @for (coa of coas; track coa.id) {
               <g [attr.transform]="'translate('+coaX(coa.readiness)+','+coaY(coa.intercept)+')'">
-                <circle [attr.r]="coa.selected ? 9 : 6" [attr.fill]="coa.color" [attr.fill-opacity]="coa.selected ? 0.9 : 0.5" [attr.stroke]="coa.color" stroke-width="1.5"/>
-                @if (coa.selected) {
+                <circle [attr.r]="selectedCoaId() === coa.id ? 9 : 6" [attr.fill]="coa.color" [attr.fill-opacity]="selectedCoaId() === coa.id ? 0.9 : 0.5" [attr.stroke]="coa.color" stroke-width="1.5"/>
+                @if (selectedCoaId() === coa.id) {
                   <circle r="15" [attr.stroke]="coa.color" stroke-width="1" fill="none" opacity="0.5" class="pulse-ring"/>
                 }
                 <text [attr.x]="coa.readiness > 60 ? -8 : 10" y="-10" font-size="8" [attr.fill]="coa.color" font-family="monospace" font-weight="bold">{{ coa.id }}</text>
@@ -465,10 +666,10 @@ const BASES_NORTH = [
         <!-- COA cards -->
         <div class="coa-list">
           @for (coa of coas; track coa.id) {
-            <div class="coa-card" [class.coa-selected]="coa.selected">
+            <div class="coa-card" [class.coa-selected]="selectedCoaId() === coa.id" (click)="selectedCoaId.set(coa.id)">
               <div class="coa-top">
                 <span class="coa-id" [style.color]="coa.color">{{ coa.id }}</span>
-                @if (coa.selected) {
+                @if (selectedCoaId() === coa.id) {
                   <span class="coa-badge">Rekommenderad</span>
                 }
               </div>
@@ -502,14 +703,14 @@ const BASES_NORTH = [
 
         <!-- Rationale block -->
         <div class="ai-rationale">
-          <div class="card-label">Motivering — Mistral-large-2411</div>
+          <div class="card-label">Policy tradeoff</div>
           <p class="rationale-text">
-            COA-BAL väljs eftersom den bevarar 61% beredskap över Wave-2 horisonten — kritiskt givet att äldre eldledningssystem saknar förmåga att modellera fleromgångstrajektorier. Maximalt engagemang (COA-MAX) ger 94% bekämpningseffekt men reducerar beredskapen till 38%, vilket innebär hög sårbarhet vid en uppföljande salva. Djup Hållbarhet (COA-DST) accepterar två genomträngningsrisker för att säkerställa 91% reservkapacitet — ett rimligt val om operatören bedömer Wave-2 som sannolik.
+            COA-BAL väljs eftersom den bevarar 61% beredskap över nästa våg utan att tappa den effekt som behövs nu. Legacy eldledning som engagerar i detekteringsordning bränner interceptor-djupet för tidigt; Steel låter commander posture och reserve floor styra valet så att wave-2-beredskap finns kvar.
           </p>
           <div class="rationale-meta">
-            <span class="r-tag">Modell: mistral/mistral-large-2411</span>
-            <span class="r-tag">Via: OpenRouter</span>
-            <span class="r-tag">Latens: 142ms</span>
+            <span class="r-tag">Commander posture</span>
+            <span class="r-tag">Reserve floor</span>
+            <span class="r-tag">Wave 2</span>
           </div>
         </div>
       </div>
@@ -526,47 +727,21 @@ const BASES_NORTH = [
           <p class="slide-sub">{{ slides[3].subtitle }}</p>
 
           <div class="board-features">
-            <div class="board-feat">
-              <div class="feat-icon">◈</div>
-              <div class="feat-text">
-                <div class="feat-title">11 enhetstyper</div>
-                <div class="feat-sub">Mark · Naval · Luftstridskrafter</div>
+            @for (step of validationSteps; track step.id; let i = $index) {
+              <div class="board-feat" [class.board-feat-active]="validationFocusIndex() === i" (click)="validationFocusIndex.set(i)">
+                <div class="feat-icon">{{ step.tag }}</div>
+                <div class="feat-text">
+                  <div class="feat-title">{{ step.title }}</div>
+                  <div class="feat-sub">{{ step.body }}</div>
+                </div>
               </div>
-            </div>
-            <div class="board-feat">
-              <div class="feat-icon">⊡</div>
-              <div class="feat-text">
-                <div class="feat-title">Rörelseplanering</div>
-                <div class="feat-sub">Waypoints med interpolerad rörelse</div>
-              </div>
-            </div>
-            <div class="board-feat">
-              <div class="feat-icon">▷</div>
-              <div class="feat-text">
-                <div class="feat-title">Uppspelningssimulering</div>
-                <div class="feat-sub">0.5× – 4× hastighet, scrubber</div>
-              </div>
-            </div>
-            <div class="board-feat">
-              <div class="feat-icon">⬡</div>
-              <div class="feat-text">
-                <div class="feat-title">Röd vs. Blå sidor</div>
-                <div class="feat-sub">Scenariobygge med motståndarsida</div>
-              </div>
-            </div>
-            <div class="board-feat">
-              <div class="feat-icon">⊕</div>
-              <div class="feat-text">
-                <div class="feat-title">Exportera till C2</div>
-                <div class="feat-sub">Manöverplan publiceras till befälhavare</div>
-              </div>
-            </div>
+            }
           </div>
         </div>
 
         <!-- Board mini demo SVG -->
         <div class="board-demo-container">
-          <div class="board-demo-label">RITBORD — BOREALIS SUND · SCENARIO 3</div>
+          <div class="board-demo-label">ROBUSTNESS LAB — {{ validationSteps[validationFocusIndex()].title.toUpperCase() }}</div>
           <svg viewBox="0 0 1670 1300" preserveAspectRatio="xMidYMid slice" class="board-svg">
             <!-- Terrain -->
             <polygon [attr.points]="terrain.north" fill="rgba(92,167,255,0.05)" stroke="rgba(92,167,255,0.15)" stroke-width="1.5"/>
@@ -607,7 +782,7 @@ const BASES_NORTH = [
 
             <!-- Mode indicator -->
             <rect x="30" y="30" width="120" height="24" rx="3" fill="rgba(92,167,255,0.1)" stroke="rgba(92,167,255,0.3)" stroke-width="1"/>
-            <text x="90" y="46" text-anchor="middle" font-size="9" fill="#5ca7ff" font-family="monospace" font-weight="bold">WAYPOINT-LÄGE</text>
+            <text x="90" y="46" text-anchor="middle" font-size="9" fill="#5ca7ff" font-family="monospace" font-weight="bold">STRESS TEST</text>
           </svg>
         </div>
       </div>
@@ -622,106 +797,106 @@ const BASES_NORTH = [
       <p class="slide-sub">{{ slides[4].subtitle }}</p>
 
       <div class="ml-grid">
-        <!-- Open source stack -->
-        <div class="ml-card ml-card-primary">
+        <!-- Single source of truth -->
+        <div class="ml-card ml-card-primary" [class.ml-card-focus]="modelFocusIndex() === 0" (click)="modelFocusIndex.set(0)">
           <div class="ml-card-header">
             <span class="ml-icon">⊚</span>
-            <span class="ml-card-title">Öppen Källkod</span>
+            <span class="ml-card-title">Single source of truth</span>
           </div>
           <div class="ml-stack-list">
             <div class="ml-stack-item">
-              <span class="ml-lib">Mistral AI</span><span class="ml-lic apache">Apache 2.0</span>
+              <span class="ml-lib">Theater state</span><span class="ml-lic apache">shared</span>
             </div>
             <div class="ml-stack-item">
-              <span class="ml-lib">FastAPI</span><span class="ml-lic mit">MIT</span>
+              <span class="ml-lib">Policy</span><span class="ml-lic mit">same model</span>
             </div>
             <div class="ml-stack-item">
-              <span class="ml-lib">Angular</span><span class="ml-lic mit">MIT</span>
+              <span class="ml-lib">Readiness</span><span class="ml-lic mit">same model</span>
             </div>
             <div class="ml-stack-item">
-              <span class="ml-lib">Python 3.12</span><span class="ml-lic apache">PSF</span>
+              <span class="ml-lib">Logistics</span><span class="ml-lic apache">same model</span>
             </div>
             <div class="ml-stack-item">
-              <span class="ml-lib">RunPod SDK</span><span class="ml-lic mit">MIT</span>
+              <span class="ml-lib">Labs</span><span class="ml-lic mit">same model</span>
             </div>
           </div>
-          <p class="ml-card-note">Inga proprietära beroenden. Full källkodstillgång.</p>
+          <p class="ml-card-note">Det som skiljer Steel från en UI-demo är att samma state driver flera ytor samtidigt.</p>
         </div>
 
-        <!-- European provenance -->
-        <div class="ml-card">
+        <!-- Backend authority -->
+        <div class="ml-card" [class.ml-card-focus]="modelFocusIndex() === 1" (click)="modelFocusIndex.set(1)">
           <div class="ml-card-header">
             <span class="ml-icon">⊛</span>
-            <span class="ml-card-title">Europeisk Härkomst</span>
+            <span class="ml-card-title">Backend authority</span>
           </div>
           <div class="ml-flag-row">
             <div class="ml-flag-item">
-              <div class="ml-flag fr">FR</div>
+              <div class="ml-flag fr">API</div>
               <div class="ml-flag-text">
-                <div class="ml-flag-name">Mistral AI</div>
-                <div class="ml-flag-sub">Paris · GDPR-kompatibel</div>
+                <div class="ml-flag-name">FastAPI</div>
+                <div class="ml-flag-sub">Autoritativ decision logic</div>
               </div>
             </div>
             <div class="ml-flag-item">
-              <div class="ml-flag eu">EU</div>
+              <div class="ml-flag eu">SRV</div>
               <div class="ml-flag-text">
-                <div class="ml-flag-name">RunPod Europa</div>
-                <div class="ml-flag-sub">Datacenter inom EU</div>
+                <div class="ml-flag-name">State backbone</div>
+                <div class="ml-flag-sub">Policy, readiness, logistics, labs</div>
               </div>
             </div>
             <div class="ml-flag-item">
-              <div class="ml-flag se">SE</div>
+              <div class="ml-flag se">DB</div>
               <div class="ml-flag-text">
-                <div class="ml-flag-name">NCS Linköping</div>
-                <div class="ml-flag-sub">Lokal deploy möjlig</div>
+                <div class="ml-flag-name">Shared domain models</div>
+                <div class="ml-flag-sub">One meaning across surfaces</div>
               </div>
             </div>
           </div>
-          <p class="ml-card-note">Data lämnar aldrig EU-jurisdiktion utan tillstånd.</p>
+          <p class="ml-card-note">Semantiken flyttas inte runt som kopior. Den läses från samma källa av varje yta.</p>
         </div>
 
-        <!-- NCS deployment -->
-        <div class="ml-card ml-card-highlight">
+        <!-- Consumers -->
+        <div class="ml-card ml-card-highlight" [class.ml-card-focus]="modelFocusIndex() === 2" (click)="modelFocusIndex.set(2)">
           <div class="ml-card-header">
             <span class="ml-icon">⊟</span>
-            <span class="ml-card-title">NCS Linköping — Lokal Deploy</span>
+            <span class="ml-card-title">Consumers</span>
           </div>
           <div class="ncs-specs">
-            <div class="ncs-spec"><span class="ncs-k">GPU</span><span class="ncs-v">A100 40GB / H100 SXM5</span></div>
-            <div class="ncs-spec"><span class="ncs-k">Inferenslatens</span><span class="ncs-v">~80ms (lokal)</span></div>
-            <div class="ncs-spec"><span class="ncs-k">Air-gap</span><span class="ncs-v">Fullt stödd</span></div>
-            <div class="ncs-spec"><span class="ncs-k">Modellformat</span><span class="ncs-v">GGUF / vLLM</span></div>
-            <div class="ncs-spec"><span class="ncs-k">Kryptering</span><span class="ncs-v">TLS 1.3 + HMAC-SHA256</span></div>
+            <div class="ncs-spec"><span class="ncs-k">Policy</span><span class="ncs-v">same state</span></div>
+            <div class="ncs-spec"><span class="ncs-k">Readiness</span><span class="ncs-v">same state</span></div>
+            <div class="ncs-spec"><span class="ncs-k">Logistics</span><span class="ncs-v">same state</span></div>
+            <div class="ncs-spec"><span class="ncs-k">Governance</span><span class="ncs-v">same state</span></div>
+            <div class="ncs-spec"><span class="ncs-k">Labs</span><span class="ncs-v">same state</span></div>
           </div>
-          <div class="ncs-badge">Operativt redo för NCS-infrastruktur</div>
+          <div class="ncs-badge">State re-used across all major surfaces</div>
         </div>
 
-        <!-- Latency comparison -->
-        <div class="ml-card">
+        <!-- Sovereign deployment -->
+        <div class="ml-card" [class.ml-card-focus]="modelFocusIndex() === 3" (click)="modelFocusIndex.set(3)">
           <div class="ml-card-header">
             <span class="ml-icon">◷</span>
-            <span class="ml-card-title">Prestandajämförelse</span>
+            <span class="ml-card-title">Sovereign deployment</span>
           </div>
           <div class="latency-bars">
             <div class="lat-row">
-              <span class="lat-label">Lokal NCS</span>
+              <span class="lat-label">Local</span>
               <div class="lat-track"><div class="lat-fill" style="width:30%;background:#7ce0be"></div></div>
-              <span class="lat-val">~80ms</span>
+              <span class="lat-val">NCS</span>
             </div>
             <div class="lat-row">
-              <span class="lat-label">RunPod EU</span>
+              <span class="lat-label">EU cloud</span>
               <div class="lat-track"><div class="lat-fill" style="width:50%;background:#5ca7ff"></div></div>
-              <span class="lat-val">~140ms</span>
+              <span class="lat-val">same semantics</span>
             </div>
             <div class="lat-row">
-              <span class="lat-label">OpenRouter</span>
+              <span class="lat-label">Backend</span>
               <div class="lat-track"><div class="lat-fill" style="width:55%;background:#9b8cff"></div></div>
-              <span class="lat-val">~150ms</span>
+              <span class="lat-val">truth-first</span>
             </div>
             <div class="lat-row">
-              <span class="lat-label">Äldre system</span>
+              <span class="lat-label">Legacy</span>
               <div class="lat-track"><div class="lat-fill" style="width:100%;background:#ef4444"></div></div>
-              <span class="lat-val">manuell</span>
+              <span class="lat-val">fragmented</span>
             </div>
           </div>
         </div>
@@ -739,78 +914,41 @@ const BASES_NORTH = [
           <p class="slide-sub">{{ slides[5].subtitle }}</p>
 
           <div class="gov-authority-levels">
-            <div class="auth-level auto">
-              <div class="auth-badge">AUTO</div>
-              <div class="auth-info">
-                <div class="auth-name">HNLT — Automatiskt</div>
-                <div class="auth-desc">Systembeslut utan operatörsåtgärd. Lägsta friktionsnivå.</div>
+            @for (domain of ontologyDomains; track domain.id; let i = $index) {
+              <div class="auth-level" [class.active-auth]="ontologyFocusIndex() === i" (click)="ontologyFocusIndex.set(i)">
+                <div class="auth-badge">{{ $index + 1 }}</div>
+                <div class="auth-info">
+                  <div class="auth-name">{{ domain.title }}</div>
+                  <div class="auth-desc">{{ domain.summary }}</div>
+                </div>
               </div>
-            </div>
-            <div class="auth-level semi">
-              <div class="auth-badge">SEMI</div>
-              <div class="auth-info">
-                <div class="auth-name">HOTL — Operatör i loopen</div>
-                <div class="auth-desc">System rekommenderar. Operatören godkänner innan åtgärd.</div>
-              </div>
-            </div>
-            <div class="auth-level manual active-auth">
-              <div class="auth-badge">HITL</div>
-              <div class="auth-info">
-                <div class="auth-name">HITL — Manuellt ◈ Aktiv</div>
-                <div class="auth-desc">Alla engagemang kräver explicit manuellt godkännande.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="gov-metrics">
-            <div class="gov-metric"><span class="gm-v">847</span><span class="gm-l">Auditerade händelser</span></div>
-            <div class="gov-metric"><span class="gm-v gm-g">0.94</span><span class="gm-l">Policy-kongruens</span></div>
-            <div class="gov-metric"><span class="gm-v gm-b">0.87</span><span class="gm-l">Förtroendepoäng</span></div>
+            }
           </div>
         </div>
 
-        <!-- Decision fabric arc gauge -->
+        <!-- Ontology proof -->
         <div class="gov-right">
-          <div class="gov-gauge-label">Beslutsfabrik-poäng</div>
-          <svg viewBox="0 0 240 180" class="gauge-svg">
-            <defs>
-              <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#ef4444"/>
-                <stop offset="50%" stop-color="#f59e0b"/>
-                <stop offset="100%" stop-color="#7ce0be"/>
-              </linearGradient>
-            </defs>
-            <!-- Background arc -->
-            <path d="M 30 150 A 90 90 0 0 1 210 150" fill="none" stroke="rgba(156,176,199,0.1)" stroke-width="14" stroke-linecap="round"/>
-            <!-- Value arc (87%) -->
-            <path d="M 30 150 A 90 90 0 0 1 210 150" fill="none" stroke="url(#gauge-grad)" stroke-width="14" stroke-linecap="round"
-                  stroke-dasharray="283" stroke-dashoffset="37"/>
-            <!-- Center value -->
-            <text x="120" y="138" text-anchor="middle" font-size="32" font-family="monospace" font-weight="bold" fill="#7ce0be">0.87</text>
-            <text x="120" y="158" text-anchor="middle" font-size="9" font-family="monospace" fill="rgba(156,176,199,0.7)" letter-spacing="2">BESLUTSFÖRMÅGA</text>
-            <!-- Labels -->
-            <text x="25" y="168" font-size="8" fill="rgba(239,68,68,0.7)" font-family="monospace">0.0</text>
-            <text x="110" y="55" text-anchor="middle" font-size="8" fill="rgba(245,158,11,0.7)" font-family="monospace">0.5</text>
-            <text x="205" y="168" text-anchor="end" font-size="8" fill="rgba(124,224,190,0.7)" font-family="monospace">1.0</text>
-          </svg>
-
+          <div class="kg-facts">
+            <div class="kg-fact">
+              <span class="kf-v">5</span>
+              <span class="kf-l">Domäner</span>
+            </div>
+            <div class="kg-fact">
+              <span class="kf-v">1</span>
+              <span class="kf-l">Operativ modell</span>
+            </div>
+            <div class="kg-fact">
+              <span class="kf-v">0</span>
+              <span class="kf-l">Feature-islands</span>
+            </div>
+          </div>
           <div class="gov-factors">
-            <div class="gov-factor">
-              <span class="gf-label">Taktisk synkronisering</span>
-              <div class="gf-bar"><div class="gf-fill" style="width:88%;background:#5ca7ff"></div></div>
-            </div>
-            <div class="gov-factor">
-              <span class="gf-label">Policy-koherens</span>
-              <div class="gf-bar"><div class="gf-fill" style="width:94%;background:#7ce0be"></div></div>
-            </div>
-            <div class="gov-factor">
-              <span class="gf-label">Operatörsbelastning</span>
-              <div class="gf-bar"><div class="gf-fill" style="width:72%;background:#f59e0b"></div></div>
-            </div>
-            <div class="gov-factor">
-              <span class="gf-label">Kommandofriktionsindex</span>
-              <div class="gf-bar"><div class="gf-fill" style="width:81%;background:#9b8cff"></div></div>
-            </div>
+            @for (domain of ontologyDomains; track domain.id; let i = $index) {
+              <div class="gov-factor">
+                <span class="gf-label">{{ domain.title }}</span>
+                <div class="gf-bar"><div class="gf-fill" [style.width]="ontologyFocusIndex() === i ? '100%' : '72%'" [style.background]="ontologyFocusIndex() === i ? '#5ca7ff' : domain.id === 'domain-3' ? '#7ce0be' : '#9b8cff'"></div></div>
+              </div>
+            }
           </div>
         </div>
       </div>
@@ -826,52 +964,45 @@ const BASES_NORTH = [
           <h2 class="slide-title">{{ slides[6].title }}</h2>
           <p class="slide-sub">{{ slides[6].subtitle }}</p>
 
-          <!-- SECTION 1: Demoed -->
           <div class="kg-section">
             <div class="kg-section-header kg-demo-header">
               <span class="kg-section-dot" style="background:#60a5fa"></span>
-              VISAT I DEMO
+              MÖJLIGT EFTERSOM SAMMA STATE DELAS
             </div>
             <div class="kg-section-items">
-              <div class="kg-item">Taktisk karta · Borealis Sund</div>
-              <div class="kg-item">AI COA-lösare · Pareto-front</div>
-              <div class="kg-item">Ritbordet · Manöverplanering</div>
-              <div class="kg-item">HITL styrning · Auktoritetsnivåer</div>
-              <div class="kg-item">Beredskapsvisualisering</div>
+            @for (effect of unificationEffects; track effect.id; let i = $index) {
+                <div class="kg-item" [class.kg-item-active]="unificationFocusIndex() === i" (click)="unificationFocusIndex.set(i)"><strong>{{ effect.title }}</strong> · {{ effect.body }}</div>
+              }
             </div>
           </div>
 
-          <!-- SECTION 2: Powers it -->
           <div class="kg-section">
             <div class="kg-section-header kg-power-header">
               <span class="kg-section-dot" style="background:#34d399"></span>
-              DRIVS AV
+              VISAT I DEMO
             </div>
             <div class="kg-section-items">
-              <div class="kg-item">FastAPI · Twin Engine · Solver</div>
-              <div class="kg-item">Mistral-large-2411 (OpenRouter)</div>
-              <div class="kg-item">NgRx Signals · 12 stores</div>
-              <div class="kg-item">WebSocket · DELTA-flöde 2s</div>
-              <div class="kg-item">Red Adversary · Friction Engine</div>
+              <div class="kg-item">Taktisk karta · lägesbild under press</div>
+              <div class="kg-item">AI COA-lösare · policy weights och reserve floor</div>
+              <div class="kg-item">Ritbordet · kontext, inte huvudbudskap</div>
+              <div class="kg-item">HITL och governance · samma beslutskedja</div>
             </div>
           </div>
 
-          <!-- SECTION 3: More exists -->
           <div class="kg-section">
             <div class="kg-section-header kg-more-header">
               <span class="kg-section-dot" style="background:#a78bfa"></span>
-              FINNS OCKSÅ
+              FORTSATT SKALA
             </div>
             <div class="kg-section-items">
-              <div class="kg-item">C2-resiliens · Beslutsfabrik</div>
-              <div class="kg-item">Kontrafaktiskt lab · Motståndstest</div>
-              <div class="kg-item">Logistikkonsol · Försörjningsvägar</div>
-              <div class="kg-item">Referensgraf · Docklager</div>
-              <div class="kg-item">Hotinspektor · Klassificering</div>
+              <div class="kg-item">C2 resilience · command friction och collapse horizon</div>
+              <div class="kg-item">Threat inspector · intent och osäkerhet i samma domänmodell</div>
+              <div class="kg-item">Demo director · scenario injection med samma kontrakt</div>
+              <div class="kg-item">Sovereign deployment · lokal eller EU utan semantisk drift</div>
             </div>
           </div>
 
-          <p class="kg-hint">Drag för att rotera · Scroll för att zooma · Klicka för nodinfo</p>
+          <p class="kg-hint">Samma state och samma ontologi gör att dessa ytor kan växa ihop utan att bli feature-islands.</p>
         </div>
 
         <!-- 3D Knowledge Graph Viewer -->
@@ -897,49 +1028,31 @@ const BASES_NORTH = [
 
       <div class="summary-grid">
         <div class="sum-card">
-          <div class="sum-num blue">14</div>
-          <div class="sum-label">Operativa vyer</div>
+          <div class="sum-num blue">Användare</div>
+          <div class="sum-label">Luftbevakare, flygstridsledare och command authority</div>
         </div>
         <div class="sum-card">
-          <div class="sum-num green">13</div>
-          <div class="sum-label">REST-endpoints + WebSocket</div>
+          <div class="sum-num green">Påverkan</div>
+          <div class="sum-label">Verksamhetskritiskt eftersom nästa våg avgör utfallet</div>
         </div>
         <div class="sum-card">
-          <div class="sum-num purple">127ms</div>
-          <div class="sum-label">Genomsnittlig AI-svarstid</div>
+          <div class="sum-num purple">Metod</div>
+          <div class="sum-label">Policy, robusthet och ontologi i samma theater state</div>
         </div>
         <div class="sum-card">
-          <div class="sum-num amber">+54pp</div>
-          <div class="sum-label">Beredskapsvinst vs. äldre system</div>
+          <div class="sum-num amber">Scope</div>
+          <div class="sum-label">Den mest intressanta delen av en större helhet, enligt kickoffen</div>
         </div>
       </div>
 
       <div class="summary-pillars">
-        <div class="pillar">
-          <div class="pillar-icon">⊙</div>
-          <div class="pillar-title">Situationsmedvetenhet</div>
-          <div class="pillar-desc">Realtids lägesbild med hotintentanalys och sensorsammansmältning</div>
-        </div>
-        <div class="pillar">
-          <div class="pillar-icon">⊛</div>
-          <div class="pillar-title">AI-beslutsstöd</div>
-          <div class="pillar-desc">Pareto-optimal COA-analys med Mistral LLM-motivering på svenska</div>
-        </div>
-        <div class="pillar">
-          <div class="pillar-icon">⬡</div>
-          <div class="pillar-title">Manöverplanering</div>
-          <div class="pillar-desc">Interaktivt ritbord med rörelse­simulering och C2-export</div>
-        </div>
-        <div class="pillar">
-          <div class="pillar-icon">◈</div>
-          <div class="pillar-title">Styrning & Kontroll</div>
-          <div class="pillar-desc">HITL-auktoritet, revisionsspår och förklarbar AI i varje beslut</div>
-        </div>
-        <div class="pillar">
-          <div class="pillar-icon">⊟</div>
-          <div class="pillar-title">Europeisk & Säker</div>
-          <div class="pillar-desc">Öppen källkod, GDPR-kompatibel, hostbar vid NCS Linköping</div>
-        </div>
+        @for (method of novelMethods; track method.id; let i = $index) {
+          <div class="pillar" [class.pillar-active]="summaryFocusIndex() === i" (click)="summaryFocusIndex.set(i)">
+            <div class="pillar-icon">{{ method.tag }}</div>
+            <div class="pillar-title">{{ method.title }}</div>
+            <div class="pillar-desc">{{ method.body }}</div>
+          </div>
+        }
       </div>
 
       <div class="summary-cta">
@@ -947,6 +1060,14 @@ const BASES_NORTH = [
         <span class="cta-note">Kräver åtkomstnyckel</span>
       </div>
     </div>
+    }
+
+    @if (!slideDemoStarted()[currentSlide()]) {
+      <button class="demo-overlay" type="button" (click)="startCurrentSlideDemo($event)">
+        <span class="demo-overlay-kicker">Klicka en gång för att starta demo</span>
+        <span class="demo-overlay-title">{{ slides[currentSlide()].title }}</span>
+        <span class="demo-overlay-sub">Förloppet körs automatiskt efter start. Därefter kan du klicka på objekten och scruba tiden.</span>
+      </button>
     }
 
   </main>
@@ -959,9 +1080,22 @@ const BASES_NORTH = [
         <span class="console-dot amber"></span>
         <span class="console-dot green"></span>
       </div>
-      <span class="console-title">BDT INFERENCE LOG</span>
+      <div class="console-header-copy">
+        <span class="console-title">BDT BACKEND COMMAND LOG</span>
+        <span class="console-subtitle">{{ slides[currentSlide()].eyebrow }} · {{ slides[currentSlide()].title }}</span>
+      </div>
     </div>
     <div class="console-body">
+      <div class="console-meta">
+        <span>SLIDE DEMO MODE</span>
+        <span>Click once to start, then interact with the slide</span>
+      </div>
+      @if (visibleConsoleLines().length === 0) {
+        <div class="console-line console-state">
+          <span class="console-prompt">></span>
+          <span>Klicka en gång på sliden för att starta demo-flödet.</span>
+        </div>
+      }
       @for (line of visibleConsoleLines(); track $index) {
         <div class="console-line" [class.console-dim]="$index < visibleConsoleLines().length - 4">
           <span class="console-prompt">$</span>
@@ -1182,6 +1316,18 @@ const BASES_NORTH = [
     .phase-bar-fill { height: 100%; background: linear-gradient(90deg, #5ca7ff, #7ce0be); border-radius: 1px; transition: width 0.06s linear; }
     .phase-bar-fill.phase-fill-intercept { background: linear-gradient(90deg, #7ce0be, #5ca7ff); }
     .stat-r { color: var(--s-red); }
+    .timeline-control {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 12px; border-radius: 6px;
+      border: 1px solid var(--s-border); background: rgba(255,255,255,0.02);
+    }
+    .timeline-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .timeline-label { font-size: 10px; color: var(--s-muted); font-family: monospace; font-weight: 700; }
+    .timeline-slider {
+      width: 100%;
+      accent-color: var(--s-blue);
+      background: transparent;
+    }
 
     /* ── AI slide ───────────────────────────────────────────────────── */
     .slide-ai { overflow-y: auto; }
@@ -1193,7 +1339,8 @@ const BASES_NORTH = [
     .pareto-svg { width: 100%; height: 200px; }
     .pulse-ring { animation: pulseRing 2s ease-in-out infinite; }
     @keyframes pulseRing { 0%,100% { opacity: 0.5; r: 15; } 50% { opacity: 0.1; r: 22; } }
-    .coa-card { padding: 10px 12px; border: 1px solid var(--s-border); border-radius: 6px; background: rgba(255,255,255,0.02); }
+    .coa-card { padding: 10px 12px; border: 1px solid var(--s-border); border-radius: 6px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s; }
+    .coa-card:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
     .coa-selected { border-color: rgba(92,167,255,0.4); background: rgba(92,167,255,0.06); }
     .coa-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
     .coa-id { font-size: 10px; font-weight: 900; font-family: monospace; }
@@ -1222,7 +1369,9 @@ const BASES_NORTH = [
     }
     .board-svg { flex: 1; display: block; }
     .board-features { display: flex; flex-direction: column; gap: 10px; }
-    .board-feat { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border: 1px solid var(--s-border); border-radius: 6px; background: rgba(255,255,255,0.02); }
+    .board-feat { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border: 1px solid var(--s-border); border-radius: 6px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s; }
+    .board-feat:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
+    .board-feat-active { border-color: rgba(92,167,255,0.35); background: rgba(92,167,255,0.08); }
     .feat-icon { font-size: 16px; color: var(--s-blue); width: 20px; flex-shrink: 0; }
     .feat-title { font-size: 12px; font-weight: 700; color: var(--s-text); }
     .feat-sub { font-size: 10px; color: var(--s-muted); margin-top: 2px; }
@@ -1230,7 +1379,9 @@ const BASES_NORTH = [
     /* ── ML slide ────────────────────────────────────────────────────── */
     .slide-ml { overflow-y: auto; }
     .ml-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-    .ml-card { padding: 18px; border: 1px solid var(--s-border); border-radius: 8px; background: rgba(255,255,255,0.02); }
+    .ml-card { padding: 18px; border: 1px solid var(--s-border); border-radius: 8px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s; }
+    .ml-card:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
+    .ml-card-focus { border-color: rgba(92,167,255,0.35); background: rgba(92,167,255,0.06); box-shadow: 0 0 0 1px rgba(92,167,255,0.08) inset; }
     .ml-card-primary { border-color: rgba(92,167,255,0.2); background: rgba(92,167,255,0.04); }
     .ml-card-highlight { border-color: rgba(124,224,190,0.25); background: rgba(124,224,190,0.04); }
     .ml-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
@@ -1269,7 +1420,8 @@ const BASES_NORTH = [
 
     /* ── Governance slide ────────────────────────────────────────────── */
     .gov-authority-levels { display: flex; flex-direction: column; gap: 6px; }
-    .auth-level { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--s-border); background: rgba(255,255,255,0.02); }
+    .auth-level { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--s-border); background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s; }
+    .auth-level:hover { border-color: rgba(245,158,11,0.28); background: rgba(245,158,11,0.05); }
     .active-auth { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.06); }
     .auth-badge { font-size: 9px; font-weight: 900; font-family: monospace; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
     .auto .auth-badge { background: rgba(124,224,190,0.15); color: var(--s-green); }
@@ -1283,7 +1435,7 @@ const BASES_NORTH = [
     .gm-g { color: var(--s-green); }
     .gm-b { color: var(--s-blue); }
     .gm-l { font-size: 8px; color: var(--s-muted); text-transform: uppercase; letter-spacing: 0.1em; }
-    .gov-right { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 16px; overflow-y: auto; }
+    .gov-right { display: flex; flex-direction: column; align-items: stretch; gap: 16px; padding: 16px; overflow-y: auto; }
     .gov-gauge-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: var(--s-muted); }
     .gauge-svg { width: 240px; height: 180px; }
     .gov-factors { width: 100%; display: flex; flex-direction: column; gap: 8px; }
@@ -1302,7 +1454,7 @@ const BASES_NORTH = [
     .sum-num.purple { color: var(--s-purple); }
     .sum-num.amber { color: var(--s-amber); }
     .sum-label { font-size: 11px; color: var(--s-muted); }
-    .summary-pillars { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; }
+    .summary-pillars { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
     .pillar { padding: 14px; border: 1px solid var(--s-border); border-radius: 8px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 6px; }
     .pillar-icon { font-size: 18px; color: var(--s-blue); }
     .pillar-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
@@ -1322,28 +1474,37 @@ const BASES_NORTH = [
 
     /* ── Console window ──────────────────────────────────────────────── */
     .console-window {
-      position: fixed; bottom: 64px; right: 24px; z-index: 50;
-      width: 340px;
-      background: rgba(3,7,12,0.92); border: 1px solid rgba(92,167,255,0.2);
-      border-radius: 8px; overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      backdrop-filter: blur(8px);
+      position: fixed; bottom: 60px; right: 24px; z-index: 50;
+      width: min(680px, calc(100vw - 48px));
+      background: rgba(3,7,12,0.94); border: 1px solid rgba(92,167,255,0.28);
+      border-radius: 10px; overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+      backdrop-filter: blur(10px);
     }
     .console-header {
-      display: flex; align-items: center; gap: 8px; padding: 6px 10px;
-      border-bottom: 1px solid rgba(92,167,255,0.1);
-      background: rgba(92,167,255,0.05);
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+      border-bottom: 1px solid rgba(92,167,255,0.14);
+      background: rgba(92,167,255,0.07);
     }
+    .console-header-copy { display: flex; flex-direction: column; gap: 3px; }
     .console-dots { display: flex; gap: 4px; }
-    .console-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .console-dot { width: 9px; height: 9px; border-radius: 50%; }
     .console-dot.red { background: #ef4444; opacity: 0.7; }
     .console-dot.amber { background: #f59e0b; opacity: 0.7; }
     .console-dot.green { background: #7ce0be; opacity: 0.7; }
-    .console-title { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(92,167,255,0.7); font-family: monospace; }
-    .console-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; min-height: 80px; max-height: 140px; overflow: hidden; }
-    .console-line { font-size: 10px; font-family: 'JetBrains Mono', 'Courier New', monospace; color: rgba(124,224,190,0.9); display: flex; gap: 6px; line-height: 1.5; }
+    .console-title { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.22em; color: rgba(92,167,255,0.98); font-family: monospace; }
+    .console-subtitle { font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: rgba(156,176,199,0.78); font-family: monospace; }
+    .console-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-height: 160px; max-height: 280px; overflow: hidden; }
+    .console-meta {
+      display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px;
+      font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.18em;
+      color: rgba(156,176,199,0.78); border-bottom: 1px solid rgba(148,189,255,0.1);
+      margin-bottom: 6px;
+    }
+    .console-line { font-size: 13px; font-family: 'JetBrains Mono', 'Courier New', monospace; color: rgba(124,224,190,0.95); display: flex; gap: 6px; line-height: 1.65; }
     .console-dim { opacity: 0.4; }
     .console-prompt { color: rgba(92,167,255,0.6); flex-shrink: 0; }
+    .console-state { color: rgba(237,245,255,0.88); }
     .console-cursor {
       width: 7px; height: 12px; background: rgba(124,224,190,0.8);
       animation: blink 1s step-end infinite; margin-top: 2px;
@@ -1374,7 +1535,9 @@ const BASES_NORTH = [
     }
     .nav-dot-active { width: 22px; border-radius: 3px; background: var(--s-blue); }
     .slide-counter {
-      position: fixed; bottom: 24px; right: 380px; z-index: 20;
+      position: fixed; bottom: 24px; left: 24px; z-index: 20;
+      padding: 4px 10px; border-radius: 999px;
+      border: 1px solid var(--s-border); background: rgba(7,14,23,0.7);
       font-size: 10px; font-family: monospace; color: var(--s-muted); font-weight: 700;
     }
 
@@ -1421,10 +1584,39 @@ const BASES_NORTH = [
     .kg-section-items { display: flex; flex-direction: column; gap: 2px; padding-left: 13px; }
     .kg-item {
       font-size: 11px; color: var(--s-muted); line-height: 1.6; padding: 2px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.04); cursor: pointer; transition: color 0.2s;
     }
+    .kg-item:hover { color: var(--s-text); }
+    .kg-item-active { color: var(--s-text); }
     .kg-item:last-child { border-bottom: none; }
     .kg-hint { font-size: 10px; font-family: monospace; color: rgba(156,176,199,0.4); margin: 0; }
+    .pillar { cursor: pointer; transition: all 0.2s; }
+    .pillar:hover { border-color: rgba(92,167,255,0.28); background: rgba(92,167,255,0.05); }
+    .pillar-active { border-color: rgba(92,167,255,0.35); background: rgba(92,167,255,0.06); }
+
+    /* ── Demo overlay ──────────────────────────────────────────────── */
+    .demo-overlay {
+      position: absolute; inset: 0; z-index: 30;
+      display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;
+      gap: 8px; padding: 40px 56px 120px;
+      border: none; background:
+        linear-gradient(180deg, rgba(5,11,18,0.08), rgba(5,11,18,0.42)),
+        radial-gradient(circle at 20% 30%, rgba(92,167,255,0.12), transparent 30%);
+      color: var(--s-text); text-align: left; cursor: pointer;
+      backdrop-filter: blur(2px);
+    }
+    .demo-overlay:hover { background:
+        linear-gradient(180deg, rgba(5,11,18,0.04), rgba(5,11,18,0.34)),
+        radial-gradient(circle at 20% 30%, rgba(92,167,255,0.16), transparent 30%); }
+    .demo-overlay-kicker {
+      font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.24em; color: var(--s-blue);
+    }
+    .demo-overlay-title {
+      font-size: clamp(24px, 3vw, 42px); font-weight: 300; letter-spacing: -0.03em;
+    }
+    .demo-overlay-sub {
+      max-width: 42rem; font-size: 13px; line-height: 1.6; color: var(--s-muted);
+    }
   `],
 })
 export class Showcase implements OnInit, OnDestroy {
@@ -1434,9 +1626,22 @@ export class Showcase implements OnInit, OnDestroy {
   readonly terrain = TERRAIN;
   readonly basesNorth = BASES_NORTH;
   readonly coas = COAS;
+  readonly operatorSteps = OPERATOR_STEPS;
+  readonly validationSteps = VALIDATION_STEPS;
+  readonly novelMethods = NOVEL_METHODS;
+  readonly ontologyDomains = ONTOLOGY_DOMAINS;
+  readonly unificationEffects = UNIFICATION_EFFECTS;
 
   currentSlide = signal(0);
   mapScenario = signal(0);
+  selectedScenarioTrackId = signal<string | null>(null);
+  slideDemoStarted = signal<Record<number, boolean>>({});
+  selectedCoaId = signal<string>('COA-BAL');
+  validationFocusIndex = signal(0);
+  modelFocusIndex = signal(0);
+  ontologyFocusIndex = signal(0);
+  unificationFocusIndex = signal(0);
+  summaryFocusIndex = signal(0);
 
   private _consoleLine = signal(0);
   private _consoleSlide = signal(0);
@@ -1452,8 +1657,14 @@ export class Showcase implements OnInit, OnDestroy {
 
   // Track animation
   private _trackTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly _flyTicks = 220;
+  private readonly _interceptTicks = 80;
+  private _demoTick = 0;
+  trackPlaying = signal(true);
   trackProgress = signal(0);
   trackPhase = signal<'fly' | 'intercept'>('fly');
+  private _slideDemoTimer: ReturnType<typeof setInterval> | null = null;
+  private _slideDemoStep = 0;
 
   animatedTracks = computed<AnimatedTrack[]>(() => {
     const p = easeInOutCubic(Math.min(1, this.trackProgress()));
@@ -1464,21 +1675,30 @@ export class Showcase implements OnInit, OnDestroy {
     }));
   });
 
+  selectedScenarioTrack = computed(() =>
+    this.animatedTracks().find(track => track.id === this.selectedScenarioTrackId()) ?? null
+  );
+
   intercepting = computed(() => this.trackPhase() === 'intercept');
 
   ngOnInit(): void {
-    this._startConsole(0);
+    this._resetConsole(0);
   }
 
   ngOnDestroy(): void {
     if (this._consoleTimer) clearInterval(this._consoleTimer);
     if (this._trackTimer) clearInterval(this._trackTimer);
+    if (this._slideDemoTimer) clearInterval(this._slideDemoTimer);
   }
 
-  private _startConsole(slide: number): void {
+  private _resetConsole(slide: number): void {
     if (this._consoleTimer) clearInterval(this._consoleTimer);
     this._consoleSlide.set(slide);
     this._consoleLine.set(0);
+  }
+
+  private _startConsole(slide: number): void {
+    this._resetConsole(slide);
     const seq = CONSOLE_SEQUENCES[slide] ?? [];
     let i = 0;
     this._consoleTimer = setInterval(() => {
@@ -1492,38 +1712,163 @@ export class Showcase implements OnInit, OnDestroy {
     if (this._trackTimer) clearInterval(this._trackTimer);
     this.trackProgress.set(0);
     this.trackPhase.set('fly');
-    let tick = 0;
-    const FLY_TICKS = 160;   // 8s at 50ms
-    const INTERCEPT_TICKS = 40; // 2s
+    this.trackPlaying.set(true);
+    this._demoTick = 0;
+    let cueIndex = Math.max(0, DEMO_CUES.findIndex(cue => cue.scenarioIndex === this.mapScenario()));
+    if (cueIndex === -1) cueIndex = 0;
+    this.mapScenario.set(DEMO_CUES[cueIndex].scenarioIndex);
+    this.selectedScenarioTrackId.set(DEMO_CUES[cueIndex].trackId);
     this._trackTimer = setInterval(() => {
-      tick++;
-      if (tick <= FLY_TICKS) {
-        this.trackProgress.set(tick / FLY_TICKS);
-      } else if (tick === FLY_TICKS + 1) {
+      if (!this.trackPlaying()) return;
+      this._demoTick++;
+      if (this._demoTick <= this._flyTicks) {
+        this.trackProgress.set(this._demoTick / this._flyTicks);
+      } else if (this._demoTick === this._flyTicks + 1) {
         this.trackPhase.set('intercept');
-      } else if (tick > FLY_TICKS + INTERCEPT_TICKS) {
-        // Auto-cycle to next scenario
-        this.mapScenario.set((this.mapScenario() + 1) % MAP_SCENARIOS.length);
-        tick = 0;
+      } else if (this._demoTick > this._flyTicks + this._interceptTicks) {
+        // Auto-cycle to next cue in the scripted demo
+        cueIndex = (cueIndex + 1) % DEMO_CUES.length;
+        this.mapScenario.set(DEMO_CUES[cueIndex].scenarioIndex);
+        this.selectedScenarioTrackId.set(DEMO_CUES[cueIndex].trackId);
+        this._demoTick = 0;
         this.trackProgress.set(0);
         this.trackPhase.set('fly');
       }
     }, 50);
   }
 
+  private _clearSlideDemoTimer(): void {
+    if (this._slideDemoTimer) {
+      clearInterval(this._slideDemoTimer);
+      this._slideDemoTimer = null;
+    }
+  }
+
+  private _setSlideStarted(index: number, started: boolean): void {
+    this.slideDemoStarted.update(state => ({ ...state, [index]: started }));
+  }
+
+  startCurrentSlideDemo(event?: MouseEvent): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    const slide = this.currentSlide();
+    if (this.slideDemoStarted()[slide]) return;
+
+    this._setSlideStarted(slide, true);
+    this._startConsole(slide);
+    this._clearSlideDemoTimer();
+    this._slideDemoStep = 0;
+
+    if (slide === 1) {
+      this._startTrackAnim();
+      return;
+    }
+
+    if (slide === 2) {
+      this._slideDemoTimer = setInterval(() => {
+        this.selectedCoaId.set(COA_CYCLE[this._slideDemoStep % COA_CYCLE.length]);
+        this._slideDemoStep++;
+      }, 1400);
+      return;
+    }
+
+    if (slide === 3) {
+      this._slideDemoTimer = setInterval(() => {
+        this.validationFocusIndex.set(this._slideDemoStep % this.validationSteps.length);
+        this._slideDemoStep++;
+      }, 1500);
+      return;
+    }
+
+    if (slide === 4) {
+      this._slideDemoTimer = setInterval(() => {
+        this.modelFocusIndex.set(this._slideDemoStep % 4);
+        this._slideDemoStep++;
+      }, 1300);
+      return;
+    }
+
+    if (slide === 5) {
+      this._slideDemoTimer = setInterval(() => {
+        this.ontologyFocusIndex.set(this._slideDemoStep % this.ontologyDomains.length);
+        this._slideDemoStep++;
+      }, 1250);
+      return;
+    }
+
+    if (slide === 6) {
+      this._slideDemoTimer = setInterval(() => {
+        this.unificationFocusIndex.set(this._slideDemoStep % this.unificationEffects.length);
+        this._slideDemoStep++;
+      }, 1200);
+      return;
+    }
+
+    if (slide === 7) {
+      this._slideDemoTimer = setInterval(() => {
+        this.summaryFocusIndex.set(this._slideDemoStep % this.novelMethods.length);
+        this._slideDemoStep++;
+      }, 1500);
+    }
+  }
+
   selectScenario(idx: number): void {
     this.mapScenario.set(idx);
-    this._startTrackAnim();
+    const firstTrack = MAP_SCENARIOS[idx]?.[0];
+    if (firstTrack) this.selectedScenarioTrackId.set(firstTrack.id);
+    if (this.slideDemoStarted()[1]) {
+      this._startTrackAnim();
+    }
+  }
+
+  selectScenarioTrack(id: string): void {
+    this.selectedScenarioTrackId.set(id);
+  }
+
+  toggleTrackPlayback(): void {
+    this.trackPlaying.update(v => !v);
+  }
+
+  onTrackScrub(e: Event): void {
+    const target = e.target as HTMLInputElement | null;
+    if (!target) return;
+    const value = Math.max(0, Math.min(100, Number(target.value)));
+    this.trackPlaying.set(false);
+    this.trackProgress.set(value / 100);
+    this.trackPhase.set(value >= 90 ? 'intercept' : 'fly');
+    this._demoTick = Math.round((value / 100) * (this._flyTicks + this._interceptTicks));
+  }
+
+  trackSummary(track: AnimatedTrack): string {
+    if (track.type === 'missile') {
+      return 'Inkommande salvo som kräver snabb prioritering och skyddad beredskap.';
+    }
+    if (track.type === 'air') {
+      return 'Luftburen aktör som påverkar intent och prioritet i lägesbilden.';
+    }
+    return 'Ytobjekt som påverkar sjö- och luftläget i samma theater state.';
   }
 
   goTo(index: number): void {
     const prev = this.currentSlide();
     this.currentSlide.set(index);
-    this._startConsole(index);
+    this._resetConsole(index);
+    this._clearSlideDemoTimer();
+    this._setSlideStarted(index, false);
+    if (index === 2) this.selectedCoaId.set('COA-BAL');
+    if (index === 3) this.validationFocusIndex.set(0);
+    if (index === 4) this.modelFocusIndex.set(0);
+    if (index === 5) this.ontologyFocusIndex.set(0);
+    if (index === 6) this.unificationFocusIndex.set(0);
+    if (index === 7) this.summaryFocusIndex.set(0);
     if (index === 1) {
-      this._startTrackAnim();
+      this.trackProgress.set(0);
+      this.trackPhase.set('fly');
     } else if (prev === 1) {
       if (this._trackTimer) { clearInterval(this._trackTimer); this._trackTimer = null; }
+      this.trackPlaying.set(true);
+      this.selectedScenarioTrackId.set(null);
     }
   }
 
