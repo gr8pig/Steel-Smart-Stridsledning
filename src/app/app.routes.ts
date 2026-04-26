@@ -16,7 +16,7 @@ export const routes: Routes = [
   },
   {
     path: 'commander',
-    loadComponent: () => import('./features/commander-orchestrator').then(m => m.CommanderOrchestrator)
+    loadComponent: () => import('./features/c2/c2-orchestrator.component').then(m => m.CommanderOrchestrator)
   },
   {
     path: 'readiness',
@@ -40,7 +40,7 @@ export const routes: Routes = [
   },
   {
     path: 'authority',
-    loadComponent: () => import('./features/authority-dashboard').then(m => m.AuthorityDashboard)
+    loadComponent: () => import('./features/c2/authority-dashboard.component').then(m => m.AuthorityDashboard)
   },
   {
     path: 'logistics',

@@ -12,6 +12,7 @@ export const PLATFORM_NODE_CATEGORIES: NodeCategory[] = [
   'INTELLIGENCE',
   'GOVERNANCE',
   'SURFACE',
+  'DOCUMENTATION',
 ];
 
 export const PLATFORM_AREAS: PlatformArea[] = [
@@ -256,7 +257,7 @@ const OPERATIONS_NODES: TechNode[] = [
     description: 'Core command surfaces for mission execution.',
     what: 'Overview, tactical, commander, readiness, logistics, and field-facing screens.',
     why: 'Represents the primary route group a user reaches when working the system.',
-    where: '`mission-overview.ts`, `tactical-console.ts`, `commander-orchestrator.ts`, `readiness-console.ts`, `logistics-console.ts`, `field-console.ts`.',
+    where: '`mission-overview.ts`, `tactical-console.ts`, `c2/c2-orchestrator.component.ts`, `readiness-console.ts`, `logistics-console.ts`, `field-console.ts`.',
     who: 'Commander, tactical operator, readiness officer, logistics officer.',
     sourcePath: 'Steel-Smart-Stridsledning/src/app/features/mission-overview.ts',
     connectedTo: ['APP_001', 'NAV_001', 'TACT_001', 'CMD_001', 'READ_001', 'LOG_001', 'FIELD_001'],
@@ -298,7 +299,7 @@ const OPERATIONS_NODES: TechNode[] = [
     description: 'Governance, authority, and audit surfaces.',
     what: 'Governance page, authority dashboard, and audit logger behavior.',
     why: 'Keeps commander decisions traceable and reviewable.',
-    where: '`governance.ts`, `authority-dashboard.ts`, `audit-logger.ts`.',
+    where: '`governance.ts`, `c2/authority-dashboard.component.ts`, `audit-logger.ts`.',
     who: 'Governance reviewer and command authority.',
     sourcePath: 'Steel-Smart-Stridsledning/src/app/features/governance.ts',
     connectedTo: ['APP_001', 'NAV_001', 'GOV_001', 'AUTH_001', 'AUD_001', 'POL_001'],
@@ -478,9 +479,9 @@ const ANALYTICAL_AND_ROUTE_NODES: TechNode[] = [
     description: 'Commander view and policy panel.',
     what: 'The commander orchestrator, header, frontier, outcome, and policy panels.',
     why: 'Makes the policy trade-offs explicit before a decision is locked in.',
-    where: '`features/commander-orchestrator.ts`, `commander-header-panel.ts`, `commander-frontier-panel.ts`, `commander-outcome-panel.ts`, `commander-policy-panel.ts`.',
+    where: '`features/c2/c2-orchestrator.component.ts`, `commander-header-panel.ts`, `commander-frontier-panel.ts`, `commander-outcome-panel.ts`, `commander-policy-panel.ts`.',
     who: 'Commander and decision authority.',
-    sourcePath: 'Steel-Smart-Stridsledning/src/app/features/commander-orchestrator.ts',
+    sourcePath: 'Steel-Smart-Stridsledning/src/app/features/c2/c2-orchestrator.component.ts',
     connectedTo: ['OPER_001', 'POL_001', 'GOVERNANCE_001', 'FAB_001'],
     x: 620,
     y: 330,
@@ -1081,7 +1082,7 @@ const REFERENCE_DOC_NODES: TechNode[] = REFERENCE_DOCS.map((doc, index, docs) =>
   node({
     id: refDocId(doc.slug),
     label: `${doc.order.toString().padStart(2, '0')}_${doc.slug.replace(/^\d+-/, '').replace(/-/g, '_').toUpperCase()}`,
-    category: 'SURFACE',
+    category: 'DOCUMENTATION',
     area: 'docs',
     status: doc.status,
     description: doc.summary,
