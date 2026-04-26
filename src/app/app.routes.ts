@@ -12,15 +12,15 @@ export const routes: Routes = [
   },
   {
     path: 'readiness',
-    loadComponent: () => import('./features/readiness-console').then(m => m.ReadinessConsole)
+    loadComponent: () => import('./features/lab/readiness-console.component').then(m => m.ReadinessConsole)
   },
   {
     path: 'robustness-lab',
-    loadComponent: () => import('./features/robustness-lab').then(m => m.RobustnessLab)
+    loadComponent: () => import('./features/lab/robustness-lab.component').then(m => m.RobustnessLab)
   },
   {
     path: 'counterfactual-lab',
-    loadComponent: () => import('./features/counterfactual-lab').then(m => m.CounterfactualLab)
+    loadComponent: () => import('./features/lab/counterfactual-lab.component').then(m => m.CounterfactualLab)
   },
   {
     path: 'governance',
@@ -44,11 +44,11 @@ export const routes: Routes = [
   },
   {
     path: 'c2-resilience',
-    loadComponent: () => import('./features/c2-resilience-lab').then(m => m.C2ResilienceLabComponent)
+    loadComponent: () => import('./features/lab/c2-resilience-lab.component').then(m => m.C2ResilienceLabComponent)
   },
   {
     path: 'drawing-board',
-    loadComponent: () => import('./features/drawing-board').then(m => m.DrawingBoard)
+    loadComponent: () => import('./features/lab/drawing-board.component').then(m => m.DrawingBoard)
   },
   {
     path: 'showcase',
