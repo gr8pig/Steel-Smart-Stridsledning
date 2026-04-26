@@ -14,13 +14,15 @@ import { SteelApiService } from '../../core/services/steel-api.service';
 import { SensorFeedStore } from '../../core/state/sensor-feed.store';
 import { DecisionFabricStore } from '../../core/state/decision-fabric.store';
 import { OperationalDirectiveQueueService } from '../../core/services/operational-directive-queue.service';
-import { ThreatTwin, COATwin, MapFeature } from '../../shared/domain/models';
+import { ThreatTwin, MapFeature } from '../../shared/domain/models';
 import { SupplyNode, SupplyCorridor } from '../../shared/domain/logistics-ontology';
 
 import { ENGAGEMENT_MAP_FEATURES } from '../../shared/domain/engagement-map.data';
 import { CapabilityLayerStore } from '../../core/state/capability-layer.store';
 import { WindowFrameComponent } from '../../shared/ui/window-frame/window-frame.component';
 import { SafetyBanner } from '../../shared/ui/safety-banner';
+import { TacticalThreatQueueComponent } from './components/tactical-threat-queue.component';
+import { TacticalRecommendationsComponent } from './components/tactical-recommendations.component';
 
 interface DegradedHeatCell {
   id: string;
@@ -37,50 +39,17 @@ interface DegradedHeatCell {
 @Component({
   selector: 'app-tactical-console',
   standalone: true,
-  imports: [CommonModule, MatIconModule, SafetyBanner, WindowFrameComponent],
+  imports: [
+    CommonModule, 
+    MatIconModule, 
+    SafetyBanner, 
+    WindowFrameComponent,
+    TacticalThreatQueueComponent,
+    TacticalRecommendationsComponent
+  ],
   template: `
     <div class="tactical-shell h-full w-full flex overflow-hidden relative">
       <app-safety-banner />
-
-      <!-- HITL Manual Confirmation Modal -->
-      @if (_pendingConfirm()) {
-        <div class="absolute inset-0 z-[200] bg-black/70 flex items-center justify-center backdrop-blur-sm">
-          <div class="bg-boreal-panel border border-boreal-red/50 rounded-sm p-8 shadow-[0_0_60px_rgba(239,68,68,0.2)] max-w-sm w-full mx-4 animate-in zoom-in-95 duration-200">
-            <div class="flex items-center gap-3 mb-4">
-              <mat-icon class="text-boreal-red !text-2xl !w-6 !h-6">lock</mat-icon>
-              <div class="flex flex-col">
-                <span class="text-boreal-red font-black text-xs uppercase tracking-[0.2em]">HITL Authority Active</span>
-                <span class="text-[9px] text-boreal-text-muted font-mono uppercase tracking-wider">Manual Confirmation Required</span>
-              </div>
-            </div>
-            @if (recommendation(); as rec) {
-              <div class="mb-5 p-3 bg-boreal-canvas rounded-sm border border-boreal-border space-y-1">
-                <div class="text-[8px] text-boreal-text-muted uppercase tracking-widest">Pending Engagement</div>
-                <div class="text-[11px] font-black text-boreal-text-primary uppercase tracking-wider">{{ rec.trackId }}</div>
-                <div class="text-[10px] text-boreal-text-secondary">{{ rec.title }}</div>
-                <div class="flex gap-3 pt-1 text-[8px] font-mono text-boreal-text-muted">
-                  <span>Base: <span class="text-boreal-text-secondary font-bold">{{ rec.baseName }}</span></span>
-                  <span>Conf: <span class="text-boreal-text-secondary font-bold">{{ rec.confidence }}%</span></span>
-                </div>
-              </div>
-            }
-            <p class="text-[10px] text-boreal-text-secondary leading-relaxed mb-6 italic">
-              Policy authority is <span class="font-black text-boreal-text-primary">MANUAL (HITL)</span>.
-              All engagements require explicit operator confirmation before execution.
-            </p>
-            <div class="flex gap-3">
-              <button (click)="cancelConfirm()"
-                class="flex-grow py-2.5 bg-transparent border border-boreal-border rounded-sm text-boreal-text-muted text-[10px] font-bold uppercase tracking-widest hover:text-boreal-text-primary transition-colors">
-                CANCEL
-              </button>
-              <button (click)="confirmManualEngagement()"
-                class="flex-grow py-2.5 bg-boreal-red border border-boreal-red rounded-sm text-white text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-boreal-red/20">
-                AUTHORIZE
-              </button>
-            </div>
-          </div>
-        </div>
-      }
 
       <!-- Deployment Status Overlay -->
       @if (orchestration.publishedIntent(); as intent) {
@@ -98,121 +67,7 @@ interface DegradedHeatCell {
       
       <!-- Left Threat Queue -->
       <app-window-frame title="Threat Queue" class="absolute top-4 left-4 z-20">
-        <div class="tactical-panel tactical-panel--queue w-85 flex flex-col">
-          <div class="panel-header uppercase tracking-widest text-[10px] text-boreal-text-muted flex items-center justify-between mb-2">
-            <span>Live Threats</span>
-            <div class="flex items-center gap-1.5">
-              <span class="px-1 rounded border text-[8px] font-black"
-                [class.border-boreal-blue/40]="tactical.sync().source === 'AUTHORITATIVE'"
-                [class.text-boreal-blue]="tactical.sync().source === 'AUTHORITATIVE'"
-                [class.border-boreal-amber/40]="tactical.sync().source !== 'AUTHORITATIVE'"
-                [class.text-boreal-amber]="tactical.sync().source !== 'AUTHORITATIVE'">
-                {{ tactical.sync().source }}
-              </span>
-              <span class="bg-boreal-red/10 text-boreal-red px-1 rounded">{{capabilityStore.remappedTracks().length}} TOTAL</span>
-              
-              <div class='relative'>
-                <button (click)='showScenarioPicker.set(!showScenarioPicker())'
-                  class='flex items-center gap-1 px-2 py-0.5 rounded-sm border border-boreal-border/50
-                         text-[8px] font-black uppercase tracking-widest text-boreal-text-muted
-                         hover:border-boreal-blue/50 hover:text-boreal-blue transition-all'>
-                  <mat-icon class='!text-[10px] !w-3 !h-3'>tune</mat-icon>
-                  SCENARIO
-                </button>
-                @if (showScenarioPicker()) {
-                  <div class='fixed inset-0 z-40' 
-                       (click)='showScenarioPicker.set(false)'
-                       (keydown.escape)='showScenarioPicker.set(false)'
-                       (keydown.enter)='showScenarioPicker.set(false)'
-                       tabindex="0" role="button" aria-label="Close scenario picker"></div>
-                  <div class='absolute left-0 top-full mt-1 z-50 w-64 bg-boreal-panel border
-                              border-boreal-border rounded-sm shadow-2xl overflow-hidden'>
-                    <div class='px-3 py-2 text-[8px] font-black uppercase tracking-widest
-                                text-boreal-text-muted bg-boreal-panel-muted/30 border-b border-boreal-border'>
-                      Load Scenario Preset
-                    </div>
-                    @for (preset of scenarioPresets; track preset.id) {
-                      <button (click)='loadPreset(preset)'
-                        class='w-full flex items-start gap-3 px-3 py-2.5 text-left
-                               hover:bg-boreal-panel-muted/50 border-b border-boreal-border/30
-                               transition-colors last:border-0'>
-                        <span class='shrink-0 mt-0.5 px-1 py-px rounded-sm text-[7px] font-black
-                                     uppercase tracking-widest'
-                              [class.bg-boreal-red/20]='preset.color === "boreal-red"'
-                              [class.text-boreal-red]='preset.color === "boreal-red"'
-                              [class.bg-boreal-amber/20]='preset.color === "boreal-amber"'
-                              [class.text-boreal-amber]='preset.color === "boreal-amber"'>
-                          {{preset.badge}}
-                        </span>
-                        <div class='flex flex-col min-w-0'>
-                          <span class='text-[10px] font-bold text-boreal-text-primary uppercase
-                                       tracking-tight truncate'>{{preset.name}}</span>
-                          <span class='text-[8px] text-boreal-text-muted leading-relaxed mt-0.5'>
-                            {{preset.description}}
-                          </span>
-                        </div>
-                      </button>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-          
-          <div class="flex-grow overflow-y-auto select-none max-h-[400px]">
-              @for (track of capabilityStore.remappedTracks(); track track.id) {
-                  <button 
-                      (click)="selectTrack(track.id)"
-                      [class.bg-boreal-panel-elevated]="tactical.selectedTrackId() === track.id"
-                      [class.border-l-3]="tactical.selectedTrackId() === track.id"
-                      [class.border-boreal-blue]="tactical.selectedTrackId() === track.id"
-                      class="w-full text-left p-4 border-b border-boreal-border hover:bg-boreal-panel-muted/50 transition-colors cursor-pointer group focus:outline-none focus:bg-boreal-panel-muted/50"
-                  >
-                      <div class="flex items-center justify-between mb-2">
-                          <div class="flex items-center gap-2">
-                              <span class="text-[10px] font-mono text-boreal-text-muted">{{track.id}}</span>
-                              @if (track.publicInterpretation; as pi) {
-                                  <span class="text-[10px] font-black text-boreal-blue uppercase tracking-tight">{{pi.displayName}}</span>
-                              } @else {
-                                  <span class="text-xs font-bold leading-none" [class.text-boreal-red]="track.class === 'MISSILE'">{{track.class}}</span>
-                              }
-                          </div>
-                          <span class="text-[10px] font-mono tabular-nums" [class.text-boreal-red]="track.timeToTarget < 100" [class.text-boreal-amber]="track.timeToTarget >= 100">
-                              {{track.timeToTarget}}s
-                          </span>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                          <div class="flex gap-1 items-center">
-                              @if (track.publicInterpretation; as pi) {
-                                  <span class="px-1.5 py-0.5 rounded bg-boreal-blue/10 text-[8px] font-black border border-boreal-blue/20 text-boreal-blue uppercase">
-                                      {{pi.steelAbstraction}}
-                                  </span>
-                              } @else {
-                                  <span class="px-1.5 py-0.5 rounded bg-boreal-canvas/40 text-[9px] font-mono border border-boreal-border text-boreal-text-secondary uppercase">
-                                      {{track.intent}}
-                                  </span>
-                              }
-                              <span class="text-[9px] text-boreal-text-muted font-medium italic">Conf: {{track.confidence * 100 | number:'1.0-0'}}%</span>
-                          </div>
-                          <mat-icon class="!text-xs text-boreal-text-muted opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</mat-icon>
-                      </div>
-                  </button>
-              } @empty {
-                  <div class="p-8 text-center text-boreal-text-muted text-xs italic">No active tracks detected.</div>
-              }
-          </div>
-
-          <div class="p-3 bg-boreal-panel-muted/20 border-t border-boreal-border">
-               <div class="flex items-center justify-between text-[10px] text-boreal-text-muted mb-2">
-                  <span>SECTOR 4 STATUS</span>
-                  <span class="text-boreal-green">STABLE</span>
-               </div>
-               <div class="h-1 w-full bg-boreal-panel-elevated rounded-full">
-                  <div class="h-full bg-boreal-green w-3/4"></div>
-               </div>
-          </div>
-        </div>
+        <app-tactical-threat-queue (trackSelected)="selectTrack($event)" />
       </app-window-frame>
 
       <!-- Center Map Area -->
@@ -874,191 +729,7 @@ interface DegradedHeatCell {
       </div>
 
       <!-- Right Recommendation Stack -->
-      <div class="tactical-panel tactical-panel--recommendations w-85 border-l border-boreal-border bg-boreal-panel flex flex-col overflow-y-auto z-20 shadow-[-20px_0_40px_var(--boreal-shadow)]">
-        <div class="panel-header uppercase tracking-widest text-[10px] text-boreal-text-muted">Recommendations</div>
-        
-        <div class="flex-grow p-4 flex flex-col gap-4">
-            @if (recommendation(); as rec) {
-                <!-- Recommendation Card -->
-                <div class="flex flex-col gap-4">
-                    <div class="p-4 rounded-sm border shadow-lg transition-all" 
-                         [class.border-boreal-blue/20]="rec.currentAction === 'PENDING'"
-                         [class.bg-boreal-blue/5]="rec.currentAction === 'PENDING'"
-                         [class.border-boreal-green/40]="rec.currentAction === 'ACCEPTED'"
-                         [class.bg-boreal-green/5]="rec.currentAction === 'ACCEPTED'"
-                         [class.border-boreal-amber/40]="rec.currentAction === 'HELD'"
-                         [class.bg-boreal-amber/5]="rec.currentAction === 'HELD'">
-                        
-                        <header class="flex items-center justify-between mb-4">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-mono text-boreal-blue uppercase font-bold tracking-[0.2em]">
-                                    {{ rec.currentAction === 'PENDING' ? 'Top Recommended COA' : 'Engagement Active' }}
-                                </span>
-                                @if (rec.currentAction !== 'PENDING') {
-                                    <span class="px-1.5 py-0.5 bg-boreal-blue/20 text-boreal-blue text-[8px] font-black rounded-sm border border-boreal-blue/30">{{ rec.currentAction }}</span>
-                                }
-                            </div>
-                            <span class="flex items-center gap-1">
-                                <span class="w-1.5 h-1.5 rounded-full bg-boreal-green shadow-[0_0_8px_var(--boreal-green)]"></span>
-                                <span class="text-[9px] text-boreal-green font-bold tracking-widest">{{ rec.confidence }}% CONF</span>
-                            </span>
-                        </header>
-                        
-                        <div class="mb-4">
-                            <h3 class="text-xs font-black text-boreal-text-primary mb-2 uppercase tracking-tight">{{ rec.title }}</h3>
-                            <div class="p-3 bg-boreal-canvas/40 border border-boreal-border rounded-sm relative overflow-hidden group/rationale">
-                               <div class="absolute inset-y-0 left-0 w-0.5 bg-boreal-blue opacity-50"></div>
-                               <span class="text-boreal-blue font-black uppercase text-[8px] block mb-2 tracking-widest">Decision Rationale</span>
-                               <p class="text-[11px] text-boreal-text-secondary leading-relaxed italic">
-                                {{ rec.rationale }}
-                               </p>
-                            </div>
-                        </div>
-
-                        <!-- Intent Distribution -->
-                        <div class="mb-5 p-3 bg-boreal-panel-muted/20 border border-boreal-border rounded-sm">
-                            <span class="text-[8px] font-black text-boreal-text-muted uppercase tracking-widest block mb-4">Intent Attribution (Live)</span>
-                            <div class="space-y-3">
-                                @for (item of rec.intentDist; track item.label) {
-                                    <div class="flex items-center gap-3" [class.opacity-40]="item.label === 'DECOY'">
-                                        <span class="text-[9px] text-boreal-text-muted w-16 font-mono font-bold uppercase tracking-tighter">{{ item.label }}</span>
-                                        <div class="flex-grow h-1 bg-boreal-canvas rounded-full overflow-hidden border border-boreal-border">
-                                            <div class="h-full bg-boreal-blue shadow-[0_0_8px_var(--boreal-blue)]" [style.width.%]="item.value"></div>
-                                        </div>
-                                        <span class="text-[9px] font-mono text-boreal-text-primary w-8 text-right font-bold">{{ item.value | number:'1.0-0' }}%</span>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-boreal-border">
-                            <div class="flex flex-col gap-1">
-                                <span class="text-[8px] text-boreal-text-muted uppercase font-bold tracking-widest">Base Node</span>
-                                <span class="text-[11px] font-black text-boreal-text-primary uppercase tracking-tight">{{ rec.baseName }}</span>
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <span class="text-[8px] text-boreal-text-muted uppercase font-bold tracking-widest">Effector</span>
-                                <span class="text-[11px] font-black text-boreal-text-primary uppercase tracking-tight">{{ rec.effectorType }}</span>
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <span class="text-[8px] text-boreal-text-muted uppercase font-bold tracking-widest">Readiness Drift</span>
-                                <span class="text-[11px] font-mono font-black text-boreal-amber tracking-tighter">{{ rec.futureCost }}</span>
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <span class="text-[8px] text-boreal-text-muted uppercase font-bold tracking-widest">Asymmetry</span>
-                                <span class="text-[11px] font-mono font-black text-boreal-green tracking-tighter">1:{{ rec.asymmetry }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Authority badge — shows current mode above action buttons -->
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-[7px] text-boreal-text-muted uppercase tracking-widest">Authority:</span>
-                            @let auth = policy.activePolicy()?.guardrails?.engagementAuthority ?? 'SEMI';
-                            <span class="px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border"
-                                [class.text-boreal-red]="auth === 'MANUAL'"
-                                [class.border-boreal-red/40]="auth === 'MANUAL'"
-                                [class.bg-boreal-red/10]="auth === 'MANUAL'"
-                                [class.text-boreal-amber]="auth === 'SEMI'"
-                                [class.border-boreal-amber/40]="auth === 'SEMI'"
-                                [class.bg-boreal-amber/10]="auth === 'SEMI'"
-                                [class.text-boreal-blue]="auth === 'AUTO'"
-                                [class.border-boreal-blue/40]="auth === 'AUTO'"
-                                [class.bg-boreal-blue/10]="auth === 'AUTO'"
-                            >{{ auth === 'MANUAL' ? 'HITL' : auth === 'SEMI' ? 'HOTL' : 'HNLT' }} · {{ auth }}</span>
-                        </div>
-
-                        <div class="flex gap-2">
-                            <button
-                                (click)="acceptRecommendation()"
-                                [disabled]="rec.currentAction !== 'PENDING'"
-                                class="flex-grow py-3 bg-boreal-blue border border-boreal-blue shadow-lg shadow-boreal-blue/20 text-white rounded-sm text-[10px] font-black tracking-[0.2em] uppercase hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:grayscale"
-                            >
-                                {{ rec.currentAction === 'ACCEPTED' ? 'ENGAGEMENT_AUTHORIZED' : 'AUTHORIZE_INTERCEPT' }}
-                            </button>
-                            <button 
-                                (click)="holdEngagement()"
-                                [disabled]="rec.currentAction !== 'PENDING'"
-                                class="px-4 py-2 bg-boreal-panel-elevated border border-boreal-border/40 rounded-sm hover:bg-boreal-panel-muted transition-colors text-boreal-text-secondary hover:text-boreal-text-primary disabled:opacity-30"
-                                title="Hold Engagement"
-                            >
-                                <mat-icon class="!text-sm">pause</mat-icon>
-                            </button>
-                        </div>
-
-                        <button 
-                            (click)="orchestration.handoffToLab(tactical.selectedTrackId()!)"
-                            class="w-full mt-3 py-2 bg-boreal-blue/5 border border-boreal-blue/20 rounded-sm text-boreal-blue text-[10px] font-bold uppercase tracking-widest hover:bg-boreal-blue/10 transition-all flex items-center justify-center gap-2"
-                        >
-                            <mat-icon class="!text-sm">science</mat-icon>
-                            Run Sensitivity Analysis
-                        </button>
-                    </div>
-
-                     <!-- Secondary Alternative (Expandable) -->
-                    @if (alternativeCOA(); as alt) {
-                        <div class="rounded-sm border border-boreal-border bg-boreal-canvas/40 transition-all overflow-hidden" [class.opacity-40]="!alternativeExpanded()">
-                            <button 
-                                (click)="alternativeExpanded.set(!alternativeExpanded())"
-                                class="w-full p-4 flex items-center justify-between group text-left outline-none"
-                            >
-                                <div class="flex items-center gap-3">
-                                    <span class="text-[9px] font-mono text-boreal-text-muted uppercase font-black tracking-widest">Alternative COA</span>
-                                    @if (alternativeExpanded()) {
-                                        <span class="px-1 bg-boreal-panel text-boreal-text-muted text-[7px] font-bold rounded uppercase">Detailed Tradeoff</span>
-                                    }
-                                </div>
-                                <mat-icon class="!text-[12px] text-boreal-text-muted group-hover:text-boreal-text-primary transition-transform" [class.rotate-180]="alternativeExpanded()">
-                                    expand_more
-                                </mat-icon>
-                            </button>
-                            
-                            @if (alternativeExpanded()) {
-                                <div class="px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <h3 class="text-[11px] font-black text-boreal-text-primary mb-1 uppercase tracking-tight">{{ alt.name }}</h3>
-                                    <p class="text-[10px] text-boreal-text-secondary leading-relaxed italic mb-4">
-                                        {{ alt.rationale }}
-                                    </p>
-                                    <div class="grid grid-cols-2 gap-4 text-[8px] border-t border-boreal-border pt-3">
-                                        <div class="flex flex-col gap-0.5">
-                                            <span class="text-boreal-text-muted font-bold uppercase">Confidence</span>
-                                            <span class="text-boreal-green font-mono font-bold">{{ alt.projectedOutcome.confidence * 100 | number:'1.0-0' }}% P(S)</span>
-                                        </div>
-                                        <div class="flex flex-col gap-0.5">
-                                            <span class="text-boreal-text-muted font-bold uppercase">Asymmetry</span>
-                                            <span class="text-boreal-amber font-mono font-bold">Ratio 1:{{ alt.projectedOutcome.asymmetryRatio | number:'1.1-1' }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-
-                    <!-- Strategic Engagement Controls -->
-                    <div class="mt-4 pt-6 border-t border-boreal-border flex flex-col gap-3">
-                        <button 
-                            (click)="forceManualEngagement()"
-                            [disabled]="rec.currentAction === 'MANUAL'"
-                            class="w-full py-2.5 bg-boreal-red/5 text-boreal-red border border-boreal-red/20 rounded-sm text-[10px] font-black tracking-widest uppercase hover:bg-boreal-red/10 transition-all disabled:opacity-30"
-                        >
-                            {{ rec.currentAction === 'MANUAL' ? 'MANUAL_OVERRIDE_ACTIVE' : 'FORCE MANUAL OVERRIDE' }}
-                        </button>
-                        <button 
-                            (click)="escalateToCommand()"
-                            class="w-full py-2.5 bg-boreal-panel-elevated border border-boreal-border rounded-sm text-[10px] font-bold tracking-widest uppercase text-boreal-text-secondary hover:text-boreal-text-primary transition-colors"
-                        >
-                            {{ rec.currentAction === 'ESCALATED' ? 'ESCALATED_TO_HUB' : 'ESCALATE TO COMMAND' }}
-                        </button>
-                    </div>
-                </div>
-            } @else {
-                <div class="h-full flex flex-col items-center justify-center p-10 text-center text-boreal-text-muted bg-boreal-canvas/10 rounded-sm border border-dashed border-boreal-border">
-                    <mat-icon class="!text-4xl mb-6 !w-10 !h-10 opacity-10">radar</mat-icon>
-                    <span class="text-[10px] font-bold uppercase tracking-[0.3em] opacity-30">Awaiting Track Selection</span>
-                    <p class="text-[10px] mt-3 italic opacity-20 max-w-[180px] leading-relaxed">Select a track from the queue or map to view Twin-driven recommendations.</p>
-                </div>
-            }
-        </div>
-      </div>
+      <app-tactical-recommendations />
     </div>
   `,
   styles: [`
@@ -1141,42 +812,6 @@ export class TacticalConsole implements OnInit, OnDestroy {
 
     mapFeatures = ENGAGEMENT_MAP_FEATURES;
 
-    readonly scenarioPresets = [
-      { id: 'SCOUT_PROBE',    name: 'Scout Probe',           badge: 'RECON',      color: 'boreal-amber',
-        description: '6 low-confidence feint probes — sensor and ID stress',
-        phase: 'phase-1', tracks: [{ count: 6,  type: 'FEINT'   as const }], jamming: false },
-      { id: 'DRONE_SWARM',    name: 'Drone Swarm',           badge: 'SWARM',      color: 'boreal-amber',
-        description: '14 drone threats — exhaust intercept inventory',
-        phase: 'phase-2', tracks: [{ count: 14, type: 'DRONE'   as const }], jamming: false },
-      { id: 'KINETIC_STRIKE', name: 'Kinetic Strike',        badge: 'HI-VAL',     color: 'boreal-red',
-        description: '7 cruise missiles at high confidence — COA decision required',
-        phase: 'phase-3', tracks: [{ count: 7,  type: 'KINETIC' as const }], jamming: false },
-      { id: 'SATURATION_WAVE',name: 'Saturation Wave',       badge: 'SATURATION', color: 'boreal-red',
-        description: '12 mixed threats across all sectors — solver stress test',
-        phase: 'phase-3', tracks: [{ count: 12, type: 'MIXED'   as const }], jamming: false },
-      { id: 'FULL_SPECTRUM',  name: 'Full Spectrum + Jamming',badge: 'FULL SPEC', color: 'boreal-red',
-        description: '8 feints + 6 kinetics under active jamming — worst case',
-        phase: 'phase-3', tracks: [{ count: 8,  type: 'FEINT'   as const },
-                                    { count: 6,  type: 'KINETIC' as const }], jamming: true },
-    ] as const;
-
-    showScenarioPicker = signal(false);
-
-    loadPreset(preset: typeof this.scenarioPresets[number]): void {
-      this.showScenarioPicker.set(false);
-      this.scenario.reset();
-      this.scenario.setPhase(preset.phase);
-      this.scenario.setJamming(preset.jamming);
-      this.tactical.clearTracks();
-      this.api.resetScenario().subscribe(() => {
-        for (const wave of preset.tracks) {
-          this.api.injectTracks(wave.count, wave.type).subscribe();
-        }
-      });
-      this.audit.log({ actor: 'OPERATOR', action: 'Scenario Loaded: ' + preset.name,
-                       rationale: preset.description, category: 'SYSTEM' });
-    }
-
     private _clockInterval: ReturnType<typeof setInterval> | null = null;
     private _scrubMoveListener: ((e: MouseEvent) => void) | null = null;
     private _scrubUpListener: (() => void) | null = null;
@@ -1199,9 +834,6 @@ export class TacticalConsole implements OnInit, OnDestroy {
     posX = signal(0);
     posY = signal(0);
     zoomLevel = signal(1);
-
-    alternativeExpanded = signal(false);
-    _pendingConfirm = signal(false);
 
     isDragging = signal(false);
     lastMouseX = 0;
@@ -1409,62 +1041,6 @@ export class TacticalConsole implements OnInit, OnDestroy {
         };
     });
 
-    alternativeCOA = computed(() => {
-        const coas = this.policy.availableCOAs();
-        const selectedId = this.policy.selectedCOAId();
-        // Find the first non-selected COA as an "Alternative"
-        return coas.find((c: COATwin) => c.id !== selectedId) || null;
-    });
-
-    // Computed Recommendation View Model
-    recommendation = computed(() => {
-        const track = this.tactical.selectedTrack();
-        const activePolicy = this.policy.activePolicy();
-        const selectedCOA = this.policy.selectedCOA();
-        const engagements = this.tactical.engagements();
-
-        if (!track || !selectedCOA) return null;
-
-        const currentAction = engagements[track.id];
-
-        // Find assignment for this specific track in the selected COA
-        const assignment = selectedCOA.assignments.find(a => a.threatId === track.id);
-        const base = assignment ? this.readiness.bases().find(b => b.id === assignment.baseId) : null;
-        
-        // Derive future cost (readiness delta)
-        const readinessDelta = assignment && selectedCOA.projectedOutcome.readinessDeltaByBase[assignment.baseId] 
-            ? selectedCOA.projectedOutcome.readinessDeltaByBase[assignment.baseId] 
-            : -0.02; // Fallback
-
-        // Dynamic rationale based on policy priority + track intent
-        let focusText = 'Standard Intercept';
-        if (activePolicy && activePolicy.weights.sustainability > 0.6) focusText = 'Sustainability-First Intercept';
-        if (activePolicy && activePolicy.weights.safety > 0.8) focusText = 'Max-Protection Response';
-        if (track.intent === 'FEINT') focusText = 'Conservation-Heavy Approach';
-
-        const dynamicRationale = track.intent === 'STRIKE' 
-            ? `High-lethality strike profile detected. ${focusText} prioritizes ${base?.name || 'Northern Vanguard'} for immediate kinetic neutralization despite ${ (Math.abs(readinessDelta) * 100).toFixed(1) }% depletion.`
-            : `Track ID ${track.id} displays ${track.intent} characteristics. ${focusText} leverages ${base?.name || 'Theater Reserves'} to maintain coverage while preserving strategic effector depth.`;
-
-        return {
-            trackId: track.id,
-            status: track.status,
-            currentAction: (currentAction?.status || 'PENDING') as 'ACCEPTED' | 'MANUAL' | 'HELD' | 'ESCALATED' | 'PENDING',
-            currentRationale: currentAction?.rationale || '',
-            title: `${focusText} - ${base?.name || 'Optimal Node'}`,
-            rationale: dynamicRationale,
-            baseName: base?.name || 'Calculated Reserved Base',
-            effectorType: assignment?.effectorType || 'Standard Kinetic',
-            futureCost: (readinessDelta * 100).toFixed(1) + '%',
-            asymmetry: selectedCOA.projectedOutcome.asymmetryRatio.toFixed(2),
-            confidence: (selectedCOA.projectedOutcome.confidence * 100).toFixed(0),
-            intentDist: [
-                { label: track.intent, value: track.confidence * 100 },
-                { label: 'DECOY', value: (1 - track.confidence) * 100 }
-            ]
-        };
-    });
-
     mapTransform = computed(() => {
         return `translate(${this.posX()}, ${this.posY()}) scale(${this.zoomLevel()})`;
     });
@@ -1523,59 +1099,6 @@ export class TacticalConsole implements OnInit, OnDestroy {
         }
     }
 
-    acceptRecommendation() {
-        const rec       = this.recommendation();
-        const authority = this.policy.activePolicy()?.guardrails.engagementAuthority ?? 'SEMI';
-        if (!rec) return;
-
-        if (authority === 'MANUAL') {
-            // HITL: require explicit confirmation before firing
-            this._pendingConfirm.set(true);
-            return;
-        }
-        this._doAcceptRecommendation(rec);
-    }
-
-    confirmManualEngagement() {
-        this._pendingConfirm.set(false);
-        const rec = this.recommendation();
-        if (rec) this._doAcceptRecommendation(rec);
-    }
-
-    cancelConfirm() {
-        this._pendingConfirm.set(false);
-    }
-
-    private _doAcceptRecommendation(rec: NonNullable<ReturnType<TacticalConsole['recommendation']>>) {
-        const authority  = this.policy.activePolicy()?.guardrails.engagementAuthority ?? 'SEMI';
-        const modeLabel  = authority === 'AUTO' ? 'Auto-authorized (HNLT)' : 'Operator-authorized';
-        const assignment = this.policy.selectedCOA()?.assignments.find(a => a.threatId === rec.trackId);
-        const isOffline = this.sensorFeed.connectionStatus() === 'DISCONNECTED';
-        this.tactical.updateEngagement(
-            rec.trackId,
-            'ACCEPTED',
-            isOffline
-              ? `${modeLabel}: ${rec.title}. Directive queued offline pending link restoration.`
-              : `${modeLabel}: ${rec.title}. Optimal node: ${rec.baseName}.`,
-            { deferLocalResolution: isOffline }
-        );
-        if (assignment) {
-            if (isOffline) {
-                this.directiveQueue.enqueueEngagement({
-                    trackId: rec.trackId,
-                    baseId: assignment.baseId,
-                    effectorType: assignment.effectorType,
-                    rationale: rec.rationale,
-                });
-            } else {
-                this.api.engageTrack(rec.trackId, assignment.baseId, assignment.effectorType).subscribe({
-                    next: () => this.tactical.markEngaged(rec.trackId),
-                    error: (e) => console.error('[TacticalConsole]', e),
-                });
-            }
-        }
-    }
-
     // IFZ / overlay helpers
     getIFZRadius(track: ThreatTwin): number {
         // Proxy for kinetic reach: higher velocity + shorter time-to-target = larger zone
@@ -1610,54 +1133,6 @@ export class TacticalConsole implements OnInit, OnDestroy {
             case 'DECOY': return 0.28;
             default: return 0.4;
         }
-    }
-
-    holdEngagement() {
-        const trackId = this.tactical.selectedTrackId();
-        if (trackId) {
-            this.tactical.updateEngagement(
-                trackId, 
-                'HELD', 
-                'Intercept delayed for further multi-spectral intent analysis or clustering window optimization.'
-            );
-        }
-    }
-
-    forceManualEngagement() {
-        const trackId = this.tactical.selectedTrackId();
-        if (trackId) {
-            this.tactical.updateEngagement(
-                trackId, 
-                'MANUAL', 
-                'Operator enforced manual override. Bypassing AI-optimized COA and policy-weighted node selection.'
-            );
-        }
-    }
-
-    escalateToCommand() {
-        const track = this.tactical.selectedTrack();
-        const coa = this.policy.selectedCOA();
-        
-        if (track) {
-            this.tactical.updateEngagement(
-                track.id, 
-                'ESCALATED', 
-                'Track escalated to Air Defense Commander for strategic override. Operator reports tradeoff boundary violation.'
-            );
-        }
-
-        this.orchestrator.showFeature({
-            name: 'Command Escalation Flow',
-            operationalFunction: `Escalates tactical track ${track?.id} to the Air Defense Commander / Orchestrator for high-level COA override or policy exception.`,
-            persona: 'Tactical Operator / Stridsledare',
-            decisionImproved: 'Engagement Authority & Strategic Reserve Allocation',
-            inputs: `Selected Track: ${track?.id}, Assigned Base: ${coa?.assignments[0]?.baseId}, Confidence: ${track?.confidence}`,
-            outputs: 'Commander Decision (Accept / Modify / Custom COA)',
-            rationale: 'Certain tracks exceed tactical guardrails or present unique sustainability risks that require commander-level tradeoff balancing.',
-            status: 'PARTIAL_FRONTEND',
-            tier: 'MVP',
-            nextStep: 'Implement Commander notification and shared track context signal.'
-        });
     }
 
     formatCoordinates(coords: [number, number][]): string {
@@ -1736,7 +1211,6 @@ export class TacticalConsole implements OnInit, OnDestroy {
     }
 
     private focusOnPoint(x: number, y: number): void {
-        // The SVG is rendered in viewBox coordinates, so we can recenter directly.
         const centeredX = (this.viewboxWidth / 2) - (x * this.zoomLevel());
         const centeredY = (this.viewboxHeight / 2) - (y * this.zoomLevel());
         this.posX.set(centeredX);
