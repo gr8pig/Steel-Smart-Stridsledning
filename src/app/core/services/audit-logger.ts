@@ -41,6 +41,32 @@ export class AuditLogger {
     this.api.logAuditEvent({ eventType: event.action ?? 'ACTION', payload: event, actorId: event.actor }).subscribe();
   }
 
+  /**
+   * Merges server-persisted events into the in-memory log.
+   * Server entries are cast to AuditEvent shape and deduplicated by id.
+   * Called once on governance page init to restore history across page reloads.
+   */
+  seedFromServer(raw: unknown[]) {
+    if (!raw?.length) return;
+    const serverEvents: AuditEvent[] = (raw as Record<string, unknown>[])
+      .filter(e => e && typeof e === 'object')
+      .map(e => ({
+        id:        String(e['id'] ?? e['eventType'] ?? `srv-${Date.now()}`),
+        time:      String(e['time'] ?? e['serverTs'] ?? new Date().toLocaleTimeString()),
+        actor:     (e['actorId'] ?? e['actor'] ?? 'SYSTEM') as AuditEvent['actor'],
+        action:    String(e['action'] ?? e['eventType'] ?? 'SERVER_EVENT'),
+        rationale: String(e['rationale'] ?? ''),
+        category:  (e['category'] ?? 'SYSTEM') as AuditEvent['category'],
+      }));
+
+    this._logs.update(current => {
+      const existingIds = new Set(current.map(e => e.id));
+      const newEntries = serverEvents.filter(e => !existingIds.has(e.id));
+      // Append older server entries below the current session events
+      return newEntries.length ? [...current, ...newEntries] : current;
+    });
+  }
+
   clear() {
     this._logs.set([]);
   }

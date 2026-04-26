@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, signal } from "@angular/core";
+import { Component, ChangeDetectionStrategy, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { MapSlideComponent } from "./map-slide.component";
 import { DecisionSupportSlideComponent } from "./decision-support-slide.component";
@@ -36,7 +36,7 @@ import { ShowcaseSlide } from "../showcase-data";
     </div>
   `
 })
-export class ShowcaseComponent implements OnInit, OnDestroy {
+export class ShowcaseComponent {
   currentSlide = signal(0);
   slides: ShowcaseSlide[] = [
     { eyebrow: "BDT Project", title: "Showcase", subtitle: "Decision Twin Prototype" },
@@ -44,7 +44,4 @@ export class ShowcaseComponent implements OnInit, OnDestroy {
     { eyebrow: "Module 2", title: "Decision Support", subtitle: "AI-Augmented Logic" },
     { eyebrow: "Module 3", title: "Robustness Lab", subtitle: "Stress Testing", content: ["Simulation Results"] }
   ];
-
-  ngOnInit(): void {}
-  ngOnDestroy(): void {}
 }

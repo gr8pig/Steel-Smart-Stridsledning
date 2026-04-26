@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { SteelApiService } from '../../core/services/steel-api.service';
 import {
-  DrawingBoardStore, DrawingUnit, DrawingUnitType, DrawingMode, DrawingSide, IntentPrediction, UNIT_CATALOGUE
+  DrawingBoardStore, DrawingUnit, DrawingUnitType, DrawingMode, DrawingSide, IntentPrediction
 } from '../../core/state/drawing-board.store';
 import { MapLayerStore } from '../../core/state/map-layer.store';
 import { ENGAGEMENT_MAP_FEATURES } from '../../shared/domain/engagement-map.data';

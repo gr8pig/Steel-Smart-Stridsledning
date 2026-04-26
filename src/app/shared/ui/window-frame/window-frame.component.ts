@@ -17,5 +17,5 @@ import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
   `
 })
 export class WindowFrameComponent {
-  @Input() title: string = 'Window';
+  @Input() title = 'Window';
 }

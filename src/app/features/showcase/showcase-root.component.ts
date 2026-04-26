@@ -1,11 +1,11 @@
 import { Component, ChangeDetectionStrategy, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { RouterLink, RouterOutlet } from "@angular/router";
+import { RouterOutlet } from "@angular/router";
 
 @Component({
   selector: "app-showcase-root",
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet],
+  imports: [CommonModule, RouterOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="showcase-shell">

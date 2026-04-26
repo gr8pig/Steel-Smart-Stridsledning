@@ -139,9 +139,9 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
       { label: 'Command bar', path: 'src/app/shared/ui/command-bar.ts', note: 'Top-bar route edge into the resilience fabric.' },
       { label: 'Capability layer switch', path: 'src/app/shared/ui/capability-layer-switch.ts', note: 'Public capability remapping control in the command bar.' },
       { label: 'Capability layer store', path: 'src/app/core/state/capability-layer.store.ts', note: 'Cross-domain track remapping and audit logging.' },
-      { label: 'C2 resilience lab', path: 'src/app/features/c2-resilience-lab.ts', note: 'Route-level resilience view backed by the decision fabric store.' },
-      { label: 'Knowledge graph', path: 'src/app/features/knowledge-graph.ts', note: 'Route-level KGSA and platform-map surface.' },
-      { label: 'Counterfactual lab', path: 'src/app/features/counterfactual-lab.ts', note: 'Policy perturbation lab with an external ML endpoint dependency.' },
+      { label: 'C2 resilience lab', path: 'src/app/features/lab/c2-resilience-lab.component.ts', note: 'Route-level resilience view backed by the decision fabric store.' },
+      { label: 'Knowledge graph', path: 'src/app/features/governance/governance-overview.component/knowledge-graph.component.ts', note: 'Route-level KGSA and platform-map surface.' },
+      { label: 'Counterfactual lab', path: 'src/app/features/lab/counterfactual-lab.component.ts', note: 'Policy perturbation lab with an external ML endpoint dependency.' },
       { label: 'Counterfactual lab store', path: 'src/app/core/ml/counterfactual-lab.store.ts', note: 'Local state for trajectory, trust, and perturbations.' },
       { label: 'Sensor feed store', path: 'src/app/core/state/sensor-feed.store.ts', note: 'Live/mock/replay theater feed adapter.' },
       { label: 'Audit logger', path: 'src/app/core/services/audit-logger.ts', note: 'Shared audit sink for route and store actions.' },
@@ -310,8 +310,8 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
       { label: 'Decision fabric', path: 'src/app/shared/domain/decision-fabric.ts', note: 'Resilience and friction model.' },
       { label: 'KGSA model', path: 'src/app/shared/domain/kgsa.ts', note: 'Knowledge graph schema and seed data.' },
       { label: 'Logistics ontology', path: 'src/app/shared/domain/logistics-ontology.ts', note: 'Supply and corridor model.' },
-      { label: 'C2 resilience lab', path: 'src/app/features/c2-resilience-lab.ts', note: 'Consumer of the decision fabric twin.' },
-      { label: 'Knowledge graph route', path: 'src/app/features/knowledge-graph.ts', note: 'Consumer of the KGSA graph model and platform manifest.' },
+      { label: 'C2 resilience lab', path: 'src/app/features/lab/c2-resilience-lab.component.ts', note: 'Consumer of the decision fabric twin.' },
+      { label: 'Knowledge graph route', path: 'src/app/features/governance/governance-overview.component/knowledge-graph.component.ts', note: 'Consumer of the KGSA graph model and platform manifest.' },
     ],
     sections: [
       {
@@ -543,7 +543,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
       { label: 'README', path: 'README.md', note: 'Current repo-state narrative and limitations.' },
       { label: 'Master plan', path: 'research/SSS_Master_Plan.md', note: 'Older implementation plan and explicit gaps.' },
       { label: 'Scope cuts', path: 'research/files/SSS_Scope_Cuts.md', note: 'Deferred feature list and reasoning.' },
-      { label: 'Counterfactual lab', path: 'src/app/features/counterfactual-lab.ts', note: 'Frontend lab that currently calls an external ML endpoint.' },
+      { label: 'Counterfactual lab', path: 'src/app/features/lab/counterfactual-lab.component.ts', note: 'Frontend lab that currently calls an external ML endpoint.' },
     ],
     sections: [
       {

@@ -19,7 +19,7 @@ import { CommonModule } from "@angular/common";
   `
 })
 export class RobustnessSlideComponent {
-  @Input() title: string = "";
-  @Input() subtitle: string = "";
+  @Input() title = "";
+  @Input() subtitle = "";
   @Input() content: string[] = [];
 }

@@ -195,7 +195,7 @@ export class C2ResilienceLabComponent {
     if (this.stressRunning()) return;
     this.stressRunning.set(true);
     this.stressResult.set(null);
-    const coaId = (this.policyStore as any).activeCOAId?.() ?? 'balanced';
+    const coaId = (this.policyStore as { activeCOAId?: () => string }).activeCOAId?.() ?? 'balanced';
     this.api.runLab({
       coaId,
       redModel: 'DECEPTIVE',

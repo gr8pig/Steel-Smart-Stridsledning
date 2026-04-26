@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ShowcaseSlide } from '../showcase-data';
 
 @Component({
   selector: 'app-welcome-slide',
@@ -64,5 +65,5 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class WelcomeSlideComponent {
-  @Input({ required: true }) config!: any;
+  @Input({ required: true }) config!: ShowcaseSlide;
 }

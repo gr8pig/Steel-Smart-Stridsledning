@@ -60,7 +60,7 @@ export const routes: Routes = [
   },
   {
     path: 'demo',
-    loadComponent: () => import('./features/demo-director').then(m => m.DemoDirector)
+    loadComponent: () => import('./features/ops/demo-director.component').then(m => m.DemoDirector)
   },
   {
     path: 'showcase',

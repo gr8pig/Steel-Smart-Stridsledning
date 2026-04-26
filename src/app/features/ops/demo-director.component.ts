@@ -1,13 +1,13 @@
 import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { ScenarioStore } from '../core/state/scenario.store';
-import { TacticalStore } from '../core/state/tactical.store';
-import { PolicyStore } from '../core/state/policy.store';
-import { OrchestrationStore } from '../core/state/orchestration.store';
+import { ScenarioStore } from '../../core/state/scenario.store';
+import { TacticalStore } from '../../core/state/tactical.store';
+import { PolicyStore } from '../../core/state/policy.store';
+import { OrchestrationStore } from '../../core/state/orchestration.store';
 import { Router } from '@angular/router';
-import { AuditLogger } from '../core/services/audit-logger';
-import { SteelApiService } from '../core/services/steel-api.service';
+import { AuditLogger } from '../../core/services/audit-logger';
+import { SteelApiService } from '../../core/services/steel-api.service';
 
 @Component({
   selector: 'app-demo-director',
