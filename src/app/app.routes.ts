@@ -38,7 +38,7 @@ export const routes: Routes = [
   },
   {
     path: 'governance',
-    loadComponent: () => import('./features/governance').then(m => m.Governance)
+    loadComponent: () => import('./features/governance/governance-overview.component').then(m => m.Governance)
   },
   {
     path: 'authority',
@@ -50,7 +50,7 @@ export const routes: Routes = [
   },
   {
     path: 'knowledge-graph',
-    loadComponent: () => import('./features/knowledge-graph').then(m => m.KnowledgeGraph)
+    loadComponent: () => import('./features/governance/knowledge-graph.component').then(m => m.KnowledgeGraph)
   },
   {
     path: 'demo',
