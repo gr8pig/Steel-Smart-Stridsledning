@@ -11,16 +11,30 @@ export const routes: Routes = [
     loadComponent: () => import('./features/c2/c2-orchestrator.component').then(m => m.CommanderOrchestrator)
   },
   {
-    path: 'readiness',
-    loadComponent: () => import('./features/lab/readiness-console.component').then(m => m.ReadinessConsole)
-  },
-  {
-    path: 'robustness-lab',
-    loadComponent: () => import('./features/lab/robustness-lab.component').then(m => m.RobustnessLab)
-  },
-  {
-    path: 'counterfactual-lab',
-    loadComponent: () => import('./features/lab/counterfactual-lab.component').then(m => m.CounterfactualLab)
+    path: 'lab',
+    loadComponent: () => import('./features/lab/lab-root.component').then(m => m.LabRootComponent),
+    children: [
+      {
+        path: 'readiness',
+        loadComponent: () => import('./features/lab/readiness-console.component').then(m => m.ReadinessConsole)
+      },
+      {
+        path: 'robustness',
+        loadComponent: () => import('./features/lab/robustness-lab.component').then(m => m.RobustnessLab)
+      },
+      {
+        path: 'counterfactual',
+        loadComponent: () => import('./features/lab/counterfactual-lab.component').then(m => m.CounterfactualLab)
+      },
+      {
+        path: 'c2-resilience',
+        loadComponent: () => import('./features/lab/c2-resilience-lab.component').then(m => m.C2ResilienceLabComponent)
+      },
+      {
+        path: 'drawing-board',
+        loadComponent: () => import('./features/lab/drawing-board.component').then(m => m.DrawingBoard)
+      },
+    ]
   },
   {
     path: 'governance',
@@ -41,14 +55,6 @@ export const routes: Routes = [
   {
     path: 'demo',
     loadComponent: () => import('./features/demo-director').then(m => m.DemoDirector)
-  },
-  {
-    path: 'c2-resilience',
-    loadComponent: () => import('./features/lab/c2-resilience-lab.component').then(m => m.C2ResilienceLabComponent)
-  },
-  {
-    path: 'drawing-board',
-    loadComponent: () => import('./features/lab/drawing-board.component').then(m => m.DrawingBoard)
   },
   {
     path: 'showcase',

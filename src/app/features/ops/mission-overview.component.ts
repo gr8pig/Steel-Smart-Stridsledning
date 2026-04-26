@@ -158,7 +158,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../../shared/domain/engagement-map.data
                     </div>
                 </div>
                 <div class="mt-auto border-t border-boreal-border p-4 bg-boreal-panel-muted/20">
-                     <button routerLink="/readiness" class="w-full py-2 bg-boreal-panel-elevated border border-boreal-border text-boreal-text-secondary rounded-sm text-[10px] uppercase font-bold tracking-[0.2em] hover:bg-boreal-panel-muted transition-all">
+                     <button routerLink="/lab/readiness" class="w-full py-2 bg-boreal-panel-elevated border border-boreal-border text-boreal-text-secondary rounded-sm text-[10px] uppercase font-bold tracking-[0.2em] hover:bg-boreal-panel-muted transition-all">
                         Analyze Base Resilience
                      </button>
                 </div>
@@ -188,7 +188,7 @@ import { ENGAGEMENT_MAP_FEATURES } from '../../shared/domain/engagement-map.data
 
          <!-- Demo Hook: Robustness Lab -->
          <div class="col-span-12 lg:col-span-4">
-            <button routerLink="/robustness-lab" class="group w-full design-card overflow-hidden !p-0 border-l-2 border-l-boreal-amber hover:scale-[1.01] transition-all text-left bg-gradient-to-r from-boreal-amber/5 to-transparent">
+            <button routerLink="/lab/robustness" class="group w-full design-card overflow-hidden !p-0 border-l-2 border-l-boreal-amber hover:scale-[1.01] transition-all text-left bg-gradient-to-r from-boreal-amber/5 to-transparent">
                 <div class="p-5 flex flex-col gap-3">
                     <div class="flex items-center justify-between">
                         <span class="text-[9px] font-bold text-boreal-amber uppercase tracking-[0.2em]">Robustness Lab</span>
