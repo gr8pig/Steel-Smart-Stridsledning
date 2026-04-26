@@ -147,7 +147,7 @@ export class NavRail {
     { path: '/lab/counterfactual', icon: 'psychology',          label: 'Counterfactual Lab',      flag: null },
     { path: '/governance',      icon: 'gavel',                 label: 'Governance',              flag: null },
     { path: '/authority',       icon: 'policy',                label: 'Authority Control',       flag: null },
-    { path: '/knowledge-graph', icon: 'hub',                   label: 'Knowledge Graph (KGSA)',  flag: 'kgsa' },
+    { path: '/governance/knowledge-graph', icon: 'hub',                   label: 'Knowledge Graph (KGSA)',  flag: 'kgsa' },
     { path: '/lab/drawing-board', icon: 'draw',                label: 'Drawing Board',           flag: null },
     { path: '/field',           icon: 'tablet_android',        label: 'Field Terminal',          flag: null },
     { path: '/demo',            icon: 'settings',              label: 'Demo Director',           flag: null },

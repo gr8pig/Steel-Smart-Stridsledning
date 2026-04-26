@@ -38,7 +38,17 @@ export const routes: Routes = [
   },
   {
     path: 'governance',
-    loadComponent: () => import('./features/governance/governance-overview.component').then(m => m.Governance)
+    loadComponent: () => import('./features/governance/governance-root.component').then(m => m.GovernanceRootComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/governance/governance-overview.component').then(m => m.Governance)
+      },
+      {
+        path: 'knowledge-graph',
+        loadComponent: () => import('./features/governance/knowledge-graph.component').then(m => m.KnowledgeGraph)
+      },
+    ]
   },
   {
     path: 'authority',
@@ -47,10 +57,6 @@ export const routes: Routes = [
   {
     path: 'reference',
     loadChildren: () => import('./features/reference/reference.routes').then(m => m.referenceRoutes)
-  },
-  {
-    path: 'knowledge-graph',
-    loadComponent: () => import('./features/governance/knowledge-graph.component').then(m => m.KnowledgeGraph)
   },
   {
     path: 'demo',
