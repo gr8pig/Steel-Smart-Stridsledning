@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { CommanderHeaderPanel } from './commander-header-panel';
-import { CommanderReadinessProjection } from './commander-readiness-projection';
-import { CommanderPolicyPanel } from './commander-policy-panel';
-import { CommanderFrontierPanel } from './commander-frontier-panel';
-import { CommanderOutcomePanel } from './commander-outcome-panel';
+import { CommanderHeaderPanel } from './c2/components/commander-header-panel';
+import { CommanderReadinessProjection } from './c2/components/commander-readiness-projection';
+import { CommanderPolicyPanel } from './c2/components/commander-policy-panel';
+import { CommanderFrontierPanel } from './c2/components/commander-frontier-panel';
+import { CommanderOutcomePanel } from './c2/components/commander-outcome-panel';
 
 @Component({
   selector: 'app-commander-orchestrator',
