@@ -92,7 +92,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
     graph: { x: 240, y: 250, links: ['00-index', '02-feature-catalog', '04-system-architecture'] },
     sources: [
       { label: 'README', path: 'README.md', note: 'Current product framing and scope language.' },
-      { label: 'Mission overview', path: 'src/app/features/mission-overview.ts', note: 'Current overview surface in the app.' },
+      { label: 'Mission overview', path: 'src/app/features/ops/mission-overview.component.ts', note: 'Current overview surface in the app.' },
       { label: 'App shell', path: 'src/app/app.html', note: 'Global chrome that wraps every route.' },
     ],
     sections: [
@@ -437,7 +437,7 @@ export const REFERENCE_DOCS: ReferenceDoc[] = [
       { label: 'Scenario store', path: 'src/app/core/state/scenario.store.ts', note: 'Scenario phase and jamming state.' },
       { label: 'Tactical store', path: 'src/app/core/state/tactical.store.ts', note: 'Threat classes, track counts, and intent enrichment.' },
       { label: 'Logistics store', path: 'src/app/core/state/logistics.store.ts', note: 'Sustainment and corridor framing.' },
-      { label: 'Mission overview', path: 'src/app/features/mission-overview.ts', note: 'Theater summary and readiness framing.' },
+      { label: 'Mission overview', path: 'src/app/features/ops/mission-overview.component.ts', note: 'Theater summary and readiness framing.' },
     ],
     sections: [
       {

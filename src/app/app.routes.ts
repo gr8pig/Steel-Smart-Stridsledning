@@ -8,11 +8,11 @@ export const routes: Routes = [
   },
   {
     path: 'overview',
-    loadComponent: () => import('./features/mission-overview').then(m => m.MissionOverview)
+    loadComponent: () => import('./features/ops/mission-overview.component').then(m => m.MissionOverview)
   },
   {
     path: 'tactical',
-    loadComponent: () => import('./features/tactical-console').then(m => m.TacticalConsole)
+    loadComponent: () => import('./features/ops/tactical-console.component').then(m => m.TacticalConsole)
   },
   {
     path: 'commander',
@@ -24,7 +24,7 @@ export const routes: Routes = [
   },
   {
     path: 'threat-inspector',
-    loadComponent: () => import('./features/threat-inspector').then(m => m.ThreatInspector)
+    loadComponent: () => import('./features/ops/threat-inspector.component').then(m => m.ThreatInspector)
   },
   {
     path: 'robustness-lab',
@@ -44,7 +44,7 @@ export const routes: Routes = [
   },
   {
     path: 'logistics',
-    loadComponent: () => import('./features/logistics-console').then(m => m.LogisticsConsole)
+    loadComponent: () => import('./features/ops/logistics-console.component').then(m => m.LogisticsConsole)
   },
   {
     path: 'reference',
@@ -60,7 +60,7 @@ export const routes: Routes = [
   },
   {
     path: 'field',
-    loadComponent: () => import('./features/field-console').then(m => m.FieldConsole)
+    loadComponent: () => import('./features/ops/field-console.component').then(m => m.FieldConsole)
   },
   {
     path: 'c2-resilience',
