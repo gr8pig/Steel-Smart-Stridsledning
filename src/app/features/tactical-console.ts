@@ -19,6 +19,7 @@ import { SupplyNode, SupplyCorridor } from '../shared/domain/logistics-ontology'
 
 import { ENGAGEMENT_MAP_FEATURES } from '../shared/domain/engagement-map.data';
 import { CapabilityLayerStore } from '../core/state/capability-layer.store';
+import { WindowFrameComponent } from '../shared/ui/window-frame/window-frame.component';
 import { SafetyBanner } from '../shared/ui/safety-banner';
 
 interface DegradedHeatCell {
@@ -36,7 +37,7 @@ interface DegradedHeatCell {
 @Component({
   selector: 'app-tactical-console',
   standalone: true,
-  imports: [CommonModule, MatIconModule, SafetyBanner],
+  imports: [CommonModule, MatIconModule, SafetyBanner, WindowFrameComponent],
   template: `
     <div class="tactical-shell h-full w-full flex overflow-hidden relative">
       <app-safety-banner />
@@ -96,9 +97,10 @@ interface DegradedHeatCell {
       }
       
       <!-- Left Threat Queue -->
-      <div class="tactical-panel tactical-panel--queue w-85 border-r border-boreal-border bg-boreal-panel flex flex-col z-20 shadow-2xl">
-        <div class="panel-header uppercase tracking-widest text-[10px] text-boreal-text-muted flex items-center justify-between">
-            <span>Threat Queue</span>
+      <app-window-frame title="Threat Queue" class="absolute top-4 left-4 z-20">
+        <div class="tactical-panel tactical-panel--queue w-85 flex flex-col">
+          <div class="panel-header uppercase tracking-widest text-[10px] text-boreal-text-muted flex items-center justify-between mb-2">
+            <span>Live Threats</span>
             <div class="flex items-center gap-1.5">
               <span class="px-1 rounded border text-[8px] font-black"
                 [class.border-boreal-blue/40]="tactical.sync().source === 'AUTHORITATIVE'"
@@ -118,7 +120,11 @@ interface DegradedHeatCell {
                   SCENARIO
                 </button>
                 @if (showScenarioPicker()) {
-                  <div class='fixed inset-0 z-40' (click)='showScenarioPicker.set(false)'></div>
+                  <div class='fixed inset-0 z-40' 
+                       (click)='showScenarioPicker.set(false)'
+                       (keydown.escape)='showScenarioPicker.set(false)'
+                       (keydown.enter)='showScenarioPicker.set(false)'
+                       tabindex="0" role="button" aria-label="Close scenario picker"></div>
                   <div class='absolute left-0 top-full mt-1 z-50 w-64 bg-boreal-panel border
                               border-boreal-border rounded-sm shadow-2xl overflow-hidden'>
                     <div class='px-3 py-2 text-[8px] font-black uppercase tracking-widest
@@ -151,62 +157,63 @@ interface DegradedHeatCell {
                 }
               </div>
             </div>
-        </div>
-        
-        <div class="flex-grow overflow-y-auto select-none">
-            @for (track of capabilityStore.remappedTracks(); track track.id) {
-                <button 
-                    (click)="selectTrack(track.id)"
-                    [class.bg-boreal-panel-elevated]="tactical.selectedTrackId() === track.id"
-                    [class.border-l-3]="tactical.selectedTrackId() === track.id"
-                    [class.border-boreal-blue]="tactical.selectedTrackId() === track.id"
-                    class="w-full text-left p-4 border-b border-boreal-border hover:bg-boreal-panel-muted/50 transition-colors cursor-pointer group focus:outline-none focus:bg-boreal-panel-muted/50"
-                >
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-mono text-boreal-text-muted">{{track.id}}</span>
-                            @if (track.publicInterpretation; as pi) {
-                                <span class="text-[10px] font-black text-boreal-blue uppercase tracking-tight">{{pi.displayName}}</span>
-                            } @else {
-                                <span class="text-xs font-bold leading-none" [class.text-boreal-red]="track.class === 'MISSILE'">{{track.class}}</span>
-                            }
-                        </div>
-                        <span class="text-[10px] font-mono tabular-nums" [class.text-boreal-red]="track.timeToTarget < 100" [class.text-boreal-amber]="track.timeToTarget >= 100">
-                            {{track.timeToTarget}}s
-                        </span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between">
-                        <div class="flex gap-1 items-center">
-                            @if (track.publicInterpretation; as pi) {
-                                <span class="px-1.5 py-0.5 rounded bg-boreal-blue/10 text-[8px] font-black border border-boreal-blue/20 text-boreal-blue uppercase">
-                                    {{pi.steelAbstraction}}
-                                </span>
-                            } @else {
-                                <span class="px-1.5 py-0.5 rounded bg-boreal-canvas/40 text-[9px] font-mono border border-boreal-border text-boreal-text-secondary uppercase">
-                                    {{track.intent}}
-                                </span>
-                            }
-                            <span class="text-[9px] text-boreal-text-muted font-medium italic">Conf: {{track.confidence * 100 | number:'1.0-0'}}%</span>
-                        </div>
-                        <mat-icon class="!text-xs text-boreal-text-muted opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</mat-icon>
-                    </div>
-                </button>
-            } @empty {
-                <div class="p-8 text-center text-boreal-text-muted text-xs italic">No active tracks detected.</div>
-            }
-        </div>
+          </div>
+          
+          <div class="flex-grow overflow-y-auto select-none max-h-[400px]">
+              @for (track of capabilityStore.remappedTracks(); track track.id) {
+                  <button 
+                      (click)="selectTrack(track.id)"
+                      [class.bg-boreal-panel-elevated]="tactical.selectedTrackId() === track.id"
+                      [class.border-l-3]="tactical.selectedTrackId() === track.id"
+                      [class.border-boreal-blue]="tactical.selectedTrackId() === track.id"
+                      class="w-full text-left p-4 border-b border-boreal-border hover:bg-boreal-panel-muted/50 transition-colors cursor-pointer group focus:outline-none focus:bg-boreal-panel-muted/50"
+                  >
+                      <div class="flex items-center justify-between mb-2">
+                          <div class="flex items-center gap-2">
+                              <span class="text-[10px] font-mono text-boreal-text-muted">{{track.id}}</span>
+                              @if (track.publicInterpretation; as pi) {
+                                  <span class="text-[10px] font-black text-boreal-blue uppercase tracking-tight">{{pi.displayName}}</span>
+                              } @else {
+                                  <span class="text-xs font-bold leading-none" [class.text-boreal-red]="track.class === 'MISSILE'">{{track.class}}</span>
+                              }
+                          </div>
+                          <span class="text-[10px] font-mono tabular-nums" [class.text-boreal-red]="track.timeToTarget < 100" [class.text-boreal-amber]="track.timeToTarget >= 100">
+                              {{track.timeToTarget}}s
+                          </span>
+                      </div>
+                      
+                      <div class="flex items-center justify-between">
+                          <div class="flex gap-1 items-center">
+                              @if (track.publicInterpretation; as pi) {
+                                  <span class="px-1.5 py-0.5 rounded bg-boreal-blue/10 text-[8px] font-black border border-boreal-blue/20 text-boreal-blue uppercase">
+                                      {{pi.steelAbstraction}}
+                                  </span>
+                              } @else {
+                                  <span class="px-1.5 py-0.5 rounded bg-boreal-canvas/40 text-[9px] font-mono border border-boreal-border text-boreal-text-secondary uppercase">
+                                      {{track.intent}}
+                                  </span>
+                              }
+                              <span class="text-[9px] text-boreal-text-muted font-medium italic">Conf: {{track.confidence * 100 | number:'1.0-0'}}%</span>
+                          </div>
+                          <mat-icon class="!text-xs text-boreal-text-muted opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</mat-icon>
+                      </div>
+                  </button>
+              } @empty {
+                  <div class="p-8 text-center text-boreal-text-muted text-xs italic">No active tracks detected.</div>
+              }
+          </div>
 
-        <div class="p-3 bg-boreal-panel-muted/20 border-t border-boreal-border">
-             <div class="flex items-center justify-between text-[10px] text-boreal-text-muted mb-2">
-                <span>SECTOR 4 STATUS</span>
-                <span class="text-boreal-green">STABLE</span>
-             </div>
-             <div class="h-1 w-full bg-boreal-panel-elevated rounded-full">
-                <div class="h-full bg-boreal-green w-3/4"></div>
-             </div>
+          <div class="p-3 bg-boreal-panel-muted/20 border-t border-boreal-border">
+               <div class="flex items-center justify-between text-[10px] text-boreal-text-muted mb-2">
+                  <span>SECTOR 4 STATUS</span>
+                  <span class="text-boreal-green">STABLE</span>
+               </div>
+               <div class="h-1 w-full bg-boreal-panel-elevated rounded-full">
+                  <div class="h-full bg-boreal-green w-3/4"></div>
+               </div>
+          </div>
         </div>
-      </div>
+      </app-window-frame>
 
       <!-- Center Map Area -->
       <div class="tactical-map flex-grow bg-boreal-canvas relative overflow-hidden flex flex-col">
