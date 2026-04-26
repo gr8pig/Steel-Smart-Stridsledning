@@ -44,7 +44,7 @@ interface FeatureViewModel {
   template: `
     @if (featureView(); as feature) {
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-boreal-canvas/80 backdrop-blur-sm"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#080c12]/80 backdrop-blur-md animate-in fade-in duration-300"
         (click)="orchestrator.close()"
         (keydown.escape)="orchestrator.close()"
         tabindex="0"
@@ -52,7 +52,7 @@ interface FeatureViewModel {
         aria-label="Close modal backdrop"
       >
         <div
-          class="design-card w-full flex flex-col max-h-[90vh] overflow-hidden !p-0"
+          class="design-card w-full flex flex-col max-h-[90vh] overflow-hidden !p-0 bg-[#080c12]/95 backdrop-blur-2xl border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.8)] rounded-sm animate-in zoom-in-[0.98] slide-in-from-bottom-4 duration-300 ease-out"
           [class.max-w-3xl]="feature.id === 'audit-log-export' || feature.id === 'policy-trace' || feature.id === 'detailed-alerts'"
           [class.max-w-2xl]="feature.id !== 'audit-log-export' && feature.id !== 'policy-trace' && feature.id !== 'detailed-alerts'"
           (click)="$event.stopPropagation()"
@@ -134,62 +134,62 @@ interface FeatureViewModel {
             <!-- GOVERNANCE AUDIT EXPORT                                       -->
             <!-- ============================================================ -->
             @case ('audit-log-export') {
-              <header class="panel-header flex items-center justify-between border-b border-boreal-border p-4 h-14 bg-boreal-panel-muted/40">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded bg-boreal-green/20 flex items-center justify-center">
-                    <mat-icon class="text-boreal-green !text-lg">terminal</mat-icon>
+              <header class="panel-header flex items-center justify-between border-b border-white/10 p-5 bg-black/20 shrink-0">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-sm bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                    <mat-icon class="text-emerald-500 !text-xl">terminal</mat-icon>
                   </div>
                   <div>
-                    <h2 class="text-[10px] uppercase tracking-[0.25em] font-black text-boreal-text-primary">Governance Audit Trail</h2>
-                    <p class="text-[8px] text-boreal-text-muted font-mono uppercase tracking-[0.15em]">SESSION LOG · {{audit.logs().length}} ENTRIES · NON-REPUDIABLE</p>
+                    <h2 class="text-[11px] uppercase tracking-[0.3em] font-black text-white">Governance Audit Trail</h2>
+                    <p class="text-[8px] text-slate-400 font-mono uppercase tracking-[0.2em] mt-0.5">SESSION LOG · {{audit.logs().length}} ENTRIES · NON-REPUDIABLE</p>
                   </div>
                 </div>
-                <button (click)="orchestrator.close()" class="p-2 hover:bg-boreal-blue/10 rounded transition-colors group">
-                  <mat-icon class="text-boreal-text-muted group-hover:text-boreal-blue">close</mat-icon>
+                <button (click)="orchestrator.close()" class="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-sm transition-colors group">
+                  <mat-icon class="!text-sm">close</mat-icon>
                 </button>
               </header>
 
-              <div class="flex gap-6 px-6 py-3 bg-boreal-canvas/30 border-b border-boreal-border shrink-0">
+              <div class="flex gap-8 px-6 py-4 bg-white/2 border-b border-white/5 shrink-0">
                 @for (stat of auditStats(); track stat.label) {
-                  <div class="flex flex-col gap-0.5">
-                    <span class="text-[7px] font-black text-boreal-text-muted uppercase tracking-widest">{{stat.label}}</span>
-                    <span class="text-[13px] font-black font-mono" [class]="stat.colorClass">{{stat.value}}</span>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-[7.5px] font-black text-slate-500 uppercase tracking-widest">{{stat.label}}</span>
+                    <span class="text-[14px] font-black font-mono tracking-tight" [class]="stat.colorClass">{{stat.value}}</span>
                   </div>
                 }
               </div>
 
-              <div class="flex-grow overflow-y-auto bg-boreal-panel divide-y divide-boreal-border/40">
+              <div class="flex-grow overflow-y-auto bg-transparent divide-y divide-white/5">
                 @for (log of audit.logs(); track log.id) {
-                  <div class="flex items-start gap-3 px-4 py-2.5 hover:bg-boreal-panel-elevated/40 transition-colors">
-                    <span class="text-[8px] font-mono text-boreal-text-muted shrink-0 pt-0.5 w-[4.5rem]">{{log.time}}</span>
-                    <span class="shrink-0 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-sm w-[5rem] text-center" [class]="actorClass(log.actor)">{{log.actor}}</span>
-                    <span class="shrink-0 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-sm w-[5rem] text-center" [class]="categoryClass(log.category)">{{log.category}}</span>
-                    <div class="flex flex-col gap-0.5 min-w-0">
-                      <span class="text-[9px] font-bold text-boreal-text-primary">{{log.action}}</span>
-                      <span class="text-[8px] text-boreal-text-muted leading-tight font-mono">{{log.rationale}}</span>
+                  <div class="flex items-start gap-4 px-5 py-3.5 hover:bg-white/5 transition-colors group">
+                    <span class="text-[9px] font-mono text-slate-500 shrink-0 pt-0.5 w-[4.5rem] opacity-70 group-hover:opacity-100 transition-opacity">{{log.time}}</span>
+                    <span class="shrink-0 px-2 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-[2px] w-[5rem] text-center" [class]="actorClass(log.actor)">{{log.actor}}</span>
+                    <span class="shrink-0 px-2 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-[2px] w-[5rem] text-center" [class]="categoryClass(log.category)">{{log.category}}</span>
+                    <div class="flex flex-col gap-1 min-w-0">
+                      <span class="text-[10px] font-bold text-slate-200 tracking-tight">{{log.action}}</span>
+                      <span class="text-[9px] text-slate-400 leading-relaxed font-mono">{{log.rationale}}</span>
                     </div>
                   </div>
                 }
               </div>
 
-              <footer class="p-4 border-t border-boreal-border flex justify-between items-center bg-boreal-panel-muted/40 shrink-0">
-                <div class="flex gap-2">
+              <footer class="p-4 px-5 border-t border-white/10 flex justify-between items-center bg-black/20 shrink-0">
+                <div class="flex gap-3">
                   <button
                     (click)="exportJSON()"
-                    class="flex items-center gap-1.5 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-boreal-green border border-boreal-green/40 rounded-sm hover:bg-boreal-green/10 transition-colors"
+                    class="flex items-center gap-1.5 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-emerald-400 border border-emerald-400/40 rounded-sm hover:bg-emerald-400/10 transition-all shadow-[0_0_10px_rgba(16,185,129,0.1)]"
                   >
                     <mat-icon class="!text-sm">download</mat-icon>
                     Export JSON
                   </button>
                   <button
                     (click)="exportCSV()"
-                    class="flex items-center gap-1.5 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-boreal-text-muted border border-boreal-border rounded-sm hover:bg-boreal-panel-elevated transition-colors"
+                    class="flex items-center gap-1.5 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400 border border-white/10 rounded-sm hover:bg-white/5 hover:text-white transition-all"
                   >
                     <mat-icon class="!text-sm">table_chart</mat-icon>
                     Export CSV
                   </button>
                 </div>
-                <button (click)="orchestrator.close()" class="px-8 py-2 bg-boreal-blue text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-boreal-blue/20">
+                <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-sky-500 text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 active:scale-95 transition-all shadow-[0_0_15px_rgba(14,165,233,0.3)]">
                   Close
                 </button>
               </footer>
@@ -309,7 +309,8 @@ interface FeatureViewModel {
                         </thead>
                         <tbody class="divide-y divide-white/5">
                           @for (coa of policy.availableCOAs(); track coa.id) {
-                            <tr class="transition-colors hover:bg-white/5 font-mono text-[10px]"
+                            <tr class="transition-colors hover:bg-white/5 font-mono text-[10px] cursor-pointer"
+                                (click)="policy.selectCOA(coa.id)"
                                 [class.bg-sky-500/10]="coa.id === policy.selectedCOAId()">
                               <td class="py-3 px-4 font-bold text-slate-200">
                                 {{coa.id}}
@@ -373,79 +374,83 @@ interface FeatureViewModel {
             <!-- SCENARIO REPLAY CONTROLS                                      -->
             <!-- ============================================================ -->
             @case ('replay-scrub') {
-              <header class="panel-header flex items-center justify-between border-b border-boreal-border p-4 h-14 bg-boreal-panel-muted/40">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded bg-boreal-green/20 flex items-center justify-center">
-                    <mat-icon class="text-boreal-green !text-lg">history</mat-icon>
+              <header class="panel-header flex items-center justify-between border-b border-white/10 p-5 bg-black/20 shrink-0">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-sm bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                    <mat-icon class="text-amber-500 !text-xl">history</mat-icon>
                   </div>
                   <div>
-                    <h2 class="text-[10px] uppercase tracking-[0.25em] font-black text-boreal-text-primary">Scenario Replay Controls</h2>
-                    <p class="text-[8px] text-boreal-text-muted font-mono uppercase tracking-[0.15em]">{{scenario.scenarioName()}} · {{scenario.currentPhase()?.name}}</p>
+                    <h2 class="text-[11px] uppercase tracking-[0.3em] font-black text-white">Scenario Replay Controls</h2>
+                    <p class="text-[8px] text-slate-400 font-mono uppercase tracking-[0.2em] mt-0.5">{{scenario.scenarioName()}} · {{scenario.currentPhase()?.name}}</p>
                   </div>
                 </div>
-                <button (click)="orchestrator.close()" class="p-2 hover:bg-boreal-blue/10 rounded transition-colors group">
-                  <mat-icon class="text-boreal-text-muted group-hover:text-boreal-blue">close</mat-icon>
+                <button (click)="orchestrator.close()" class="p-2 hover:bg-white/5 text-slate-500 hover:text-white rounded-sm transition-colors group">
+                  <mat-icon class="!text-sm">close</mat-icon>
                 </button>
               </header>
 
-              <div class="flex-grow overflow-y-auto p-6 space-y-6 bg-boreal-panel">
+              <div class="flex-grow overflow-y-auto p-6 space-y-8 bg-transparent">
 
                 <!-- Time Display & Playback -->
                 <section>
                   <div class="flex items-center justify-between">
-                    <div class="flex flex-col gap-1">
-                      <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em]">Simulation Clock</span>
-                      <span class="text-3xl font-mono font-black text-boreal-text-primary tabular-nums tracking-tight">{{formatTime(scenario.simTime())}}</span>
+                    <div class="flex flex-col gap-1.5">
+                      <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Simulation Clock</span>
+                      <span class="text-[32px] font-mono font-black text-white tabular-nums tracking-tight">{{formatTime(scenario.simTime())}}</span>
                     </div>
-                    <div class="flex items-center gap-3">
-                      <span class="px-2.5 py-1 text-[8px] font-black uppercase tracking-widest rounded-sm border"
-                            [class.bg-boreal-green/10]="scenario.runState() === 'RUNNING'"
-                            [class.text-boreal-green]="scenario.runState() === 'RUNNING'"
-                            [class.border-boreal-green/30]="scenario.runState() === 'RUNNING'"
-                            [class.bg-boreal-amber/10]="scenario.runState() === 'PAUSED'"
-                            [class.text-boreal-amber]="scenario.runState() === 'PAUSED'"
-                            [class.border-boreal-amber/30]="scenario.runState() === 'PAUSED'"
-                            [class.bg-boreal-panel-elevated]="scenario.runState() === 'IDLE' || scenario.runState() === 'REPLAY'"
-                            [class.text-boreal-text-muted]="scenario.runState() === 'IDLE' || scenario.runState() === 'REPLAY'"
-                            [class.border-boreal-border]="scenario.runState() === 'IDLE' || scenario.runState() === 'REPLAY'">
+                    <div class="flex items-center gap-4">
+                      <span class="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-[2px] border"
+                            [class.bg-emerald-500/10]="scenario.runState() === 'RUNNING'"
+                            [class.text-emerald-400]="scenario.runState() === 'RUNNING'"
+                            [class.border-emerald-500/30]="scenario.runState() === 'RUNNING'"
+                            [class.bg-amber-500/10]="scenario.runState() === 'PAUSED'"
+                            [class.text-amber-400]="scenario.runState() === 'PAUSED'"
+                            [class.border-amber-500/30]="scenario.runState() === 'PAUSED'"
+                            [class.bg-white/5]="scenario.runState() === 'IDLE' || scenario.runState() === 'REPLAY'"
+                            [class.text-slate-400]="scenario.runState() === 'IDLE' || scenario.runState() === 'REPLAY'"
+                            [class.border-white/10]="scenario.runState() === 'IDLE' || scenario.runState() === 'REPLAY'">
                         {{scenario.runState()}}
                       </span>
-                      <button
-                        (click)="toggleReplayPlayback()"
-                        class="w-10 h-10 flex items-center justify-center border rounded-sm transition-all"
-                        [class.bg-boreal-green/10]="scenario.runState() !== 'RUNNING'"
-                        [class.border-boreal-green/30]="scenario.runState() !== 'RUNNING'"
-                        [class.text-boreal-green]="scenario.runState() !== 'RUNNING'"
-                        [class.bg-boreal-amber/10]="scenario.runState() === 'RUNNING'"
-                        [class.border-boreal-amber/30]="scenario.runState() === 'RUNNING'"
-                        [class.text-boreal-amber]="scenario.runState() === 'RUNNING'"
-                      >
-                        <mat-icon class="!text-base">{{scenario.runState() === 'RUNNING' ? 'pause' : 'play_arrow'}}</mat-icon>
-                      </button>
-                      <button
-                        (click)="resetReplay()"
-                        class="w-10 h-10 flex items-center justify-center border border-boreal-border rounded-sm text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-elevated transition-all"
-                        title="Reset to T+0"
-                      >
-                        <mat-icon class="!text-base">skip_previous</mat-icon>
-                      </button>
+                      <div class="flex gap-2">
+                        <button
+                          (click)="toggleReplayPlayback()"
+                          class="w-12 h-12 flex items-center justify-center border rounded-sm transition-all shadow-[0_0_15px_rgba(0,0,0,0.2)]"
+                          [class.bg-emerald-500/10]="scenario.runState() !== 'RUNNING'"
+                          [class.border-emerald-500/30]="scenario.runState() !== 'RUNNING'"
+                          [class.text-emerald-400]="scenario.runState() !== 'RUNNING'"
+                          [class.hover:bg-emerald-500/20]="scenario.runState() !== 'RUNNING'"
+                          [class.bg-amber-500/10]="scenario.runState() === 'RUNNING'"
+                          [class.border-amber-500/30]="scenario.runState() === 'RUNNING'"
+                          [class.text-amber-400]="scenario.runState() === 'RUNNING'"
+                          [class.hover:bg-amber-500/20]="scenario.runState() === 'RUNNING'"
+                        >
+                          <mat-icon class="!text-2xl">{{scenario.runState() === 'RUNNING' ? 'pause' : 'play_arrow'}}</mat-icon>
+                        </button>
+                        <button
+                          (click)="resetReplay()"
+                          class="w-12 h-12 flex items-center justify-center border border-white/10 rounded-sm text-slate-500 hover:text-white hover:bg-white/5 transition-all shadow-[0_0_15px_rgba(0,0,0,0.2)]"
+                          title="Reset to T+0"
+                        >
+                          <mat-icon class="!text-2xl">skip_previous</mat-icon>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </section>
 
                 <!-- Timeline Scrubber -->
                 <section>
-                  <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em] block mb-3">Timeline Scrub (0 – 2h)</span>
-                  <div class="px-1">
+                  <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-4">Timeline Scrub (0 – 2h)</span>
+                  <div class="px-2 py-4 bg-white/5 border border-white/10 rounded-sm">
                     <input
                       type="range"
                       min="0"
                       max="7200"
                       [value]="scenario.simTime()"
                       (input)="onTimeSlider($event)"
-                      class="w-full cursor-pointer accent-boreal-green"
+                      class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-400"
                     />
-                    <div class="flex justify-between text-[7px] text-boreal-text-muted font-mono mt-1.5 px-0.5">
+                    <div class="flex justify-between text-[8px] text-slate-500 font-mono mt-3 px-1">
                       <span>T+00:00</span>
                       <span>T+00:30</span>
                       <span>T+01:00</span>
@@ -457,51 +462,55 @@ interface FeatureViewModel {
 
                 <!-- Phase Navigation -->
                 <section>
-                  <span class="text-[9px] font-black text-boreal-text-muted uppercase tracking-[0.2em] block mb-3">Scenario Phases</span>
-                  <div class="space-y-2">
+                  <span class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-4">Scenario Phases</span>
+                  <div class="space-y-3">
                     @for (phase of scenario.phases(); track phase.id) {
                       <div
-                        class="flex items-center gap-3 p-3 rounded-sm border transition-colors"
-                        [class.bg-boreal-green/5]="phase.status === 'ACTIVE'"
-                        [class.border-boreal-green/30]="phase.status === 'ACTIVE'"
-                        [class.bg-boreal-canvas/20]="phase.status === 'COMPLETED'"
-                        [class.border-boreal-border/40]="phase.status === 'COMPLETED'"
-                        [class.bg-boreal-panel-elevated/20]="phase.status === 'UPCOMING'"
-                        [class.border-boreal-border]="phase.status === 'UPCOMING'"
+                        class="flex items-center gap-4 p-4 rounded-sm border transition-colors shadow-sm"
+                        [class.bg-emerald-500/5]="phase.status === 'ACTIVE'"
+                        [class.border-emerald-500/30]="phase.status === 'ACTIVE'"
+                        [class.shadow-[0_0_15px_rgba(16,185,129,0.1)]]="phase.status === 'ACTIVE'"
+                        [class.bg-black/20]="phase.status === 'COMPLETED'"
+                        [class.border-white/5]="phase.status === 'COMPLETED'"
+                        [class.bg-white/5]="phase.status === 'UPCOMING'"
+                        [class.border-white/10]="phase.status === 'UPCOMING'"
                       >
                         <div
-                          class="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-                          [class.bg-boreal-green/20]="phase.status === 'ACTIVE'"
-                          [class.bg-boreal-panel-elevated]="phase.status !== 'ACTIVE'"
+                          class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border"
+                          [class.bg-emerald-500/20]="phase.status === 'ACTIVE'"
+                          [class.border-emerald-500/40]="phase.status === 'ACTIVE'"
+                          [class.bg-white/5]="phase.status !== 'ACTIVE'"
+                          [class.border-transparent]="phase.status !== 'ACTIVE'"
                         >
                           @if (phase.status === 'COMPLETED') {
-                            <mat-icon class="!text-xs text-boreal-text-muted">check</mat-icon>
+                            <mat-icon class="!text-sm text-emerald-500">check</mat-icon>
                           } @else if (phase.status === 'ACTIVE') {
-                            <div class="w-2 h-2 rounded-full bg-boreal-green animate-pulse"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
                           } @else {
-                            <div class="w-2 h-2 rounded-full bg-boreal-border"></div>
+                            <div class="w-2 h-2 rounded-full bg-white/20"></div>
                           }
                         </div>
-                        <div class="flex flex-col flex-grow min-w-0">
+                        <div class="flex flex-col flex-grow min-w-0 gap-1">
                           <span
-                            class="text-[10px] font-bold uppercase tracking-tight"
-                            [class.text-boreal-green]="phase.status === 'ACTIVE'"
-                            [class.text-boreal-text-secondary]="phase.status === 'COMPLETED'"
-                            [class.text-boreal-text-primary]="phase.status === 'UPCOMING'"
+                            class="text-[11px] font-bold uppercase tracking-widest"
+                            [class.text-emerald-400]="phase.status === 'ACTIVE'"
+                            [class.text-slate-500]="phase.status === 'COMPLETED'"
+                            [class.text-white]="phase.status === 'UPCOMING'"
                           >{{phase.name}}</span>
-                          <span class="text-[9px] text-boreal-text-muted truncate">{{phase.description}}</span>
+                          <span class="text-[10px] text-slate-400 truncate">{{phase.description}}</span>
                         </div>
                         <span
-                          class="px-2 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-sm shrink-0"
-                          [class.bg-boreal-green/10]="phase.status === 'ACTIVE'"
-                          [class.text-boreal-green]="phase.status === 'ACTIVE'"
-                          [class.bg-boreal-panel-elevated]="phase.status !== 'ACTIVE'"
-                          [class.text-boreal-text-muted]="phase.status !== 'ACTIVE'"
+                          class="px-2.5 py-1 text-[8px] font-black uppercase tracking-widest rounded-[2px] shrink-0 border border-transparent"
+                          [class.bg-emerald-500/10]="phase.status === 'ACTIVE'"
+                          [class.border-emerald-500/20]="phase.status === 'ACTIVE'"
+                          [class.text-emerald-400]="phase.status === 'ACTIVE'"
+                          [class.bg-white/5]="phase.status !== 'ACTIVE'"
+                          [class.text-slate-500]="phase.status !== 'ACTIVE'"
                         >{{phase.status}}</span>
                         @if (phase.status !== 'ACTIVE') {
                           <button
                             (click)="scenario.setPhase(phase.id)"
-                            class="px-3 py-1.5 text-[8px] font-black uppercase tracking-widest rounded-sm border border-boreal-border text-boreal-text-muted hover:text-boreal-text-primary hover:bg-boreal-panel-elevated transition-all shrink-0"
+                            class="ml-2 px-4 py-2 text-[8px] font-black uppercase tracking-widest rounded-sm border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all shrink-0"
                           >Jump</button>
                         }
                       </div>
@@ -511,8 +520,8 @@ interface FeatureViewModel {
 
               </div>
 
-              <footer class="p-4 border-t border-boreal-border flex justify-end bg-boreal-panel-muted/40 shrink-0">
-                <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-boreal-blue text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-boreal-blue/20 hover:brightness-110 active:scale-95 transition-all">
+              <footer class="p-4 px-5 border-t border-white/10 flex justify-end bg-black/20 shrink-0">
+                <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-sky-500 text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:brightness-110 active:scale-95 transition-all">
                   Close
                 </button>
               </footer>
@@ -629,7 +638,7 @@ interface FeatureViewModel {
               </div>
 
               <footer class="p-4 px-5 border-t border-white/10 flex justify-end bg-black/20 shrink-0">
-                <button (click)="orchestrator.close()" class="px-8 py-2.5 bg-sky-500 text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:brightness-110 active:scale-95 transition-all">
+                <button (click)="handleAcknowledge(feature)" class="px-8 py-2.5 bg-sky-500 text-white rounded-sm text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:brightness-110 active:scale-95 transition-all">
                   {{feature.acknowledgeLabel || 'ACKNOWLEDGE PLAN'}}
                 </button>
               </footer>
@@ -642,6 +651,10 @@ interface FeatureViewModel {
   `,
   styles: [`
     :host { display: block; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -651,7 +664,7 @@ export class PlannedCapabilityModal {
   policy       = inject(PolicyStore);
   scenario     = inject(ScenarioStore);
   sensorFeed   = inject(SensorFeedStore);
-  private readonly router: Router = inject(Router);
+  private readonly router = inject(Router);
 
   readonly alertCategories: LogFilter[] = ['ALL', 'TACTICAL', 'POLICY', 'READINESS', 'LAB', 'SYSTEM'];
   logFilter = signal<LogFilter>('ALL');
@@ -761,11 +774,11 @@ export class PlannedCapabilityModal {
   auditStats = computed(() => {
     const logs = this.audit.logs();
     return [
-      { label: 'Total Events',   value: String(logs.length),                                          colorClass: 'text-boreal-text-primary' },
-      { label: 'Tactical',       value: String(logs.filter(l => l.category === 'TACTICAL').length),   colorClass: 'text-boreal-red' },
-      { label: 'Policy',         value: String(logs.filter(l => l.category === 'POLICY').length),     colorClass: 'text-boreal-blue' },
-      { label: 'Readiness',      value: String(logs.filter(l => l.category === 'READINESS').length),  colorClass: 'text-boreal-amber' },
-      { label: 'System',         value: String(logs.filter(l => l.category === 'SYSTEM').length),     colorClass: 'text-boreal-text-muted' },
+      { label: 'Total Events',   value: String(logs.length),                                          colorClass: 'text-white' },
+      { label: 'Tactical',       value: String(logs.filter(l => l.category === 'TACTICAL').length),   colorClass: 'text-rose-400' },
+      { label: 'Policy',         value: String(logs.filter(l => l.category === 'POLICY').length),     colorClass: 'text-sky-400' },
+      { label: 'Readiness',      value: String(logs.filter(l => l.category === 'READINESS').length),  colorClass: 'text-amber-400' },
+      { label: 'System',         value: String(logs.filter(l => l.category === 'SYSTEM').length),     colorClass: 'text-slate-400' },
     ];
   });
 

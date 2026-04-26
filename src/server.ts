@@ -41,11 +41,6 @@ const LOCK_PASSWORD = process.env['APP_LOCK_PASSWORD'] ?? 'dev-only-unlock';
 const LOCK_TOKEN_TTL_SECONDS = Number(process.env['APP_LOCK_TOKEN_TTL_SECONDS'] ?? 60 * 60);
 const LOCK_COOKIE_NAME = 'steel_access';
 const FASTAPI_BASE_URL = process.env['FASTAPI_BASE_URL'] ?? 'http://127.0.0.1:8000';
-const FASTAPI_WS_URL = (() => {
-  const url = new URL(FASTAPI_BASE_URL);
-  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-  return url;
-})();
 // ── Mock theater state ────────────────────────────────────────────────────────
 
 interface Geometry { x: number; y: number; heading: number; velocity: number; }

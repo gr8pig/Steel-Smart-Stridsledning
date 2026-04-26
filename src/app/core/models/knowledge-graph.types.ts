@@ -4,7 +4,8 @@ export type NodeCategory =
   | "LOGISTICS"
   | "INTELLIGENCE"
   | "GOVERNANCE"
-  | "SURFACE";
+  | "SURFACE"
+  | "DOCUMENTATION";
 export type PlatformArea =
   | "runtime"
   | "backend"

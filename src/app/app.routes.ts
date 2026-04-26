@@ -72,7 +72,13 @@ export const routes: Routes = [
   },
   {
     path: 'showcase',
-    loadComponent: () => import('./features/showcase').then(m => m.Showcase)
+    loadComponent: () => import('./features/showcase/showcase-root.component').then(m => m.ShowcaseRootComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/showcase/components/showcase.component').then(m => m.ShowcaseComponent)
+      }
+    ]
   },
   {
     path: '**',

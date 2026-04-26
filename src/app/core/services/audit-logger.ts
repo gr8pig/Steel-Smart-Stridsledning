@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { ScenarioStore } from '../state/scenario.store';
+import { SteelApiService } from './steel-api.service';
 
 export interface AuditEvent {
   id: string;
@@ -14,6 +15,7 @@ export interface AuditEvent {
 @Injectable({ providedIn: 'root' })
 export class AuditLogger {
   private scenario = inject(ScenarioStore);
+  private api = inject(SteelApiService);
 
   private _logs = signal<AuditEvent[]>([
     {
@@ -36,6 +38,7 @@ export class AuditLogger {
       simTime: this.scenario.simTime(),
     };
     this._logs.update(list => [newEvent, ...list]);
+    this.api.logAuditEvent({ eventType: event.action ?? 'ACTION', payload: event, actorId: event.actor }).subscribe();
   }
 
   clear() {

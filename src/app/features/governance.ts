@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { PolicyStore } from '../core/state/policy.store';
@@ -7,6 +7,7 @@ import { LabStore } from '../core/state/lab.store';
 import { OrchestrationStore } from '../core/state/orchestration.store';
 import { AuditLogger } from '../core/services/audit-logger';
 import { LLMService } from '../core/services/llm.service';
+import { SteelApiService } from '../core/services/steel-api.service';
 
 @Component({
   selector: 'app-governance',
@@ -238,6 +239,7 @@ import { LLMService } from '../core/services/llm.service';
                 <span>Log Trace & Rationale Consistency Audit</span>
                 <div class="flex gap-4">
                     <button (click)="audit.clear()" class="text-[9px] text-boreal-text-muted hover:text-boreal-text-primary uppercase font-bold transition-colors">Clear Log</button>
+                    <button (click)="downloadCSV()" class="text-[9px] text-boreal-blue hover:text-boreal-text-primary uppercase font-bold transition-colors">Export CSV</button>
                     <span class="text-boreal-text-muted/40 font-mono text-[10px]">V-AUDIT: SSS_9.0</span>
                 </div>
             </div>
@@ -307,13 +309,14 @@ import { LLMService } from '../core/services/llm.service';
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Governance {
+export class Governance implements OnInit {
     policy        = inject(PolicyStore);
     tactical      = inject(TacticalStore);
     lab           = inject(LabStore);
     orchestration = inject(OrchestrationStore);
     audit         = inject(AuditLogger);
     llm           = inject(LLMService);
+    api           = inject(SteelApiService);
 
     readonly _auditHash = (() => {
         const h = Array.from({length: 40}, (_, i) => 'abcdef0123456789'[(i * 7 + 11) % 16]).join('');
@@ -324,6 +327,25 @@ export class Governance {
     _rationaleSource  = signal<'BACKEND' | 'FALLBACK' | null>(null);
     _rationaleModel   = signal<string | null>(null);
     _rationaleLoading = signal(false);
+
+    ngOnInit() {
+        this.api.getAuditLog().subscribe(logs => {
+            // merge logic here if needed
+        });
+    }
+
+    downloadCSV() {
+        const logs = this.audit.logs();
+        const csvContent = "data:text/csv;charset=utf-8," 
+            + ["Time,Actor,Action,Rationale"].concat(logs.map(l => `${l.time},${l.actor},${l.action},"${l.rationale.replace(/"/g, '""')}"`)).join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `audit_log_${new Date().toISOString()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
     generateRationale() {
         const coa = this.policy.selectedCOA();

@@ -290,7 +290,7 @@ interface DragState {
                       [routerLink]="node.route"
                       class="mt-3 inline-flex rounded-sm border border-sky-400/30 bg-sky-400/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.24em] text-sky-200 transition-colors hover:bg-sky-400/15"
                     >
-                      Open Route
+                      {{ node.category === 'DOCUMENTATION' ? 'View Document' : 'Open Route' }}
                     </a>
                   }
                 </div>
@@ -484,7 +484,7 @@ interface DragState {
 })
 export class KnowledgeGraph {
   readonly store = inject(KnowledgeGraphStore);
-  readonly categories = PLATFORM_NODE_CATEGORIES;
+  readonly categories = [...PLATFORM_NODE_CATEGORIES, 'DOCUMENTATION' as const];
   readonly areas = PLATFORM_AREAS;
 
   readonly viewMode = signal<KnowledgeGraphViewMode>("GRAPH");

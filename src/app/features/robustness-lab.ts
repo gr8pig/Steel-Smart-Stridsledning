@@ -422,6 +422,7 @@ export class RobustnessLab {
             jammerSeverity:   this.jammerSeverity(),
             trackDegradation: this.trackDegradation(),
             nRuns:            500,
+            overrides:        this.lab.overrides(), // Inject lab store overrides
         }).subscribe({
             next: result => {
                 clearInterval(progressInterval);

@@ -142,7 +142,6 @@ export class NavRail {
     { path: '/commander',       icon: 'account_tree',          label: 'Commander Orchestrator',  flag: null },
     { path: '/readiness',       icon: 'battery_charging_full', label: 'Base Resilience',         flag: null },
     { path: '/logistics',       icon: 'local_shipping',        label: 'Logistics & Supply',      flag: null },
-    { path: '/reference',       icon: 'menu_book',             label: 'Reference Graph',         flag: null },
     { path: '/threat-inspector',icon: 'visibility',            label: 'Threat Inspector',        flag: null },
     { path: '/robustness-lab',  icon: 'science',               label: 'Robustness Lab',          flag: null },
     { path: '/counterfactual-lab', icon: 'psychology',          label: 'Counterfactual Lab',      flag: null },

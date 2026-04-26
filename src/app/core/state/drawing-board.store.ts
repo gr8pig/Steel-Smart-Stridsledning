@@ -1,6 +1,7 @@
-import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { SteelApiService } from '../services/steel-api.service';
 import { ENGAGEMENT_MAP_FEATURES } from '../../shared/domain/engagement-map.data';
+import { MapFeature } from '../../shared/domain/models';
 
 export type DrawingUnitType =
   | 'INFANTRY' | 'ARMOR' | 'ARTILLERY' | 'SPECIAL_FORCES'
@@ -20,16 +21,17 @@ export interface DrawingUnit {
   startX: number;
   startY: number;
   waypoints: DrawingWaypoint[];
-  speed: number; // SVG units per simulated second
+  speed: number; 
   armament?: string;
   origin?: string;
+  elevation?: number;
 }
 
 export interface UnitPosition {
   unitId: string;
   x: number;
   y: number;
-  heading: number; // degrees, 0 = right, 90 = down
+  heading: number;
 }
 
 export interface IntentPrediction {
@@ -47,13 +49,43 @@ export interface ConflictNode {
   pk: number;
 }
 
+export interface BlueReaction {
+  id: string;
+  targetId: string;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+}
+
+export interface ScenarioDescriptor {
+  id: string;
+  name: string;
+  units: DrawingUnit[];
+  updatedAt?: string;
+}
+
 export interface ScenarioBundle {
-  blueReactions: any[];
+  blueReactions: BlueReaction[];
   conflictNodes: ConflictNode[];
   trajectories?: Record<string, { x: number, y: number, t: number }[]>;
 }
 
-const SPEEDS: Record<DrawingUnitType, number> = {
+export const UNIT_CATALOGUE: { group: string; type: DrawingUnitType; label: string }[] = [
+  { group: 'Ground', type: 'INFANTRY',       label: 'Infantry'   },
+  { group: 'Ground', type: 'ARMOR',          label: 'Armor'      },
+  { group: 'Ground', type: 'ARTILLERY',      label: 'Artillery'  },
+  { group: 'Ground', type: 'SPECIAL_FORCES', label: 'SF'         },
+  { group: 'Naval',  type: 'SHIP_DESTROYER', label: 'Destroyer'  },
+  { group: 'Naval',  type: 'SHIP_CARRIER',   label: 'Carrier'    },
+  { group: 'Naval',  type: 'SHIP_SUBMARINE', label: 'Submarine'  },
+  { group: 'Naval',  type: 'SHIP_PATROL',    label: 'Patrol'     },
+  { group: 'Air',    type: 'AIRCRAFT',       label: 'Aircraft'   },
+  { group: 'Air',    type: 'DRONE',          label: 'Drone'      },
+  { group: 'Air',    type: 'HELICOPTER',     label: 'Helicopter' },
+];
+
+export const SPEEDS: Record<DrawingUnitType, number> = {
   INFANTRY:       30,
   ARMOR:          60,
   ARTILLERY:      25,
@@ -73,8 +105,9 @@ let _idCounter = 1;
 export class DrawingBoardStore {
   private api = inject(SteelApiService);
 
+  // State Signals
   units          = signal<DrawingUnit[]>([]);
-  scenarios      = signal<any[]>([]);
+  scenarios      = signal<ScenarioDescriptor[]>([]);
   selectedUnitId = signal<string | null>(null);
   mode           = signal<DrawingMode>('SELECT');
   activeUnitType = signal<DrawingUnitType>('INFANTRY');
@@ -94,11 +127,17 @@ export class DrawingBoardStore {
     this.refreshScenarios();
   }
 
-  refreshScenarios() {
-    this.api.getScenarios().subscribe(ss => this.scenarios.set(ss));
+  refreshScenarios(): void {
+    this.api.getScenarios().subscribe(ss => {
+      this.scenarios.set(ss as ScenarioDescriptor[]);
+    });
   }
 
-  saveCurrentToVault(name: string) {
+  unitsByCategory(group: string) {
+    return UNIT_CATALOGUE.filter(u => u.group === group);
+  }
+
+  saveCurrentToVault(name: string): void {
     const scenario = {
       name,
       units: this.units(),
@@ -108,7 +147,7 @@ export class DrawingBoardStore {
     });
   }
 
-  loadScenario(id: string) {
+  loadScenario(id: string): void {
     const scenario = this.scenarios().find(s => s.id === id);
     if (scenario) {
       this.units.set(scenario.units || []);
@@ -118,15 +157,15 @@ export class DrawingBoardStore {
     }
   }
 
-  deleteScenario(id: string) {
+  deleteScenario(id: string): void {
     this.api.deleteScenario(id).subscribe(() => {
       this.refreshScenarios();
     });
   }
 
-  runAdvancedSimulation() {
+  runAdvancedSimulation(): void {
     this.api.runAdvancedSim(this.units()).subscribe(bundle => {
-      this.advancedSimulationBundle.set(bundle);
+      this.advancedSimulationBundle.set(bundle as ScenarioBundle);
       this.simulationMode.set('ADVANCED');
     });
   }
@@ -167,12 +206,12 @@ export class DrawingBoardStore {
       return u?.side === 'RED';
     });
     
-    const blueBases = ENGAGEMENT_MAP_FEATURES.filter(f => f.side === 'north' && f.subtype === 'air_base');
+    const blueBases = (ENGAGEMENT_MAP_FEATURES as MapFeature[]).filter(f => f.side === 'north' && f.subtype === 'air_base');
     
-    const interceptors: any[] = [];
+    const interceptors: BlueReaction[] = [];
     
     redUnits.forEach(red => {
-      let nearestBase = null;
+      let nearestBase: MapFeature | null = null;
       let minDist = Infinity;
       
       blueBases.forEach(base => {
@@ -189,8 +228,8 @@ export class DrawingBoardStore {
         interceptors.push({
           id: `INT-${red.unitId}`,
           targetId: red.unitId,
-          startX: (nearestBase as any).x,
-          startY: (nearestBase as any).y,
+          startX: (nearestBase as MapFeature).x ?? 0,
+          startY: (nearestBase as MapFeature).y ?? 0,
           endX: red.x,
           endY: red.y
         });
@@ -204,50 +243,59 @@ export class DrawingBoardStore {
     const type = this.activeUnitType();
     const prefix = type.replace('SHIP_', 'SHP-').slice(0, 3).toUpperCase();
     const id = `${prefix}-${String(_idCounter++).padStart(3, '0')}`;
+    
+    let fakeElevation = 0;
+    if (['AIRCRAFT', 'DRONE', 'HELICOPTER'].includes(type)) {
+      fakeElevation = Math.floor(Math.random() * 14000) + 1000; // 1k-15k
+    } else if (type === 'SPECIAL_FORCES') {
+      fakeElevation = Math.floor(Math.random() * 500); // ~500
+    }
+
     this.units.update(us => [...us, {
       id, type, side: this.activeSide(), label: id,
       startX: x, startY: y, waypoints: [], speed: SPEEDS[type],
-      armament: this.activeArmament(), origin: this.activeOrigin()
+      armament: this.activeArmament(), origin: this.activeOrigin(),
+      elevation: fakeElevation
     }]);
     return id;
   }
 
-  addWaypoint(unitId: string, x: number, y: number) {
+  addWaypoint(unitId: string, x: number, y: number): void {
     this.units.update(us => us.map(u =>
       u.id === unitId ? { ...u, waypoints: [...u.waypoints, { x, y }] } : u
     ));
   }
 
-  removeLastWaypoint(unitId: string) {
+  removeLastWaypoint(unitId: string): void {
     this.units.update(us => us.map(u =>
       u.id === unitId ? { ...u, waypoints: u.waypoints.slice(0, -1) } : u
     ));
   }
 
-  deleteUnit(id: string) {
+  deleteUnit(id: string): void {
     this.units.update(us => us.filter(u => u.id !== id));
     if (this.selectedUnitId() === id) this.selectedUnitId.set(null);
   }
 
-  clearAll() {
+  clearAll(): void {
     this.units.set([]);
     this.selectedUnitId.set(null);
     this.playbackTime.set(0);
     this.isPlaying.set(false);
   }
 
-  selectUnit(id: string | null) { this.selectedUnitId.set(id); }
+  selectUnit(id: string | null): void { this.selectedUnitId.set(id); }
 
-  setMode(m: DrawingMode) {
+  setMode(m: DrawingMode): void {
     this.mode.set(m);
     if (m !== 'PLAYBACK') this.isPlaying.set(false);
   }
 
-  togglePlay() { this.isPlaying.update(v => !v); }
+  togglePlay(): void { this.isPlaying.update(v => !v); }
 
-  resetPlayback() { this.playbackTime.set(0); this.isPlaying.set(false); }
+  resetPlayback(): void { this.playbackTime.set(0); this.isPlaying.set(false); }
 
-  advanceTime(deltaSec: number) {
+  advanceTime(deltaSec: number): void {
     const total = this.totalDuration();
     const prevT = this.playbackTime();
     this.playbackTime.update(t => {

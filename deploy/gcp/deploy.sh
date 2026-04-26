@@ -55,7 +55,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --cpu-boost \
   --cpu-throttling \
   --port 8080 \
-  --set-env-vars NODE_ENV=production,OPENROUTER_API_KEY=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,RUNPOD_API_KEY=rpa_PAWQUYLZKHCHZIPHA6S88RNX3LLYVZVO8KLZHOPLihko27,RUNPOD_ENDPOINT_ID=v2-deep-sim-boreal-001 \
+  --set-secrets=OPENROUTER_API_KEY=OPENROUTER_API_KEY:latest,RUNPOD_API_KEY=RUNPOD_API_KEY:latest,RUNPOD_ENDPOINT_ID=RUNPOD_ENDPOINT_ID:latest \
   --project "${PROJECT_ID}"
 
 echo "Deployed to Cloud Run in ${REGION}:"

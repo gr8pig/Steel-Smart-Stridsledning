@@ -23,9 +23,17 @@ export class LabStore {
   private _insights = signal<LabInsight[]>([]);
   private _latestInsightId = signal<string | null>(null);
   private _heatmap = signal<number[][] | null>(null);
+  private _overrides = signal<Record<string, number>>({});
+  private _runResult = signal<LabRunResult | null>(null);
 
   insights     = this._insights.asReadonly();
   heatmap      = this._heatmap.asReadonly();
+  overrides    = this._overrides.asReadonly();
+  runResult    = this._runResult.asReadonly();
+
+  updateOverride(key: string, value: number) {
+    this._overrides.update(o => ({ ...o, [key]: value }));
+  }
 
   latestInsight = computed(() =>
     this._insights().find(i => i.id === this._latestInsightId()) || null
@@ -50,6 +58,7 @@ export class LabStore {
   }
 
   setRunResult(result: LabRunResult) {
+    this._runResult.set(result);
     this._heatmap.set(result.failureHeatmap);
   }
 
@@ -57,5 +66,6 @@ export class LabStore {
     this._insights.set([]);
     this._latestInsightId.set(null);
     this._heatmap.set(null);
+    this._runResult.set(null);
   }
 }

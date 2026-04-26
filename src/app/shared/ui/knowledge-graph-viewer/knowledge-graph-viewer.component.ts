@@ -36,10 +36,10 @@ class DataFlowSystem {
 
     const material = new THREE.PointsMaterial({
       color,
-      size: 5,
+      size: 12,
       map: texture,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.95,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -48,7 +48,7 @@ class DataFlowSystem {
 
     for (let i = 0; i < this.particleCount; i++) {
       this.progress.push(Math.random());
-      this.speeds.push(0.001 + Math.random() * 0.0025);
+      this.speeds.push(0.003 + Math.random() * 0.005);
     }
 
     scene.add(this.points);
@@ -116,9 +116,9 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
   private matGhost = new THREE.MeshStandardMaterial({ color: 0x1e293b, transparent: true, opacity: 0.1, wireframe: true });
   private matSemi = new THREE.MeshStandardMaterial({ color: 0x334155, transparent: true, opacity: 0.35 });
 
-  private edgeMaterialActive = new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.4 });
-  private edgeMaterialGhost = new THREE.LineBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.08 });
-  private arrowheadGeometry = new THREE.ConeGeometry(2, 6, 8);
+  private edgeMaterialActive = new THREE.LineBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.8, linewidth: 2 });
+  private edgeMaterialGhost = new THREE.LineBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.2 });
+  private arrowheadGeometry = new THREE.ConeGeometry(4, 10, 8); // Slightly larger arrowheads
 
   private edgesGroup: THREE.Group = new THREE.Group();
 
@@ -126,10 +126,9 @@ export class KnowledgeGraphViewerComponent implements AfterViewInit, OnDestroy {
     this.spriteTexture = this.createGlowTexture();
     effect(() => { 
       if (this.scene) {
-        // Redraw when filters or selection change
-        this.store.filteredNodes();
+        const nodes = this.store.filteredNodes(); // Reacts to filter changes
         this.store.selectedNodeId();
-        this.buildNodes(this.store.nodes()); 
+        this.buildNodes(nodes); // Pass filtered nodes
       }
     });
   }

@@ -10,16 +10,29 @@ import { DecisionFabricStore } from '../../core/state/decision-fabric.store';
 import { CapabilityOrchestrator } from '../../core/services/capability-orchestrator';
 import { RationaleOrchestrator } from './rationale-drawer';
 import { CapabilityLayerSwitch } from './capability-layer-switch';
+import { TelemetryService } from '../../core/services/telemetry.service';
 import { ShellLayoutService } from '../../core/services/shell-layout.service';
 
 @Component({
   selector: 'app-command-bar',
   standalone: true,
-  imports: [MatIconModule, CommonModule, CapabilityLayerSwitch, RouterLink],
+  imports: [CommonModule, MatIconModule, RouterLink, CapabilityLayerSwitch],
   template: `
-    <div class="flex flex-col gap-2 border-b border-boreal-border bg-boreal-canvas/80 px-3 py-2 backdrop-blur-xl select-none z-50 sm:px-4 lg:h-14 lg:flex-row lg:items-center lg:justify-between lg:px-6">
-      <!-- Left: Operational Context -->
-      <div class="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 lg:gap-6">
+    <div class="flex h-14 w-full items-center justify-between border-b border-boreal-border bg-boreal-panel/80 px-4 backdrop-blur-md">
+      <!-- Left: Context & Brand -->
+      <div class="flex items-center gap-4 lg:gap-6">
+        <div class="flex gap-4">
+            <div class="flex flex-col">
+                <span class="text-[8px] font-mono font-black text-blue-400 uppercase tracking-widest">⚡ INF</span>
+                <span class="text-[10px] font-mono font-bold">{{telemetry.inferenceLatency()}}ms</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[8px] font-mono font-black text-green-400 uppercase tracking-widest">⇌ RTT</span>
+                <span class="text-[10px] font-mono font-bold">{{telemetry.networkRTT()}}ms</span>
+            </div>
+            <div class="w-2 h-2 rounded-full mt-2" [class.bg-green-500]="telemetry.syncStatus() === 'CONNECTED'" [class.bg-red-500]="telemetry.syncStatus() === 'DISCONNECTED'"></div>
+        </div>
+
         <button
           type="button"
           class="flex h-9 w-9 items-center justify-center rounded-sm border border-boreal-border bg-boreal-panel-muted text-boreal-text-muted transition-colors hover:bg-boreal-panel-elevated hover:text-boreal-text-primary lg:hidden"
@@ -163,6 +176,7 @@ export class CommandBar {
   rationale = inject(RationaleOrchestrator);
   sensorFeed = inject(SensorFeedStore);
   layout = inject(ShellLayoutService);
+  telemetry = inject(TelemetryService);
 
   alertCount = computed(() => this.audit.logs().length);
 

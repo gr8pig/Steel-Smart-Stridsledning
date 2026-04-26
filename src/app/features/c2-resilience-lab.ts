@@ -1,8 +1,12 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DecisionFabricStore } from '../core/state/decision-fabric.store';
 import { TacticalStore } from '../core/state/tactical.store';
 import { C2ResilienceGaugeComponent } from '../shared/ui/c2-resilience-gauge';
+import { SteelApiService, LabRunResult } from '../core/services/steel-api.service';
+import { PolicyStore } from '../core/state/policy.store';
+import { effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-c2-resilience-lab',
@@ -130,17 +134,90 @@ import { C2ResilienceGaugeComponent } from '../shared/ui/c2-resilience-gauge';
           <div class="absolute -bottom-4 left-full -translate-x-1/2 text-xs text-gray-500 font-mono uppercase">10m</div>
         </div>
       </div>
+      
+      <div class="mt-6 bg-gray-800 p-6 rounded-xl border border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-400 uppercase tracking-wider">Stress Analysis</h2>
+          <button
+            (click)="runStressTest()"
+            [disabled]="stressRunning()"
+            class="px-4 py-2 bg-boreal-blue text-white rounded font-bold text-sm uppercase tracking-wide disabled:opacity-50 hover:bg-blue-600 transition-colors">
+            {{ stressRunning() ? 'Running...' : 'Run Stress Test' }}
+          </button>
+        </div>
+        @if (stressResult(); as r) {
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div><p class="text-xs text-gray-500">Robustness</p><p class="text-2xl font-mono text-white">{{ r.robustnessScore | number:'1.2-2' }}</p></div>
+            <div><p class="text-xs text-gray-500">Fail Prob</p><p class="text-2xl font-mono text-red-400">{{ r.failureProbability | percent:'1.0-1' }}</p></div>
+            <div><p class="text-xs text-gray-500">Fragility</p><p class="text-sm font-mono text-yellow-400 mt-1">{{ r.fragilityPoint }}</p></div>
+          </div>
+        }
+        @if (scoreHistory().length > 1) {
+          <div class="mt-4">
+            <p class="text-xs text-gray-500 mb-1">Resilience History</p>
+            <svg width="120" height="32" class="text-boreal-blue">
+              <path [attr.d]="sparklinePoints" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            </svg>
+          </div>
+        }
+      </div>
     </div>
   `,
   styles: [`
     .text-healthy { color: #10b981; }
     .text-stressed { color: #f59e0b; }
     .text-degraded { color: #ef4444; }
+    .bg-boreal-blue { background-color: #3b82f6; }
   `]
 })
 export class C2ResilienceLabComponent {
   store = inject(DecisionFabricStore);
   tacticalStore = inject(TacticalStore);
+  private api = inject(SteelApiService);
+  private policyStore = inject(PolicyStore);
+  private destroyRef = inject(DestroyRef);
+  stressResult = signal<LabRunResult | null>(null);
+  stressRunning = signal(false);
+  private _scoreHistory = signal<number[]>([]);
+  readonly scoreHistory = this._scoreHistory.asReadonly();
+
+  constructor() {
+    effect(() => {
+      const score = this.store.resilienceScore();
+      this._scoreHistory.update(hist => {
+        const next = [...hist, score];
+        return next.length > 20 ? next.slice(-20) : next;
+      });
+    });
+  }
+
+  runStressTest() {
+    if (this.stressRunning()) return;
+    this.stressRunning.set(true);
+    this.stressResult.set(null);
+    const coaId = (this.policyStore as any).activeCOAId?.() ?? 'balanced';
+    this.api.runLab({
+      coaId,
+      redModel: 'DECEPTIVE',
+      jammerSeverity: 2,
+      trackDegradation: 1,
+      nRuns: 200,
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: result => { this.stressResult.set(result); this.stressRunning.set(false); },
+      error: () => this.stressRunning.set(false),
+    });
+  }
+
+  get sparklinePoints(): string {
+    const hist = this._scoreHistory();
+    if (hist.length < 2) return '';
+    const w = 120, h = 32;
+    return hist.map((v, i) => {
+      const x = (i / (hist.length - 1)) * w;
+      const y = h - (v * h);
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  }
 
   projectedCollapse = computed(() => this.store.collapseHorizon());
 
