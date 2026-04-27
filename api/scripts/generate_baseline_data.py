@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import asyncio
 import json
 import os
 import sys
@@ -16,20 +15,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from api.baseline_bundle import build_simulation_context, generate_bundle, resolve_scenario_keys
 from api.main import ensemble_inference, runpod_orchestrator
-
-
-async def _wait_for_runpod_job(job_id: str, *, max_polls: int = 60, poll_interval_seconds: int = 5) -> dict[str, Any]:
-    for _poll in range(max_polls):
-        await asyncio.sleep(poll_interval_seconds)
-        status = await runpod_orchestrator.poll_status(job_id)
-        if status["status"] in {"COMPLETED", "FAILED"}:
-            return status
-
-    return {
-        "id": job_id,
-        "status": "FAILED",
-        "error": f"Timed out after {max_polls * poll_interval_seconds}s",
-    }
 
 
 def _write_json(file_path: Path, payload: dict[str, Any]) -> None:
@@ -85,19 +70,11 @@ async def generate_all_baselines(
             "task": "generate_baseline_bundle",
             "scenarioKeys": scenario_keys,
         }
-        stable_job_id = "baseline-bundle"
         try:
-            await runpod_orchestrator.trigger_deep_sim(
-                {
-                    **payload,
-                    "scenarioDigest": "baseline-bundle",
-                    "stableJobId": stable_job_id,
-                }
+            output = await runpod_orchestrator.run_sync(
+                payload,
+                timeout_seconds=300,
             )
-            status = await _wait_for_runpod_job(stable_job_id)
-            if status["status"] != "COMPLETED":
-                raise RuntimeError(status.get("error") or "RunPod bundle job failed")
-            output = status.get("output") or {}
             results = output.get("content") if isinstance(output, dict) and "content" in output else output
             if not isinstance(results, dict):
                 raise RuntimeError("RunPod bundle job returned an unexpected payload")
@@ -152,6 +129,8 @@ def main() -> None:
     args = parse_args()
     requested = None if args.scenarios == "all" else [key.strip() for key in args.scenarios.split(",") if key.strip()]
     scenario_keys = resolve_scenario_keys(requested)
+
+    import asyncio
 
     asyncio.run(
         generate_all_baselines(

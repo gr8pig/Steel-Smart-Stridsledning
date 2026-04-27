@@ -90,6 +90,21 @@ class TestRunPodOrchestrator(unittest.IsolatedAsyncioTestCase):
             await orchestrator.trigger_deep_sim({"data": "test"})
         self.assertEqual(str(cm.exception), "RUNPOD_ENDPOINT_ID must be configured to trigger simulations.")
 
+    async def test_run_sync_success(self):
+        with patch("runpod.Endpoint") as mock_endpoint_class:
+            mock_endpoint = MagicMock()
+            mock_endpoint_class.return_value = mock_endpoint
+            mock_endpoint.run_sync.return_value = {"content": {"scenarios": {"seed": {}}}}
+
+            orchestrator = RunPodOrchestrator()
+            orchestrator.endpoint_id = "test_endpoint_id"
+
+            result = await orchestrator.run_sync({"task": "generate_baseline_bundle"}, timeout_seconds=42)
+
+            self.assertEqual(result, {"content": {"scenarios": {"seed": {}}}})
+            mock_endpoint_class.assert_called_once_with("test_endpoint_id")
+            mock_endpoint.run_sync.assert_called_once_with({"task": "generate_baseline_bundle"}, timeout=42)
+
     async def test_trigger_training_job_with_gpu_limits(self):
         with patch("runpod.Endpoint") as mock_endpoint_class:
             mock_endpoint = MagicMock()
@@ -143,8 +158,9 @@ class TestRunPodOrchestrator(unittest.IsolatedAsyncioTestCase):
     async def test_poll_status_in_progress_queries_runpod(self):
         with patch("runpod.Endpoint") as mock_endpoint_class:
             mock_endpoint = MagicMock()
+            mock_endpoint.endpoint_id = "test_endpoint_id"
             mock_endpoint_class.return_value = mock_endpoint
-            mock_endpoint.jobs.return_value = [{"status": "IN_PROGRESS"}]
+            mock_endpoint.rp_client.get.return_value = {"status": "IN_PROGRESS"}
 
             registry = DeepSimJobRegistry()
             job = DeepSimJob(
@@ -162,11 +178,12 @@ class TestRunPodOrchestrator(unittest.IsolatedAsyncioTestCase):
     async def test_poll_status_transition_to_completed(self):
         with patch("runpod.Endpoint") as mock_endpoint_class:
             mock_endpoint = MagicMock()
+            mock_endpoint.endpoint_id = "test_endpoint_id"
             mock_endpoint_class.return_value = mock_endpoint
-            mock_endpoint.jobs.return_value = [{
+            mock_endpoint.rp_client.get.return_value = {
                 "status": "COMPLETED",
                 "output": {"p50": [0.8, 0.75], "trust_score": 0.9},
-            }]
+            }
 
             registry = DeepSimJobRegistry()
             job = DeepSimJob(
@@ -272,6 +289,17 @@ class TestDeepSimStatusEndpoint(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(result["image"], "test-image:latest")
             self.assertEqual(result["status"], "provisioned")
             self.assertEqual(orchestrator.endpoint_id, "ep-456")
+            mock_create_template.assert_called_once_with(
+                name="steel-deep-sim",
+                image_name="test-image:latest",
+                docker_start_cmd="python -u /app/api/ml/worker/handler.py",
+                container_disk_in_gb=15,
+                env={
+                    "RUNPOD_SKIP_AUTO_SYSTEM_CHECKS": "true",
+                    "RUNPOD_SKIP_GPU_CHECK": "true",
+                },
+                is_serverless=True,
+            )
 
 
 if __name__ == "__main__":

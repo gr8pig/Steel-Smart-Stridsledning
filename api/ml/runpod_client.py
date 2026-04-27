@@ -99,6 +99,20 @@ class RunPodOrchestrator:
         )
         return job.id
 
+    async def run_sync(self, payload: Dict[str, Any], *, timeout_seconds: int = 600) -> Dict[str, Any]:
+        """Run a synchronous job against the configured RunPod endpoint."""
+        if not self.endpoint_id:
+            raise ValueError("RUNPOD_ENDPOINT_ID must be configured to trigger simulations.")
+
+        self._ensure_api_key()
+        endpoint = runpod.Endpoint(self.endpoint_id)
+
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: endpoint.run_sync(payload, timeout=timeout_seconds),
+        )
+
     async def poll_status(self, job_id: str) -> Dict[str, Any]:
         """
         Polls RunPod for the status of a submitted job.
@@ -142,10 +156,10 @@ class RunPodOrchestrator:
                 except (json.JSONDecodeError, TypeError):
                     output = {"raw": output}
             tracked.result = output
-        elif rp_status in ("FAILED", "ERROR", "CANCELLED"):
+        elif rp_status in ("FAILED", "ERROR", "CANCELLED", "TIMED_OUT"):
             tracked.status = "FAILED"
             tracked.error = runpod_job_status.get("error", f"RunPod job {rp_status}")
-        elif rp_status in ("IN_QUEUE", "IN_PROGRESS"):
+        elif rp_status in ("IN_QUEUE", "IN_PROGRESS", "RUNNING"):
             tracked.status = "IN_PROGRESS"
         else:
             tracked.status = "IN_PROGRESS"
@@ -155,12 +169,9 @@ class RunPodOrchestrator:
 
     def _fetch_job_status(self, endpoint: runpod.Endpoint, provider_job_id: str) -> Dict:
         try:
-            job = endpoint.jobs(provider_job_id)
-            if job:
-                return job[0] if isinstance(job, list) else job
-        except Exception:
-            pass
-        return {"status": "IN_PROGRESS"}
+            return endpoint.rp_client.get(f"{endpoint.endpoint_id}/status/{provider_job_id}")
+        except Exception as exc:
+            return {"status": "IN_PROGRESS", "error": str(exc)}
 
     async def trigger_training_job(self) -> str:
         """
@@ -235,8 +246,12 @@ class RunPodOrchestrator:
         result = runpod.create_template(
             name="steel-deep-sim",
             image_name=image_name,
-            docker_start_cmd="python /app/api/ml/worker/handler.py",
+            docker_start_cmd="python -u /app/api/ml/worker/handler.py",
             container_disk_in_gb=15,
+            env={
+                "RUNPOD_SKIP_AUTO_SYSTEM_CHECKS": "true",
+                "RUNPOD_SKIP_GPU_CHECK": "true",
+            },
             is_serverless=True,
         )
         template_id = result.get("id") if isinstance(result, dict) else str(result)
