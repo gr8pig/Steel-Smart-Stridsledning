@@ -62,6 +62,18 @@ interface DomainCard {
   body: string;
 }
 
+interface BackboneCard {
+  title: string;
+  preserved: string;
+  role: string;
+}
+
+interface OntologyModelGroup {
+  title: string;
+  lead: string;
+  models: string[];
+}
+
 const FINAL_SLIDES: FinalSlide[] = [
   {
     eyebrow: 'Final Showcase',
@@ -96,7 +108,7 @@ const FINAL_SLIDES: FinalSlide[] = [
   {
     eyebrow: 'Scale',
     title: 'Fem domäner, ett språk',
-    subtitle: 'Samma theater state driver tactical view, readiness, logistics, governance och labs utan semantisk drift.',
+    subtitle: 'Samma funktionella domänontologi driver tactical view, readiness, logistics, governance och labs utan semantisk drift.',
   },
   {
     eyebrow: 'Close',
@@ -306,23 +318,74 @@ const COMPARISON_ROWS: ComparisonRow[] = [
 const DOMAIN_CARDS: DomainCard[] = [
   {
     title: 'Beslutsstöd och analys',
-    body: 'COA, rationale, Monte Carlo och kontrafaktik läser samma threats, policy och readiness.',
+    body: 'COATwin, PolicyTwin, rationale, Monte Carlo och counterfactuals läser samma threats, guardrails och projected outcomes.',
   },
   {
     title: 'Taktisk lägesbild',
-    body: 'Tracks, intent och sensorfusion betyder samma sak för operatören som för backend-logiken.',
+    body: 'ThreatTwin och SensorTwin bär intent, klassificering, geometri, sensor quality och jamming i samma modell.',
   },
   {
     title: 'Logistik och uthållighet',
-    body: 'Supply nodes, corridors och reserve floor kopplas direkt till verkansbeslutet.',
+    body: 'SupplyNode, SupplyCorridor och ReinforcementGroup kopplas direkt till readiness, fuel, ammo och nästa våg.',
   },
   {
     title: 'Operatörsytor',
-    body: 'Tactical view, commander view och readiness använder samma språk, inte tre tolkningar.',
+    body: 'Command surfaces, field view, governance UI och labs läser samma domänspråk, inte tre separata snapshots.',
   },
   {
     title: 'Infrastruktur',
-    body: 'API, state backbone, SSR och kontrakt håller ihop utan att skapa nya sanningar.',
+    body: 'TypeScript-interface, state backbone, SSR transport och API seams håller betydelsen stabil mellan ytor och backend.',
+  },
+];
+
+const ONTOLOGY_MODEL_GROUPS: OntologyModelGroup[] = [
+  {
+    title: 'Core domain models',
+    lead: 'Det semantiska kontraktet börjar i delade TypeScript-interface för theater simulation.',
+    models: ['BaseTwin', 'ThreatTwin', 'EffectorTwin', 'SensorTwin', 'PolicyTwin', 'COATwin', 'OperationalDirective', 'MapFeature / ScenarioPhase'],
+  },
+  {
+    title: 'Logistics ontology',
+    lead: 'Logistiken är inte en sidoyta, utan en del av samma operativa verklighet och samma beslutsmodell.',
+    models: ['SupplyNode', 'SupplyCorridor', 'ReinforcementGroup'],
+  },
+  {
+    title: 'Key idea',
+    lead: 'En enda theater state matar policy, readiness, logistics, governance och labs utan kopierade snapshots.',
+    models: ['One theater state', 'Shared seed data', 'No semantic drift', 'Same model across all surfaces'],
+  },
+];
+
+const BACKBONE_CARDS: BackboneCard[] = [
+  {
+    title: 'Intro från första showcasen',
+    preserved: 'Användare, problem, metod och mål ligger kvar som öppning.',
+    role: 'Ger samma hook, men snabbare och rakare mot juryns första fråga.',
+  },
+  {
+    title: 'Operatörsflödet',
+    preserved: 'Attack, interception och supply lines lever kvar som kärnprocess.',
+    role: 'Förtydligar att Steel hjälper beslutskedjan, inte bara kartvisningen.',
+  },
+  {
+    title: 'Tre COA-alternativ',
+    preserved: 'COA-MAX, COA-BAL och COA-DST är fortfarande beslutshjärtat.',
+    role: 'Visar tradeoff mellan effekt nu och uthållighet sen.',
+  },
+  {
+    title: 'Kontrafaktisk validering',
+    preserved: 'Decision tree, ML inference och Monte Carlo ligger kvar som ryggrad.',
+    role: 'Det gör att rekommendationen känns rationell, inte dekorativ.',
+  },
+  {
+    title: 'Ontology och knowledge graph',
+    preserved: 'Delad theatre state, fem domäner och grafen behålls.',
+    role: 'Det gör slutdelen skalbar och binder ihop demo med frameworket.',
+  },
+  {
+    title: 'Slutsatsen',
+    preserved: 'Hackathon-svaret och "rätt verkan nu" ligger kvar som slutkläm.',
+    role: 'Finalen blir en komprimering av första showcasen, inte en ny rundtur.',
   },
 ];
 
@@ -399,6 +462,22 @@ const CLOSE_POINTS = [
                 <div class="hero-stack-row"><span>Problem</span><strong>Fatta rätt beslut under sekundnivå-friktion och osäkerhet</strong></div>
                 <div class="hero-stack-row"><span>Metod</span><strong>Policy, robusthet och ontologi i ett delat theater state</strong></div>
                 <div class="hero-stack-row"><span>Mål</span><strong>Nästa våg ska fortfarande kunna mötas med styrka kvar</strong></div>
+              </div>
+
+              <div class="backbone-panel">
+                <div class="backbone-panel-head">
+                  <div class="callout-label">Behåller från första showcasen</div>
+                  <div class="backbone-panel-sub">Finalen ska kännas som samma showcase, men komprimerad till problem -> process -> Ghost Feint -> framework.</div>
+                </div>
+                <div class="backbone-grid">
+                  @for (card of backboneCards; track card.title) {
+                    <article class="backbone-card">
+                      <div class="backbone-card-title">{{ card.title }}</div>
+                      <div class="backbone-card-preserved">{{ card.preserved }}</div>
+                      <div class="backbone-card-role">{{ card.role }}</div>
+                    </article>
+                  }
+                </div>
               </div>
             </section>
           }
@@ -603,6 +682,25 @@ const CLOSE_POINTS = [
               <h2 class="final-slide-title">{{ slides[6].title }}</h2>
               <p class="final-slide-subtitle">{{ slides[6].subtitle }}</p>
 
+              <div class="ontology-summary-panel">
+                <div class="callout-label">Steel ontology</div>
+                <div class="callout-body">Steel använder en funktionell domänontologi: ett delat paket av TypeScript-interface och seed data som definierar den semantiska modellen för hela theater simulation.</div>
+              </div>
+
+              <div class="ontology-model-grid">
+                @for (group of ontologyModelGroups; track group.title) {
+                  <article class="ontology-model-card">
+                    <div class="ontology-model-title">{{ group.title }}</div>
+                    <div class="ontology-model-lead">{{ group.lead }}</div>
+                    <div class="ontology-model-chip-row">
+                      @for (model of group.models; track model) {
+                        <div class="ontology-model-chip">{{ model }}</div>
+                      }
+                    </div>
+                  </article>
+                }
+              </div>
+
               <div class="domain-grid">
                 @for (domain of domainCards; track domain.title) {
                   <article class="domain-card">
@@ -616,6 +714,10 @@ const CLOSE_POINTS = [
                 <div class="callout-block">
                   <div class="callout-label">Varför det går att skala</div>
                   <div class="callout-body">Utan ontologi får man fem vyer. Med ontologi får man ett beslutssystem.</div>
+                </div>
+                <div class="callout-block callout-block-strong">
+                  <div class="callout-label">Det vi behåller här</div>
+                  <div class="callout-body">Det här är direkt ryggraden från första showcasen: delad theatre state, fem domäner, knowledge graph och samma semantik mellan ytor.</div>
                 </div>
               </div>
             </section>
@@ -631,6 +733,17 @@ const CLOSE_POINTS = [
                 @for (point of futurePoints; track point) {
                   <article class="future-card">{{ point }}</article>
                 }
+              </div>
+
+              <div class="callout-strip">
+                <div class="callout-block">
+                  <div class="callout-label">Vad vi behåller</div>
+                  <div class="callout-body">Intro, operatörsflöde, COA, kontrafaktisk validering, delad theatre state, fem domäner, knowledge graph och slutsats.</div>
+                </div>
+                <div class="callout-block callout-block-strong">
+                  <div class="callout-label">Vad vi ändrar</div>
+                  <div class="callout-body">Finalen känns inte som en rundtur i systemet. Den känns som ett problem, en process, ett intent-skifte och en skalbar beslutslösning.</div>
+                </div>
               </div>
 
               <div class="close-pillars">
@@ -954,9 +1067,75 @@ const CLOSE_POINTS = [
       color: var(--s-text);
     }
 
+    .backbone-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px 20px;
+      border-radius: 14px;
+      border: 1px solid rgba(124, 224, 190, 0.14);
+      background: rgba(124, 224, 190, 0.04);
+      max-width: 72rem;
+    }
+
+    .backbone-panel-head {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .backbone-panel-sub {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--s-muted);
+    }
+
+    .backbone-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .backbone-card {
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .backbone-card-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--s-text);
+    }
+
+    .backbone-card-preserved {
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--s-green);
+    }
+
+    .backbone-card-role {
+      font-size: 11px;
+      line-height: 1.55;
+      color: var(--s-muted);
+    }
+
+    .ontology-summary-panel {
+      padding: 18px 20px;
+      border-radius: 14px;
+      border: 1px solid rgba(92, 167, 255, 0.16);
+      background: rgba(92, 167, 255, 0.05);
+      max-width: 72rem;
+    }
+
     .process-grid,
     .stakes-grid,
     .layer-grid,
+    .ontology-model-grid,
     .domain-grid,
     .future-grid,
     .close-pillars,
@@ -971,6 +1150,7 @@ const CLOSE_POINTS = [
 
     .stakes-grid,
     .layer-grid,
+    .ontology-model-grid,
     .future-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -987,6 +1167,7 @@ const CLOSE_POINTS = [
     .process-card,
     .stakes-card,
     .layer-card,
+    .ontology-model-card,
     .domain-card,
     .future-card,
     .close-pillar,
@@ -999,6 +1180,7 @@ const CLOSE_POINTS = [
     .process-card,
     .stakes-card,
     .layer-card,
+    .ontology-model-card,
     .domain-card,
     .future-card,
     .demo-metric-card {
@@ -1016,6 +1198,7 @@ const CLOSE_POINTS = [
     .process-label,
     .stakes-card-title,
     .layer-card-title,
+    .ontology-model-title,
     .domain-card-title {
       font-size: 13px;
       font-weight: 800;
@@ -1026,12 +1209,35 @@ const CLOSE_POINTS = [
     .process-description,
     .stakes-card-body,
     .layer-card-summary,
+    .ontology-model-lead,
     .domain-card-body,
     .future-card,
     .demo-metric-detail {
       font-size: 12px;
       line-height: 1.65;
       color: var(--s-muted);
+    }
+
+    .ontology-model-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ontology-model-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .ontology-model-chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--s-green);
+      font-size: 10px;
+      font-weight: 700;
     }
 
     .callout-strip {
@@ -1421,6 +1627,10 @@ const CLOSE_POINTS = [
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
+      .backbone-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .domain-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
@@ -1438,6 +1648,7 @@ const CLOSE_POINTS = [
 
       .stakes-grid,
       .layer-grid,
+      .ontology-model-grid,
       .future-grid,
       .callout-strip,
       .demo-layout,
@@ -1486,6 +1697,7 @@ const CLOSE_POINTS = [
       }
 
       .process-grid,
+      .backbone-grid,
       .close-pillars,
       .demo-metric-grid {
         grid-template-columns: 1fr;
@@ -1530,7 +1742,9 @@ export class FinalShowcase {
   readonly layerCards = LAYER_CARDS;
   readonly demoSteps = DEMO_STEPS;
   readonly comparisonRows = COMPARISON_ROWS;
+  readonly backboneCards = BACKBONE_CARDS;
   readonly domainCards = DOMAIN_CARDS;
+  readonly ontologyModelGroups = ONTOLOGY_MODEL_GROUPS;
   readonly futurePoints = FUTURE_POINTS;
   readonly closePoints = CLOSE_POINTS;
 
