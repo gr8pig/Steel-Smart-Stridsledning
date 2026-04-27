@@ -16,7 +16,7 @@ except ImportError:
     runpod = MagicMock()
     sys.modules["runpod"] = runpod
 
-from api.main import app
+from api.main import app, runpod_orchestrator
 
 
 class TestMlRoutes(unittest.TestCase):
@@ -60,6 +60,7 @@ class TestMlRoutes(unittest.TestCase):
                 "label": "Mobile Interceptor Cell",
                 "unitType": "AIR_DEFENSE",
                 "side": "BLUE",
+                "platform": "SU_35",
                 "readiness": 0.56,
                 "speed": 0.67,
                 "waypointComplexity": 0.36,
@@ -94,6 +95,23 @@ class TestMlRoutes(unittest.TestCase):
         self.assertGreater(len(data["ensemble_members"]), 0)
         self.assertGreater(len(data["asset_impacts"]), 1)
 
+    def test_predict_enriches_catalog_identity_fields(self):
+        response = self.client.post(
+            "/api/ml/predict",
+            json={
+                "theater": self.theater,
+                "assets": self.assets,
+                "selectedAssetId": "ASSET-B",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        selected = response.json()["selected_asset"]
+        self.assertEqual(selected["platform"], "SU_35")
+        self.assertEqual(selected["origin_country"], "RUSSIA")
+        self.assertEqual(selected["armament"], "KINETIC_STRIKE")
+        self.assertIn("LONG_RANGE_AAM", selected["armaments"])
+
     def test_asset_properties_change_prediction(self):
         rich_a = self.client.post(
             "/api/ml/predict",
@@ -114,10 +132,12 @@ class TestMlRoutes(unittest.TestCase):
         ).json()
 
         self.assertNotEqual(rich_a["p50"][-1], rich_b["p50"][-1])
-        self.assertNotEqual(rich_a["asset_impacts"][0]["summary"], rich_b["asset_impacts"][0]["summary"])
+        within_a = rich_a["asset_impacts"]
+        self.assertNotEqual(within_a[0]["summary"], within_a[1]["summary"])
 
     def test_deep_sim_returns_stable_metadata(self):
-        with patch("api.main.runpod_orchestrator.trigger_deep_sim", new=AsyncMock(side_effect=["provider-1", "provider-2"])):
+        with patch("api.main.runpod_orchestrator.trigger_deep_sim", new=AsyncMock(side_effect=["provider-1", "provider-2"])), \
+             patch.object(runpod_orchestrator, "endpoint_id", "test-endpoint"):
             response_a = self.client.post(
                 "/api/ml/deep-sim",
                 json={

@@ -1,3 +1,5 @@
+import { ArmamentLoadout, ArmamentType, OriginCountry, PlatformType } from '../../shared/domain/models';
+
 export interface CounterfactualPolicyDeltas {
   safety: number;
   sustainability: number;
@@ -25,9 +27,11 @@ export interface CounterfactualAsset {
   label: string;
   unitType: string;
   side: AssetSide;
-  armament?: 'KINETIC_STRIKE' | 'ELECTRONIC_WARFARE' | 'ISR_SURVEILLANCE' | 'AIR_SUPERIORITY' | 'HYBRID_DECEPTION';
+  platform?: PlatformType;
+  armaments?: ArmamentType[];
+  armament?: ArmamentLoadout;
   heading?: number;
-  originCountry?: 'SWEDEN' | 'NATO' | 'RUSSIA' | 'OTHER';
+  originCountry?: OriginCountry;
   readiness: number;
   speed: number;
   waypointComplexity: number;

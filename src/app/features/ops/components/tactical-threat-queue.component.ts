@@ -83,13 +83,15 @@ import { AuditLogger } from '../../../core/services/audit-logger';
                   class="w-full text-left p-4 border-b border-boreal-border hover:bg-boreal-panel-muted/50 transition-colors cursor-pointer group focus:outline-none focus:bg-boreal-panel-muted/50"
               >
                   <div class="flex items-center justify-between mb-2">
-                      <div class="flex items-center gap-2">
-                          <span class="text-[10px] font-mono text-boreal-text-muted">{{track.id}}</span>
-                          @if (track.publicInterpretation; as pi) {
-                              <span class="text-[10px] font-black text-boreal-blue uppercase tracking-tight">{{pi.displayName}}</span>
-                          } @else {
-                              <span class="text-xs font-bold leading-none" [class.text-boreal-red]="track.class === 'MISSILE'">{{track.class}}</span>
-                          }
+                      <div class="min-w-0 flex flex-col gap-0.5">
+                          <span class="truncate text-[10px] font-black uppercase tracking-tight"
+                            [class.text-boreal-blue]="track.publicInterpretation"
+                            [class.text-boreal-text-primary]="!track.publicInterpretation">
+                            {{ track.displayLabel }}
+                          </span>
+                          <span class="truncate text-[8px] font-mono text-boreal-text-muted uppercase tracking-tighter">
+                            {{ track.id }} · {{ track.class }}
+                          </span>
                       </div>
                       <span class="text-[10px] font-mono tabular-nums" [class.text-boreal-red]="track.timeToTarget < 100" [class.text-boreal-amber]="track.timeToTarget >= 100">
                           {{track.timeToTarget}}s
@@ -97,15 +99,20 @@ import { AuditLogger } from '../../../core/services/audit-logger';
                   </div>
                   
                   <div class="flex items-center justify-between">
-                      <div class="flex gap-1 items-center">
-                          @if (track.publicInterpretation; as pi) {
-                              <span class="px-1.5 py-0.5 rounded bg-boreal-blue/10 text-[8px] font-black border border-boreal-blue/20 text-boreal-blue uppercase">
-                                  {{pi.steelAbstraction}}
-                              </span>
-                          } @else {
-                              <span class="px-1.5 py-0.5 rounded bg-boreal-canvas/40 text-[9px] font-mono border border-boreal-border text-boreal-text-secondary uppercase">
-                                  {{track.intent}}
-                              </span>
+                      <div class="flex flex-wrap gap-1 items-center">
+                          <span class="px-1.5 py-0.5 rounded text-[8px] font-black border uppercase"
+                            [class.bg-boreal-blue/10]="track.publicInterpretation"
+                            [class.border-boreal-blue/20]="track.publicInterpretation"
+                            [class.text-boreal-blue]="track.publicInterpretation"
+                            [class.bg-boreal-canvas/40]="!track.publicInterpretation"
+                            [class.border-boreal-border]="!track.publicInterpretation"
+                            [class.text-boreal-text-secondary]="!track.publicInterpretation">
+                              {{ track.displayTypeLabel }}
+                          </span>
+                          @if (track.originCountry) {
+                            <span class="px-1.5 py-0.5 rounded bg-boreal-panel-elevated text-[8px] font-black border border-boreal-border text-boreal-text-muted uppercase">
+                              {{ track.originCountry }}
+                            </span>
                           }
                           <span class="text-[9px] text-boreal-text-muted font-medium italic">Conf: {{track.confidence * 100 | number:'1.0-0'}}%</span>
                       </div>

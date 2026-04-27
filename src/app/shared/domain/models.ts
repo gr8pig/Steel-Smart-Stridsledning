@@ -21,10 +21,16 @@ export interface BaseTwin {
   targetFloor?: number;
 }
 
-export type PlatformType = 'S_400' | 'PATRIOT' | 'GRIPEN' | 'SU_35' | 'F_35' | 'GENERIC_DRONE' | 'GENERIC_MISSILE' | 'UNKNOWN';
+export type PlatformType =
+  | 'GRIPEN_CD' | 'GRIPEN_E' | 'F_35' | 'SU_35' | 'SU_34' | 'MIG_31' | 'TU_22M3'
+  | 'J_20' | 'J_16' | 'J_10C' | 'H_6K' | 'KJ_500'
+  | 'S_400' | 'PATRIOT' | 'NASAMS' | 'IRIS_T_SLS' | 'RBS_70_NG' | 'BAMSE'
+  | 'KALIBR' | 'ISKANDER' | 'KINZHAL' | 'SHAHED_136' | 'ORLAN_10'
+  | 'F_16' | 'EUROFIGHTER' | 'E_3_SENTRY'
+  | 'GENERIC_DRONE' | 'GENERIC_MISSILE' | 'UNKNOWN';
 export type ArmamentType = 'LONG_RANGE_AAM' | 'SHORT_RANGE_AAM' | 'BOMB' | 'CRUISE_MISSILE' | 'SAM_LONG_RANGE' | 'SAM_SHORT_RANGE' | 'NONE';
 export type ArmamentLoadout = 'KINETIC_STRIKE' | 'ELECTRONIC_WARFARE' | 'ISR_SURVEILLANCE' | 'AIR_SUPERIORITY' | 'HYBRID_DECEPTION';
-export type OriginCountry = 'SWEDEN' | 'NATO' | 'RUSSIA' | 'OTHER';
+export type OriginCountry = 'SWEDEN' | 'NATO' | 'RUSSIA' | 'CHINA' | 'OTHER';
 
 export interface ThreatTwin {
   id: string;
@@ -179,4 +185,21 @@ export interface ScenarioPhase {
   name: string;
   status: 'COMPLETED' | 'ACTIVE' | 'UPCOMING';
   description: string;
+}
+
+export type TheaterEventType =
+  | 'INTERCEPT_SUCCESS'
+  | 'INTERCEPT_FAILURE'
+  | 'BASE_STRIKE'
+  | 'BASE_DEGRADED'
+  | 'BASE_DESTROYED'
+  | 'THREAT_IMMINENT'
+  | 'PHASE_SHIFT';
+
+export interface TheaterEvent {
+  id: string;
+  eventType: TheaterEventType;
+  simTime: number;
+  details: Record<string, unknown>;
+  timestamp?: number;
 }

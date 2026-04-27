@@ -850,17 +850,28 @@ export class PlannedCapabilityModal {
   }
 
   onTimeSlider(event: Event): void {
-    this.scenario.setSimTime(Number((event.target as HTMLInputElement).value));
+    const nextTime = Number((event.target as HTMLInputElement).value);
+    this.scenario.setSimTime(nextTime);
+    if (this.sensorFeed.isReplay()) {
+      this.sensorFeed.seekReplay(nextTime);
+    }
   }
 
   toggleReplayPlayback(): void {
-    if (this.scenario.runState() === 'RUNNING') {
-      this.scenario.setRunState('PAUSED');
-      this.sensorFeed.setFeedMode('LIVE');
-    } else {
-      this.scenario.setRunState('RUNNING');
-      this.sensorFeed.setFeedMode('REPLAY');
+    if (this.sensorFeed.isReplay()) {
+      if (this.scenario.runState() === 'RUNNING') {
+        this.scenario.setRunState('PAUSED');
+        this.sensorFeed.pauseReplay();
+      } else {
+        this.scenario.setRunState('RUNNING');
+        this.sensorFeed.resumeReplay();
+      }
+      return;
     }
+
+    this.scenario.setSimTime(0);
+    this.scenario.setRunState('RUNNING');
+    this.sensorFeed.setFeedMode('REPLAY');
   }
 
   resetReplay(): void {

@@ -11,7 +11,7 @@ export interface PublishedIntent {
 }
 
 export interface DemoStory {
-  id: 'RESILIENCE' | 'ROBUSTNESS' | 'NONE';
+  id: 'RESILIENCE' | 'ROBUSTNESS' | 'BOREAL_STRIKE' | 'GHOST_FEINT' | 'NONE';
   name: string;
   currentStep: number;
   totalSteps: number;

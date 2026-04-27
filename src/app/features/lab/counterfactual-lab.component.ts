@@ -6,6 +6,7 @@ import { Subject, debounceTime, firstValueFrom, switchMap, tap, catchError, EMPT
 
 import { SteelApiService } from '../../core/services/steel-api.service';
 import { CounterfactualLabStore } from '../../core/ml/counterfactual-lab.store';
+import { ScenarioSimStore } from '../../core/state/scenario-sim.store';
 import {
   CounterfactualAsset,
   CounterfactualPrediction,
@@ -19,6 +20,7 @@ import { ScenarioStore } from '../../core/state/scenario.store';
 import { TacticalStore } from '../../core/state/tactical.store';
 import { ReadinessStore } from '../../core/state/readiness.store';
 import { LogisticsStore } from '../../core/state/logistics.store';
+import { CapabilityLayerStore } from '../../core/state/capability-layer.store';
 
 const FALLBACK_ASSETS: CounterfactualAsset[] = [
   {
@@ -173,6 +175,21 @@ const FALLBACK_ASSETS: CounterfactualAsset[] = [
                 </div>
 
                 @if (store.selectedAsset(); as asset) {
+                  <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-3">
+                    <div class="text-[7px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Identity</div>
+                    <div class="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-boreal-text-secondary">
+                      {{ asset.platform || asset.unitType }} · {{ asset.originCountry || asset.side }} · {{ asset.source }}
+                    </div>
+                    @if (asset.armaments?.length) {
+                      <div class="mt-2 flex flex-wrap gap-1">
+                        @for (armament of asset.armaments; track armament) {
+                          <span class="rounded-sm border border-boreal-border bg-boreal-panel-muted/30 px-2 py-0.5 text-[7px] font-mono uppercase tracking-[0.18em] text-boreal-text-muted">
+                            {{ armament }}
+                          </span>
+                        }
+                      </div>
+                    }
+                  </div>
                   <div class="grid grid-cols-3 gap-2">
                     <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-2">
                       <div class="text-[7px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Readiness</div>
@@ -456,12 +473,157 @@ const FALLBACK_ASSETS: CounterfactualAsset[] = [
             </section>
           </aside>
         </div>
+
+        <!-- Scenario Simulation Panel -->
+        <section class="rounded border border-boreal-border bg-boreal-panel/40 p-4">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <div class="text-[8px] font-black uppercase tracking-[0.35em] text-boreal-text-muted">Scenario Simulation</div>
+              <div class="mt-1 text-[10px] font-mono uppercase tracking-[0.2em] text-boreal-text-secondary">
+                Parameter sweep across policy weights and jammer conditions
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <select
+                [value]="scenarioSim.scenarioA()"
+                (change)="onScenarioSelect($event)"
+                class="rounded border border-boreal-border bg-boreal-canvas px-2 py-1 text-[9px] font-mono uppercase tracking-wider text-boreal-text-primary">
+                <option value="boreal-strike">Boreal Strike</option>
+                <option value="ghost-feint">Ghost Feint</option>
+                <option value="current">Current Theater</option>
+              </select>
+              <button
+                (click)="scenarioSim.runSweep()"
+                [disabled]="scenarioSim.isRunning()"
+                class="rounded border border-boreal-blue/40 bg-boreal-blue/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-boreal-blue transition-all hover:bg-boreal-blue/20 disabled:opacity-30 disabled:cursor-not-allowed">
+                {{ scenarioSim.isRunning() ? 'Running...' : 'Run Sweep' }}
+              </button>
+              <button
+                (click)="scenarioSim.runCompare()"
+                [disabled]="scenarioSim.isRunning()"
+                class="rounded border border-boreal-amber/40 bg-boreal-amber/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-boreal-amber transition-all hover:bg-boreal-amber/20 disabled:opacity-30 disabled:cursor-not-allowed">
+                Compare Scenarios
+              </button>
+            </div>
+          </div>
+
+          @if (scenarioSim.error(); as err) {
+            <div class="mb-3 rounded border border-boreal-red/30 bg-boreal-red/5 px-3 py-2 text-[9px] font-mono text-boreal-red">
+              {{ err }}
+            </div>
+          }
+
+          @if (scenarioSim.sweepResult(); as result) {
+            <div class="grid grid-cols-4 gap-4">
+              <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-3">
+                <div class="text-[7px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Overall Robustness</div>
+                <div class="mt-1 text-[22px] font-mono font-bold text-boreal-green">{{ result.aggregate.overallRobustness * 100 | number:'1.0-0' }}%</div>
+                <div class="text-[8px] font-mono text-boreal-text-muted">
+                  {{ result.aggregate.robustnessRange.min * 100 | number:'1.0-0' }}-{{ result.aggregate.robustnessRange.max * 100 | number:'1.0-0' }}%
+                </div>
+              </div>
+              <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-3">
+                <div class="text-[7px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Failure Probability</div>
+                <div class="mt-1 text-[22px] font-mono font-bold" [class.text-boreal-red]="result.aggregate.overallFailureProbability > 0.35" [class.text-boreal-amber]="result.aggregate.overallFailureProbability <= 0.35 && result.aggregate.overallFailureProbability > 0.2" [class.text-boreal-green]="result.aggregate.overallFailureProbability <= 0.2">
+                  {{ result.aggregate.overallFailureProbability * 100 | number:'1.0-0' }}%
+                </div>
+              </div>
+              <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-3">
+                <div class="text-[7px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Ensemble Trust</div>
+                <div class="mt-1 text-[22px] font-mono font-bold text-boreal-blue">{{ result.aggregate.overallTrust * 100 | number:'1.0-0' }}%</div>
+              </div>
+              <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-3">
+                <div class="text-[7px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Best Policy</div>
+                <div class="mt-1 text-[11px] font-mono text-boreal-text-primary">
+                  S{{ result.aggregate.bestPolicy.safety | number:'1.1-1' }} / Su{{ result.aggregate.bestPolicy.sustainability | number:'1.1-1' }} / R{{ result.aggregate.bestPolicy.resilience | number:'1.1-1' }}
+                </div>
+                <div class="text-[8px] font-mono text-boreal-text-muted">{{ result.sweepCount }} sweep points · {{ result.elapsedMs | number:'1.0-0' }}ms</div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <div class="mb-2 text-[8px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Per-Asset Sweep Results (Best Policy)</div>
+              <div class="grid grid-cols-5 gap-2">
+                @for (asset of result.sweepPoints[0]?.assetResults ?? []; track asset.assetId) {
+                  <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-2">
+                    <div class="text-[9px] font-bold text-boreal-text-primary">{{ asset.label }}</div>
+                    <div class="text-[8px] font-mono text-boreal-text-muted">{{ asset.unitType }} · {{ asset.side }}</div>
+                    <div class="mt-1 flex items-center gap-2">
+                      <span class="text-[14px] font-mono font-bold" [class.text-boreal-green]="asset.robustnessScore >= 0.6" [class.text-boreal-red]="asset.robustnessScore < 0.4" [class.text-boreal-amber]="asset.robustnessScore >= 0.4 && asset.robustnessScore < 0.6">
+                        {{ asset.robustnessScore * 100 | number:'1.0-0' }}%
+                      </span>
+                      <span class="text-[8px] font-mono" [class.text-boreal-green]="asset.deltaRobustness >= 0" [class.text-boreal-red]="asset.deltaRobustness < 0">
+                        {{ asset.deltaRobustness >= 0 ? '+' : '' }}{{ asset.deltaRobustness | number:'1.2-2' }}
+                      </span>
+                    </div>
+                    <div class="text-[8px] font-mono text-boreal-text-muted">
+                      fail {{ asset.failureProbability * 100 | number:'1.0-0' }}% · asym {{ asset.asymmetryRatio | number:'1.1-1' }}
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (scenarioSim.compareResult(); as compare) {
+            <div class="space-y-4">
+              <div class="grid grid-cols-3 gap-4">
+                <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-3">
+                  <div class="text-[7px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">{{ compare.scenarioA.name }}</div>
+                  <div class="mt-1 text-[20px] font-mono font-bold text-boreal-blue">{{ compare.scenarioA.overallRobustness * 100 | number:'1.0-0' }}%</div>
+                  <div class="text-[8px] font-mono text-boreal-text-muted">{{ compare.scenarioA.threatCount }} threats · {{ compare.scenarioA.baseCount }} bases</div>
+                </div>
+                <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-3 flex flex-col items-center justify-center">
+                  <div class="text-[7px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Delta</div>
+                  <div class="mt-1 text-[20px] font-mono font-bold" [class.text-boreal-green]="compare.deltas.robustness > 0" [class.text-boreal-red]="compare.deltas.robustness < 0">
+                    {{ compare.deltas.robustness > 0 ? '+' : '' }}{{ compare.deltas.robustness * 100 | number:'1.0-0' }}%
+                  </div>
+                  <div class="mt-1 rounded-sm px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
+                       [class.bg-boreal-green/10]="compare.deltas.verdict !== 'A is more resilient'"
+                       [class.text-boreal-green]="compare.deltas.verdict !== 'A is more resilient'"
+                       [class.bg-boreal-red/10]="compare.deltas.verdict === 'A is more resilient'"
+                       [class.text-boreal-red]="compare.deltas.verdict === 'A is more resilient'">
+                    {{ compare.deltas.verdict }}
+                  </div>
+                </div>
+                <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-3">
+                  <div class="text-[7px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">{{ compare.scenarioB.name }}</div>
+                  <div class="mt-1 text-[20px] font-mono font-bold text-boreal-blue">{{ compare.scenarioB.overallRobustness * 100 | number:'1.0-0' }}%</div>
+                  <div class="text-[8px] font-mono text-boreal-text-muted">{{ compare.scenarioB.threatCount }} threats · {{ compare.scenarioB.baseCount }} bases</div>
+                </div>
+              </div>
+
+              <div>
+                <div class="mb-2 text-[8px] font-black uppercase tracking-[0.3em] text-boreal-text-muted">Policy Sensitivity</div>
+                <div class="grid grid-cols-3 gap-2">
+                  @for (point of compare.pairedSweep; track $index) {
+                    <div class="rounded border border-boreal-border bg-boreal-canvas/40 p-2 text-[8px] font-mono">
+                      <div class="flex justify-between text-boreal-text-muted">
+                        <span>S{{ point.policy.safety | number:'1.1-1' }}/Su{{ point.policy.sustainability | number:'1.1-1' }}</span>
+                        <span [class.text-boreal-green]="point.deltaRobustness > 0" [class.text-boreal-red]="point.deltaRobustness < 0">
+                          {{ point.deltaRobustness > 0 ? '+' : '' }}{{ point.deltaRobustness | number:'1.3-3' }}
+                        </span>
+                      </div>
+                      <div class="mt-1 h-1 overflow-hidden rounded-full bg-boreal-canvas/60">
+                        <div class="h-full rounded-full transition-all"
+                             [class.bg-boreal-green]="point.deltaRobustness > 0"
+                             [class.bg-boreal-red]="point.deltaRobustness < 0"
+                             [style.width.%]="deltaBarWidth(point.deltaRobustness)"></div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </section>
       </div>
     </div>
   `,
 })
 export class CounterfactualLab {
   readonly store = inject(CounterfactualLabStore);
+  readonly scenarioSim = inject(ScenarioSimStore);
   private readonly api = inject(SteelApiService);
   private readonly http = inject(HttpClient);
   private readonly drawingBoard = inject(DrawingBoardStore);
@@ -469,6 +631,7 @@ export class CounterfactualLab {
   private readonly tactical = inject(TacticalStore);
   private readonly readiness = inject(ReadinessStore);
   private readonly logistics = inject(LogisticsStore);
+  private readonly capability = inject(CapabilityLayerStore);
   private readonly destroyRef = inject(DestroyRef);
 
   private jobId = signal<string | null>(null);
@@ -512,13 +675,21 @@ export class CounterfactualLab {
         this.store.setAssets(nextAssets);
       }
       const selectedFromBoard = this.drawingBoard.selectedUnitId();
-      const selectedAsset = this.store.selectedAsset();
+      const preferredLiveSelection = this.tactical.labHandoffTrackId() ?? this.tactical.selectedTrackId();
+      const selectedAssetId = this.store.selectedAssetId();
       if (
         selectedFromBoard
         && this.store.availableAssets().some(asset => asset.id === selectedFromBoard)
-        && (!selectedAsset || selectedAsset.source !== 'drawing_board')
+        && selectedAssetId !== selectedFromBoard
       ) {
         this.store.selectAsset(selectedFromBoard);
+      } else if (
+        !selectedFromBoard
+        && preferredLiveSelection
+        && this.store.availableAssets().some(asset => asset.id === preferredLiveSelection)
+        && selectedAssetId !== preferredLiveSelection
+      ) {
+        this.store.selectAsset(preferredLiveSelection);
       }
     }, { allowSignalWrites: true });
 
@@ -552,6 +723,15 @@ export class CounterfactualLab {
 
   onMetricSelected(metricName: string): void {
     this.selectedMetricName.set(metricName);
+  }
+
+  onScenarioSelect(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.scenarioSim.scenarioA.set(value);
+  }
+
+  deltaBarWidth(delta: number): number {
+    return Math.min(100, Math.abs(delta) * 500);
   }
 
   async triggerDeepSim(): Promise<void> {
@@ -659,34 +839,131 @@ export class CounterfactualLab {
 
   private buildAssets(): CounterfactualAsset[] {
     const units = this.drawingBoard.units();
-    if (!units.length) return FALLBACK_ASSETS.map(asset => ({ ...asset }));
+    if (!units.length) {
+      const liveAssets = this.buildLiveAssets();
+      return liveAssets.length ? liveAssets : FALLBACK_ASSETS.map(asset => ({ ...asset }));
+    }
     const selectedId = this.drawingBoard.selectedUnitId();
     return units.map((unit, index) => this.convertUnit(unit, index, unit.id === selectedId));
   }
 
+  private buildLiveAssets(): CounterfactualAsset[] {
+    const baseAssets = this.readiness.bases().map(base => {
+      const totalInterceptors = base.missileInventory.interceptorShort + base.missileInventory.interceptorMid + base.missileInventory.interceptorLong;
+      const inventoryDepth = this.clamp(totalInterceptors / 60, 0, 1);
+
+      return {
+        id: base.id,
+        label: base.name,
+        unitType: 'BASE',
+        side: 'BLUE' as const,
+        armaments: ['SAM_SHORT_RANGE', 'SAM_LONG_RANGE'] as CounterfactualAsset['armaments'],
+        armament: 'AIR_SUPERIORITY' as const,
+        originCountry: 'SWEDEN' as const,
+        readiness: base.readiness,
+        speed: 0.08,
+        waypointComplexity: 0.08,
+        inventoryDepth,
+        sensorQuality: this.clamp(0.42 + inventoryDepth * 0.24 + (base.sortieCapacity / 24) * 0.12 - base.threatExposure * 0.10, 0, 1),
+        exposedRisk: base.threatExposure,
+        mobility: 0.12,
+        endurance: this.clamp(base.fuelStock * 0.58 + (1 - base.crewFatigue) * 0.24 + inventoryDepth * 0.18, 0, 1),
+        source: 'campaign' as const,
+        metadata: {
+          role: base.role,
+          sortieCapacity: base.sortieCapacity,
+          runwayStatus: base.runwayStatus,
+          airframesAvailable: base.airframesAvailable,
+        },
+      };
+    });
+
+    const threatAssets = this.capability.remappedTracks()
+      .filter(track => track.status !== 'NEUTRALIZED' && track.status !== 'LEAKED')
+      .map(track => {
+        const catalogPlatform = track.catalogPlatform;
+        const armaments = track.armaments ?? catalogPlatform?.armaments ?? [];
+        const platformSpeed = catalogPlatform?.max_speed_kmh ?? Math.max(track.geometry.velocity, 150);
+        const combatRadius = catalogPlatform?.combat_radius_km ?? Math.max(180, Math.round((track.timeToTarget * track.geometry.velocity) / 3600));
+        const radarRange = catalogPlatform?.radar_range_km ?? (track.class === 'AIRCRAFT' ? 120 : track.class === 'DRONE' ? 40 : 0);
+        const intentRisk = track.intent === 'STRIKE' || track.intent === 'STRATEGIC_STRIKE'
+          ? 0.20
+          : (track.intent === 'SATURATION' ? 0.14 : 0.08);
+
+        return {
+          id: track.id,
+          label: track.displayLabel,
+          unitType: catalogPlatform?.type ?? track.class,
+          side: 'RED' as const,
+          platform: track.platform,
+          armaments,
+          armament: track.armament,
+          heading: track.heading ?? track.geometry.heading,
+          originCountry: track.originCountry,
+          readiness: this.clamp(0.44 + track.confidence * 0.18 + armaments.length * 0.04, 0, 1),
+          speed: this.clamp(track.geometry.velocity / Math.max(platformSpeed, 1), 0, 1),
+          waypointComplexity: 0.34,
+          inventoryDepth: this.clamp(0.18 + armaments.length * 0.14, 0, 1),
+          sensorQuality: this.clamp(Math.max(track.sensorQuality ?? 0, radarRange / 250, 0.15), 0, 1),
+          exposedRisk: this.clamp(0.26 + intentRisk + track.confidence * 0.14 + (track.jammingProbability ?? 0) * 0.12, 0, 1),
+          mobility: this.clamp(platformSpeed / 3000, 0, 1),
+          endurance: this.clamp(combatRadius / 2500, 0, 1),
+          source: 'campaign' as const,
+          metadata: {
+            targetId: track.targetId,
+            catalogPlatformId: catalogPlatform?.id ?? track.platform,
+            catalogPlatformLabel: catalogPlatform?.display_name ?? track.displayLabel,
+            sourceBadge: track.sourceBadge,
+            timeToTarget: track.timeToTarget,
+          },
+        };
+      });
+
+    return [...baseAssets, ...threatAssets];
+  }
+
   private convertUnit(unit: DrawingUnit, index: number, isSelected: boolean): CounterfactualAsset {
     const complexity = Math.min(1, (unit.waypoints.length * 0.12) + (this.pathComplexity(unit) * 0.002));
-    const mobility = Math.min(1, unit.speed / 250);
+    const mobility = unit.platformSpeedKmh ? Math.min(1, unit.platformSpeedKmh / 3000) : Math.min(1, unit.speed / 250);
     const readinessBase = unit.side === 'BLUE' ? 0.68 : 0.52;
     const typeBias = this.unitTypeBias(unit.type);
+    const inventoryDepth = unit.armaments?.length
+      ? this.clamp(0.20 + unit.armaments.length * 0.14 + (unit.side === 'BLUE' ? 0.08 : -0.02), 0, 1)
+      : this.clamp(typeBias.inventory + (unit.side === 'BLUE' ? 0.12 : -0.08), 0, 1);
+    const sensorQuality = unit.radarRangeKm
+      ? this.clamp(unit.radarRangeKm / 250, 0, 1)
+      : this.clamp(typeBias.sensor + (unit.side === 'BLUE' ? 0.08 : -0.05), 0, 1);
+    const endurance = unit.combatRadiusKm
+      ? this.clamp(unit.combatRadiusKm / 2500, 0, 1)
+      : this.clamp(typeBias.endurance - complexity * 0.10 + (unit.side === 'BLUE' ? 0.04 : 0), 0, 1);
 
     return {
       id: unit.id,
       label: unit.label || `Unit ${index + 1}`,
       unitType: unit.type,
       side: unit.side,
+      platform: unit.platform,
+      armaments: unit.armaments,
+      armament: unit.armamentLoadout,
+      originCountry: unit.originCountry,
       readiness: this.clamp(readinessBase + typeBias.readiness + (isSelected ? 0.06 : 0) - complexity * 0.15, 0, 1),
       speed: mobility,
       waypointComplexity: this.clamp(complexity, 0, 1),
-      inventoryDepth: this.clamp(typeBias.inventory + (unit.side === 'BLUE' ? 0.12 : -0.08), 0, 1),
-      sensorQuality: this.clamp(typeBias.sensor + (unit.side === 'BLUE' ? 0.08 : -0.05), 0, 1),
+      inventoryDepth,
+      sensorQuality,
       exposedRisk: this.clamp(typeBias.risk + complexity * 0.35 + (unit.side === 'RED' ? 0.10 : 0), 0, 1),
       mobility,
-      endurance: this.clamp(typeBias.endurance - complexity * 0.10 + (unit.side === 'BLUE' ? 0.04 : 0), 0, 1),
+      endurance,
       source: 'drawing_board',
       metadata: {
         selected: isSelected,
         waypointCount: unit.waypoints.length,
+        catalogSourceId: unit.catalogSourceId,
+        catalogForce: unit.catalogForce,
+        catalogCategory: unit.catalogCategory,
+        platformSpeedKmh: unit.platformSpeedKmh,
+        combatRadiusKm: unit.combatRadiusKm,
+        radarRangeKm: unit.radarRangeKm,
       },
     };
   }
@@ -697,6 +974,8 @@ export class CounterfactualLab {
         return { readiness: 0.04, inventory: 0.32, sensor: 0.28, risk: 0.18, endurance: 0.54 };
       case 'DRONE':
         return { readiness: 0.02, inventory: 0.18, sensor: 0.34, risk: 0.28, endurance: 0.36 };
+      case 'DRONE_SWARM':
+        return { readiness: 0.00, inventory: 0.10, sensor: 0.30, risk: 0.38, endurance: 0.22 };
       case 'HELICOPTER':
         return { readiness: 0.03, inventory: 0.22, sensor: 0.26, risk: 0.24, endurance: 0.42 };
       case 'SHIP_CARRIER':
@@ -740,6 +1019,9 @@ export class CounterfactualLab {
         asset.label,
         asset.unitType,
         asset.side,
+        asset.platform ?? '',
+        (asset.armaments ?? []).join(','),
+        asset.originCountry ?? '',
         asset.readiness.toFixed(3),
         asset.speed.toFixed(3),
         asset.waypointComplexity.toFixed(3),

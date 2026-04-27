@@ -8,13 +8,14 @@ import { ScenarioStore } from '../../core/state/scenario.store';
 import { OrchestrationStore } from '../../core/state/orchestration.store';
 import { MapLayerStore } from '../../core/state/map-layer.store';
 import { LogisticsStore } from '../../core/state/logistics.store';
+import { TheaterEventStore } from '../../core/state/theater-event.store';
 import { CapabilityOrchestrator } from '../../core/services/capability-orchestrator';
 import { AuditLogger, AuditEvent } from '../../core/services/audit-logger';
 import { SteelApiService } from '../../core/services/steel-api.service';
 import { SensorFeedStore } from '../../core/state/sensor-feed.store';
 import { DecisionFabricStore } from '../../core/state/decision-fabric.store';
 import { OperationalDirectiveQueueService } from '../../core/services/operational-directive-queue.service';
-import { ThreatTwin, MapFeature } from '../../shared/domain/models';
+import { ThreatTwin, MapFeature, TheaterEvent } from '../../shared/domain/models';
 import { SupplyNode, SupplyCorridor } from '../../shared/domain/logistics-ontology';
 
 import { ENGAGEMENT_MAP_FEATURES } from '../../shared/domain/engagement-map.data';
@@ -48,12 +49,12 @@ interface DegradedHeatCell {
     TacticalRecommendationsComponent
   ],
   template: `
-    <div class="tactical-shell h-full w-full flex overflow-hidden relative">
+    <div class="tactical-shell boreal-map-surface h-full w-full flex overflow-hidden relative">
       <app-safety-banner />
 
       <!-- Deployment Status Overlay -->
       @if (orchestration.publishedIntent(); as intent) {
-          <div class="tactical-intent-toast absolute top-18 left-90 z-50 px-4 py-2 bg-boreal-blue/20 backdrop-blur-xl border border-boreal-blue/40 rounded shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div class="tactical-intent-toast absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-boreal-blue/20 backdrop-blur-xl border border-boreal-blue/40 rounded shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
               <mat-icon class="text-boreal-blue animate-pulse">published_with_changes</mat-icon>
               <div class="flex flex-col">
                   <span class="text-[9px] font-mono text-boreal-text-muted uppercase tracking-widest">New Intent Published</span>
@@ -64,6 +65,49 @@ interface DegradedHeatCell {
               </button>
           </div>
       }
+
+      <!-- Theater Event Notifications -->
+      @if (eventStore.unacknowledgedEvents(); as evtList) {
+        @if (evtList.length > 0) {
+          @for (evt of evtList.slice(0, 3); track evt.id) {
+            @if (getEventPosition(evt); as pos) {
+            } @else {
+              <div class="absolute z-40 px-3 py-1.5 rounded shadow-2xl backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300"
+                   [class.bg-boreal-green/15]="evt.eventType === 'INTERCEPT_SUCCESS'"
+                   [class.border-boreal-green/40]="evt.eventType === 'INTERCEPT_SUCCESS'"
+                   [class.bg-boreal-amber/15]="evt.eventType === 'INTERCEPT_FAILURE' || evt.eventType === 'BASE_DEGRADED' || evt.eventType === 'THREAT_IMMINENT'"
+                   [class.border-boreal-amber/40]="evt.eventType === 'INTERCEPT_FAILURE' || evt.eventType === 'BASE_DEGRADED' || evt.eventType === 'THREAT_IMMINENT'"
+                   [class.bg-boreal-red/15]="evt.eventType === 'BASE_STRIKE' || evt.eventType === 'BASE_DESTROYED'"
+                   [class.border-boreal-red/40]="evt.eventType === 'BASE_STRIKE' || evt.eventType === 'BASE_DESTROYED'"
+                   [class.bg-boreal-blue/15]="evt.eventType === 'PHASE_SHIFT'"
+                   [class.border-boreal-blue/40]="evt.eventType === 'PHASE_SHIFT'"
+                   border
+                   [style.top.%]="8 + evtList.indexOf(evt) * 6"
+                   style="right: 16px; max-width: 280px;"
+              >
+                <mat-icon class="!w-4 !h-4 !text-sm"
+                  [class.text-boreal-green]="evt.eventType === 'INTERCEPT_SUCCESS'"
+                  [class.text-boreal-amber]="evt.eventType === 'INTERCEPT_FAILURE' || evt.eventType === 'BASE_DEGRADED' || evt.eventType === 'THREAT_IMMINENT'"
+                  [class.text-boreal-red]="evt.eventType === 'BASE_STRIKE' || evt.eventType === 'BASE_DESTROYED'"
+                  [class.text-boreal-blue]="evt.eventType === 'PHASE_SHIFT'"
+                >{{ eventIcon(evt.eventType) }}</mat-icon>
+                <div class="flex flex-col min-w-0">
+                  <span class="text-[8px] font-black uppercase tracking-widest"
+                    [class.text-boreal-green]="evt.eventType === 'INTERCEPT_SUCCESS'"
+                    [class.text-boreal-amber]="evt.eventType === 'INTERCEPT_FAILURE' || evt.eventType === 'BASE_DEGRADED' || evt.eventType === 'THREAT_IMMINENT'"
+                    [class.text-boreal-red]="evt.eventType === 'BASE_STRIKE' || evt.eventType === 'BASE_DESTROYED'"
+                    [class.text-boreal-blue]="evt.eventType === 'PHASE_SHIFT'"
+                  >{{ eventLabel(evt.eventType) }}</span>
+                  <span class="text-[9px] text-boreal-text-secondary truncate">{{ eventDescription(evt) }}</span>
+                </div>
+                <button (click)="eventStore.acknowledge(evt.id)" class="ml-1 text-boreal-text-muted hover:text-boreal-text-primary shrink-0">
+                  <mat-icon class="!text-sm">close</mat-icon>
+                </button>
+              </div>
+            }
+          }
+        }
+      }
       
       <!-- Left Threat Queue -->
       <app-window-frame title="Threat Queue" class="absolute top-4 left-4 z-20">
@@ -71,7 +115,7 @@ interface DegradedHeatCell {
       </app-window-frame>
 
       <!-- Center Map Area -->
-      <div class="tactical-map flex-grow bg-boreal-canvas relative overflow-hidden flex flex-col">
+      <div class="tactical-map boreal-map-surface flex-grow bg-boreal-canvas relative overflow-hidden flex flex-col">
          <!-- Radial Grid -->
          <div class="absolute inset-0 opacity-5 pointer-events-none">
             <div class="absolute w-full h-full" [style.background-image]="'radial-gradient(var(--boreal-blue) 1px, transparent 1px)'" style="background-size: 80px 80px;"></div>
@@ -166,20 +210,28 @@ interface DegradedHeatCell {
                <div class="flex items-center gap-2">
                   <span class="text-[8px] font-mono text-boreal-text-muted uppercase">Zoom: {{zoomLevel().toFixed(2)}}x</span>
                   <span class="text-[8px] font-mono text-boreal-text-muted uppercase">Tracks: {{tactical.activeThreats().length}}</span>
+                                   @if (engagedCount() > 0) {
+                                     <span class="text-[8px] font-mono text-boreal-blue uppercase">ENG: {{engagedCount()}}</span>
+                                   }
+                                   @if (tactical.leakedThreats().length > 0) {
+                                     <span class="text-[8px] font-mono text-boreal-red uppercase">LEAKED: {{tactical.leakedThreats().length}}</span>
+                                   }
                   <span class="text-[8px] font-mono text-boreal-text-muted uppercase">Src: {{tactical.sync().source}}</span>
                   <span class="text-[8px] font-mono text-boreal-text-muted uppercase">Queue: {{directiveQueue.pendingCount()}}</span>
                </div>
             </div>
             
-            @if (!degradedMapMode() && tactical.selectedTrack(); as track) {
+            @if (!degradedMapMode() && capabilityStore.selectedTrack(); as track) {
                 <div class="flex items-center gap-3 bg-boreal-red/10 backdrop-blur-md border border-boreal-red/30 rounded px-4 py-1 shadow-xl animate-in slide-in-from-bottom-2 duration-300 pointer-events-auto">
                    <mat-icon class="text-boreal-red !w-4 !h-4 !text-[14px]">priority_high</mat-icon>
                    <div class="flex flex-col">
-                      <span class="text-[8px] font-black text-boreal-red uppercase tracking-widest leading-tight">Intercept Priority</span>
-                      <span class="text-[10px] font-mono text-boreal-text-primary font-bold leading-tight">{{ track.id }} ({{ track.class }}) - T: {{ track.timeToTarget }}s</span>
-                   </div>
-                </div>
-            } @else if (degradedMapMode()) {
+                       <span class="text-[8px] font-black text-boreal-red uppercase tracking-widest leading-tight">Intercept Priority</span>
+                       <span class="text-[10px] font-mono text-boreal-text-primary font-bold leading-tight">
+                         {{ track.id }} · {{ track.displayLabel }} · {{ track.displayTypeLabel }} · T: {{ track.timeToTarget }}s
+                       </span>
+                    </div>
+                 </div>
+             } @else if (degradedMapMode()) {
                 <div class="flex items-center gap-3 bg-boreal-amber/10 backdrop-blur-md border border-boreal-amber/30 rounded px-4 py-1 shadow-xl pointer-events-auto">
                    <mat-icon class="text-boreal-amber !w-4 !h-4 !text-[14px]">blur_on</mat-icon>
                    <div class="flex flex-col">
@@ -202,6 +254,8 @@ interface DegradedHeatCell {
                 viewBox="0 0 1670 1300" 
                 preserveAspectRatio="xMidYMid slice"
                 xmlns="http://www.w3.org/2000/svg"
+                role="img"
+                aria-label="Tactical common operating picture map"
             >
                 <defs>
                     <filter id="shadow">
@@ -224,15 +278,21 @@ interface DegradedHeatCell {
                          }
                     </g>
 
-                    <!-- Sensor Rings Layer: coverage halos around blue bases -->
+                    <!-- Sensor Rings Layer: coverage halos around bases -->
                     @if (layers.isLayerVisible('sensor_rings')) {
                         <g class="pointer-events-none">
                             @for (feature of mapFeatures; track feature.name) {
                                 @if (feature.recordType === 'location' && feature.subtype === 'air_base' && feature.x !== undefined && feature.y !== undefined) {
                                     <circle [attr.cx]="feature.x" [attr.cy]="feature.y" r="200"
-                                        fill="none" class="stroke-boreal-blue/15" stroke-width="0.6" stroke-dasharray="6,5"/>
+                                        fill="none"
+                                        [class.stroke-boreal-blue/15]="feature.side === 'north'"
+                                        [class.stroke-boreal-red/15]="feature.side === 'south'"
+                                        stroke-width="0.6" stroke-dasharray="6,5"/>
                                     <circle [attr.cx]="feature.x" [attr.cy]="feature.y" r="110"
-                                        fill="none" class="stroke-boreal-blue/10" stroke-width="0.4" stroke-dasharray="2,7"/>
+                                        fill="none"
+                                        [class.stroke-boreal-blue/10]="feature.side === 'north'"
+                                        [class.stroke-boreal-red/10]="feature.side === 'south'"
+                                        stroke-width="0.4" stroke-dasharray="2,7"/>
                                 }
                             }
                         </g>
@@ -427,23 +487,60 @@ interface DegradedHeatCell {
                                    </g>
                                 }
 
-                                <!-- Base Symbology -->
-                                @if (layers.isLayerVisible('bases') && feature.subtype === 'air_base') {
-                                    <g class="cursor-pointer">
-                                        <!-- Operational Status Halo -->
-                                        @if (getBaseReadiness(feature.name); as read) {
-                                            <circle r="12" fill="none" class="stroke-boreal-blue/20" stroke-width="2"></circle>
-                                            <circle r="12" fill="none" class="stroke-boreal-blue" stroke-width="2" [attr.stroke-dasharray]="(read * 75.4) + ', 75.4'" transform="rotate(-90)"></circle>
-                                        }
+<!-- Base Symbology -->
+                                 @if (layers.isLayerVisible('bases') && feature.subtype === 'air_base') {
+                                     <g class="cursor-pointer">
+                                         <!-- Operational Status Halo -->
+                                         @if (getBaseReadiness(feature.name); as read) {
+                                             <circle r="12" fill="none"
+                                                 [class.stroke-boreal-blue/20]="feature.side === 'north'"
+                                                 [class.stroke-boreal-red/20]="feature.side === 'south'"
+                                                 stroke-width="2"></circle>
+                                             <circle r="12" fill="none"
+                                                 [class.stroke-boreal-blue]="feature.side === 'north'"
+                                                 [class.stroke-boreal-red]="feature.side === 'south'"
+                                                 stroke-width="2" [attr.stroke-dasharray]="(read * 75.4) + ', 75.4'" transform="rotate(-90)"></circle>
+                                         }
 
-                                        <!-- Diamond Symbol (Boreal Standard for Base) -->
-                                        <g transform="rotate(45)">
-                                            <rect x="-4" y="-4" width="8" height="8" class="fill-boreal-canvas stroke-boreal-blue" stroke-width="1.5"></rect>
-                                            <line x1="-2" y1="0" x2="2" y2="0" class="stroke-boreal-blue" stroke-width="0.5"></line>
-                                            <line x1="0" y1="-2" x2="0" y2="2" class="stroke-boreal-blue" stroke-width="0.5"></line>
-                                        </g>
-                                    </g>
-                                }
+                                         <!-- Base Status Indicator (DEGRADED / DISABLED) -->
+                                         @if (getBaseStatus(feature.name) === 'DISABLED') {
+                                             <circle r="16" fill="none" class="stroke-boreal-red" stroke-width="2" stroke-dasharray="4,3" opacity="0.8">
+                                                 <animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.5s" repeatCount="indefinite"/>
+                                             </circle>
+                                         } @else if (getBaseStatus(feature.name) === 'DEGRADED') {
+                                             <circle r="14" fill="none" class="stroke-boreal-amber" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.7"></circle>
+                                         }
+
+                                         <!-- Diamond Symbol (Boreal Standard for Base) -->
+                                         <g transform="rotate(45)">
+                                             <rect x="-4" y="-4" width="8" height="8"
+                                                 class="fill-boreal-canvas"
+                                                 [class.stroke-boreal-blue]="feature.side === 'north' && getBaseStatus(feature.name) === 'OPERATIONAL'"
+                                                 [class.stroke-boreal-amber]="getBaseStatus(feature.name) === 'DEGRADED'"
+                                                 [class.stroke-boreal-red]="getBaseStatus(feature.name) === 'DISABLED' || (feature.side === 'south' && getBaseStatus(feature.name) === 'OPERATIONAL')"
+                                                 stroke-width="1.5"></rect>
+                                             <line x1="-2" y1="0" x2="2" y2="0"
+                                                 [class.stroke-boreal-blue]="feature.side === 'north'"
+                                                 [class.stroke-boreal-red]="feature.side === 'south'"
+                                                 stroke-width="0.5"></line>
+                                             <line x1="0" y1="-2" x2="0" y2="2"
+                                                 [class.stroke-boreal-blue]="feature.side === 'north'"
+                                                 [class.stroke-boreal-red]="feature.side === 'south'"
+                                                 stroke-width="0.5"></line>
+                                         </g>
+
+                                         <!-- Base Status Label -->
+                                         @if (getBaseStatus(feature.name) !== 'OPERATIONAL' && zoomLevel() > 0.8) {
+                                             <g [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 0 0;'">
+                                                 <text y="26" text-anchor="middle"
+                                                     [class.fill-boreal-red]="getBaseStatus(feature.name) === 'DISABLED'"
+                                                     [class.fill-boreal-amber]="getBaseStatus(feature.name) === 'DEGRADED'"
+                                                     class="text-[7px] font-mono font-black uppercase tracking-widest select-none pointer-events-none"
+                                                 >{{ getBaseStatus(feature.name) === 'DISABLED' ? 'OFFLINE' : 'DEGRADED' }}</text>
+                                             </g>
+                                         }
+                                     </g>
+                                 }
 
                                 <!-- Civil Centers -->
                                 @if (feature.subtype === 'capital') {
@@ -492,13 +589,32 @@ interface DegradedHeatCell {
                     <!-- Threat Track Layer -->
                     @if (layers.isLayerVisible('threat_tracks') && !degradedMapMode()) {
                         @for (track of capabilityStore.remappedTracks(); track track.id) {
-                            <g 
-                                [attr.transform]="getTrackTransform(track)" 
-                                class="transition-transform duration-500 ease-linear cursor-pointer group/track"
+                            <g
+                                [attr.transform]="getTrackTransform(track)"
+                                class="transition-transform ease-linear cursor-pointer group/track"
+                                [style.transitionDuration.ms]="trackTransitionDurationMs()"
+                                [class.opacity-30]="track.status === 'LEAKED'"
                                 (click)="selectTrack(track.id); $event.stopPropagation()"
                             >
+                                <!-- ENGAGED pulsing ring -->
+                                @if (track.status === 'ENGAGED') {
+                                    <circle r="20" fill="none" class="stroke-boreal-blue" stroke-width="2" opacity="0.6">
+                                        <animate attributeName="r" values="16;24;16" dur="1.2s" repeatCount="indefinite"/>
+                                        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.2s" repeatCount="indefinite"/>
+                                    </circle>
+                                }
+
+                                <!-- LEAKED impact flash -->
+                                @if (track.status === 'LEAKED') {
+                                    <circle r="10" class="fill-boreal-red/50">
+                                        <animate attributeName="r" values="6;14;6" dur="2s" repeatCount="indefinite"/>
+                                        <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+                                    </circle>
+                                    <circle r="18" fill="none" class="stroke-boreal-red" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.5"></circle>
+                                }
+
                                 <!-- Uncertainty Radii (Degraded Confidence) -->
-                                @if (track.confidence < 0.7) {
+                                @if (track.confidence < 0.7 && track.status !== 'LEAKED') {
                                     <circle r="25" fill="none" class="stroke-boreal-red/5" stroke-width="10"></circle>
                                     <circle r="30" fill="none" class="stroke-boreal-red/10" stroke-width="1" stroke-dasharray="2,4" class="animate-pulse"></circle>
                                 }
@@ -514,14 +630,14 @@ interface DegradedHeatCell {
                                 }
 
                                 <!-- Heading Vector -->
-                                <line x1="0" y1="0" [attr.x2]="40" y2="0" [attr.transform]="'rotate(' + track.geometry.heading + ')'" class="stroke-boreal-red/40" stroke-width="1" stroke-dasharray="4,2"></line>
+                                <line x1="0" y1="0" [attr.x2]="40" y2="0" [attr.transform]="'rotate(' + getTrackRotation(track) + ')'" class="stroke-boreal-red/40" stroke-width="1" stroke-dasharray="4,2"></line>
 
                                 <!-- Threat Combat Symbol (Chevron Based) -->
-                                <g [attr.transform]="'rotate(' + track.geometry.heading + ')'">
+                                <g [attr.transform]="'rotate(' + getTrackRotation(track) + ')'">
                                     <path 
                                         d="M-6,-4 L4,0 L-6,4" 
                                         fill="none" 
-                                        [attr.stroke]="track.id === tactical.selectedTrackId() ? 'var(--boreal-blue)' : 'var(--boreal-red)'" 
+                                        stroke="var(--boreal-red)"
                                         stroke-width="2" 
                                         stroke-linecap="square"
                                     ></path>
@@ -530,26 +646,26 @@ interface DegradedHeatCell {
                                     }
                                 </g>
 
-                                @if (track.id === tactical.selectedTrackId()) {
+@if (track.id === tactical.selectedTrackId()) {
                                      <!-- Selection Brackets -->
-                                     <path d="M-15,-15 L-10,-15 M-15,-15 L-15,-10" class="stroke-boreal-blue" stroke-width="1.5"></path>
-                                     <path d="M15,-15 L10,-15 M15,-15 L15,-10" class="stroke-boreal-blue" stroke-width="1.5"></path>
-                                     <path d="M-15,15 L-10,15 M-15,15 L-15,10" class="stroke-boreal-blue" stroke-width="1.5"></path>
-                                     <path d="M15,15 L10,15 M15,15 L15,10" class="stroke-boreal-blue" stroke-width="1.5"></path>
-                                     
-                                     <!-- Call-out Label -->
-                                     <g [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 0 0;'">
-                                         <g transform="translate(18, -18)">
-                                            <rect x="0" y="-12" width="60" height="12" class="fill-boreal-blue/20 stroke-boreal-blue/40" stroke-width="0.5"></rect>
-                                            <text x="4" y="-3" class="text-[8px] font-mono fill-boreal-blue font-black uppercase tracking-widest">
-                                                {{ track.publicInterpretation ? track.publicInterpretation.displayName : 'TRK_' + track.id }}
-                                            </text>
-                                            @if (layers.isLayerVisible('source_badges') && track.publicInterpretation) {
-                                                <text x="65" y="-3" class="text-[6px] font-mono fill-boreal-amber font-black uppercase tracking-tight">[SAAB-SOURCE]</text>
-                                            }
-                                         </g>
-                                     </g>
-                                }
+                                     <path d="M-15,-15 L-10,-15 M-15,-15 L-15,-10" class="stroke-boreal-amber" stroke-width="1.5"></path>
+                                     <path d="M15,-15 L10,-15 M15,-15 L15,-10" class="stroke-boreal-amber" stroke-width="1.5"></path>
+                                     <path d="M-15,15 L-10,15 M-15,15 L-15,10" class="stroke-boreal-amber" stroke-width="1.5"></path>
+                                     <path d="M15,15 L10,15 M15,15 L15,10" class="stroke-boreal-amber" stroke-width="1.5"></path>
+                                      
+                                      <!-- Call-out Label -->
+                                      <g [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 0 0;'">
+                                          <g transform="translate(18, -18)">
+                                             <rect x="0" y="-12" width="132" height="12" class="fill-boreal-amber/20 stroke-boreal-amber/40" stroke-width="0.5"></rect>
+                                             <text x="4" y="-3" class="text-[7px] font-mono fill-boreal-amber font-black uppercase tracking-widest">
+                                                 {{ track.displayLabel }}
+                                             </text>
+                                             @if (layers.isLayerVisible('source_badges') && track.sourceBadge) {
+                                                 <text x="108" y="-3" class="text-[6px] font-mono fill-boreal-amber font-black uppercase tracking-tight">[{{ track.sourceBadge }}]</text>
+                                             }
+                                          </g>
+                                      </g>
+                                 }
 
                                 <!-- ID Label (Always on for consistency if zoomed enough) -->
                                 @if (zoomLevel() > 1.5 || track.id === tactical.selectedTrackId()) {
@@ -559,18 +675,90 @@ interface DegradedHeatCell {
                                         style="paint-order: stroke; stroke: var(--boreal-red); stroke-width: 2px;"
                                         [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 12px 14px;'"
                                     >
-                                        {{ track.publicInterpretation ? track.publicInterpretation.displayName : track.id }}
+                                        {{ track.displayLabel }}
                                     </text>
-                                    @if (layers.isLayerVisible('source_badges') && track.publicInterpretation) {
-                                        <text 
-                                            x="12" y="22" 
-                                            class="text-[6px] font-mono fill-boreal-amber font-black select-none pointer-events-none uppercase tracking-tighter"
-                                            [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 12px 22px;'"
-                                        >[SAAB-SOURCE]</text>
-                                    }
-                                }
+                                     @if (layers.isLayerVisible('source_badges') && track.sourceBadge) {
+                                         <text 
+                                             x="12" y="22" 
+                                             class="text-[6px] font-mono fill-boreal-amber font-black select-none pointer-events-none uppercase tracking-tighter"
+                                             [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 12px 22px;'"
+                                        >[{{ track.sourceBadge }}]</text>
+                                     }
+                                 }
                             </g>
                         }
+                    }
+
+                    <!-- Intercept Result Markers -->
+                    @for (evt of interceptEvents(); track evt.id) {
+                      @if (getEventPosition(evt); as pos) {
+                        <g [attr.transform]="'translate(' + pos.x + ',' + pos.y + ')'" class="pointer-events-none">
+                          @if (evt.eventType === 'INTERCEPT_SUCCESS') {
+                            <circle r="18" fill="none" class="stroke-boreal-green" stroke-width="2" opacity="0.7">
+                              <animate attributeName="r" from="8" to="28" dur="1.5s" repeatCount="indefinite"/>
+                              <animate attributeName="opacity" from="0.7" to="0" dur="1.5s" repeatCount="indefinite"/>
+                            </circle>
+                            <circle r="4" class="fill-boreal-green" opacity="0.9"></circle>
+                            <line x1="-3" y1="-3" x2="3" y2="3" class="stroke-boreal-green" stroke-width="2" opacity="0.9"></line>
+                            <line x1="3" y1="-3" x2="-3" y2="3" class="stroke-boreal-green" stroke-width="2" opacity="0.9"></line>
+                          }
+                          @if (evt.eventType === 'INTERCEPT_FAILURE') {
+                            <circle r="18" fill="none" class="stroke-boreal-amber" stroke-width="2" opacity="0.7">
+                              <animate attributeName="r" from="8" to="28" dur="1.5s" repeatCount="indefinite"/>
+                              <animate attributeName="opacity" from="0.7" to="0" dur="1.5s" repeatCount="indefinite"/>
+                            </circle>
+                            <line x1="-5" y1="0" x2="5" y2="0" class="stroke-boreal-amber" stroke-width="2.5" opacity="0.9"></line>
+                          }
+                        </g>
+                      }
+                    }
+
+                    <!-- Base Strike Markers -->
+                    @for (evt of strikeEvents(); track evt.id) {
+                      @if (getEventPosition(evt); as pos) {
+                        <g [attr.transform]="'translate(' + pos.x + ',' + pos.y + ')'" class="pointer-events-none">
+                          @if (evt.eventType === 'BASE_DESTROYED') {
+                            <circle r="30" fill="none" class="stroke-boreal-red" stroke-width="3" opacity="0.8">
+                              <animate attributeName="r" from="15" to="40" dur="2s" repeatCount="indefinite"/>
+                              <animate attributeName="opacity" from="0.8" to="0" dur="2s" repeatCount="indefinite"/>
+                            </circle>
+                            <circle r="12" class="fill-boreal-red/30" opacity="0.7"></circle>
+                            <line x1="-6" y1="-6" x2="6" y2="6" class="stroke-boreal-red" stroke-width="2.5" opacity="0.9"></line>
+                            <line x1="6" y1="-6" x2="-6" y2="6" class="stroke-boreal-red" stroke-width="2.5" opacity="0.9"></line>
+                          }
+                          @if (evt.eventType === 'BASE_DEGRADED') {
+                            <circle r="22" fill="none" class="stroke-boreal-amber" stroke-width="2" opacity="0.7">
+                              <animate attributeName="r" from="12" to="32" dur="2s" repeatCount="indefinite"/>
+                              <animate attributeName="opacity" from="0.7" to="0" dur="2s" repeatCount="indefinite"/>
+                            </circle>
+                            <polygon points="0,-8 2.5,-2 8,-2 3.5,2 5,8 0,4.5 -5,8 -3.5,2 -8,-2 -2.5,-2" class="fill-boreal-amber" opacity="0.6"></polygon>
+                          }
+                          @if (evt.eventType === 'BASE_STRIKE') {
+                            <circle r="16" fill="none" class="stroke-boreal-red/70" stroke-width="1.5" opacity="0.5">
+                              <animate attributeName="r" from="8" to="24" dur="1.8s" repeatCount="indefinite"/>
+                              <animate attributeName="opacity" from="0.6" to="0" dur="1.8s" repeatCount="indefinite"/>
+                            </circle>
+                            <circle r="3" class="fill-boreal-red/50"></circle>
+                          }
+                        </g>
+                      }
+                    }
+
+                    <!-- Leaked Threat Impact Markers -->
+                    @for (marker of leakedThreatMarkers(); track marker.id) {
+                      <g [attr.transform]="'translate(' + marker.x + ',' + marker.y + ')'" class="pointer-events-none">
+                        <circle r="8" class="fill-boreal-red/40" opacity="0.8">
+                          <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/>
+                          <animate attributeName="opacity" values="0.8;0.4;0.8" dur="2s" repeatCount="indefinite"/>
+                        </circle>
+                        <circle r="14" fill="none" class="stroke-boreal-red/60" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"></circle>
+                        @if (zoomLevel() > 1) {
+                          <text y="-20" text-anchor="middle"
+                            class="text-[7px] font-mono fill-boreal-red font-black uppercase tracking-widest select-none pointer-events-none"
+                            [attr.style]="'transform: scale(' + 1/zoomLevel() + '); transform-origin: 0 -20px;'"
+                          >LEAKED</text>
+                        }
+                      </g>
                     }
                 </g>
             </svg>
@@ -776,9 +964,11 @@ interface DegradedHeatCell {
       }
 
       .tactical-intent-toast {
+        position: relative !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 0 1rem;
         top: 1rem !important;
-        left: 1rem !important;
-        right: 1rem;
       }
     }
 
@@ -809,8 +999,52 @@ export class TacticalConsole implements OnInit, OnDestroy {
     sensorFeed = inject(SensorFeedStore);
     decisionFabric = inject(DecisionFabricStore);
     directiveQueue = inject(OperationalDirectiveQueueService);
+    eventStore = inject(TheaterEventStore);
 
     mapFeatures = ENGAGEMENT_MAP_FEATURES;
+
+    mapEvents = computed(() => {
+      const events = this.eventStore.events();
+      const recent = events.filter(e => {
+        const age = this.scenario.simTime() - e.simTime;
+        return age >= 0 && age < 60;
+      });
+      return recent;
+    });
+
+    interceptEvents = computed(() =>
+      this.mapEvents().filter(e =>
+        e.eventType === 'INTERCEPT_SUCCESS' || e.eventType === 'INTERCEPT_FAILURE'
+      )
+    );
+
+    strikeEvents = computed(() =>
+      this.mapEvents().filter(e =>
+        e.eventType === 'BASE_STRIKE' || e.eventType === 'BASE_DEGRADED' || e.eventType === 'BASE_DESTROYED'
+      )
+    );
+
+    leakedThreatMarkers = computed(() => {
+      const leaked = this.tactical.leakedThreats();
+      return leaked.map(t => ({
+        id: t.id,
+        x: t.geometry.x,
+        y: t.geometry.y,
+        targetId: t.targetId,
+        threatClass: t.class,
+      }));
+    });
+
+    trackTransitionDurationMs = computed(() => {
+      if (this.sensorFeed.isReplay()) {
+        return Math.max(120, Math.round((2000 / this.sensorFeed.replaySpeed()) * 0.94));
+      }
+      return 1880;
+    });
+
+    engagedCount = computed(() =>
+      this.tactical.tracks().filter(t => t.status === 'ENGAGED').length
+    );
 
     private _clockInterval: ReturnType<typeof setInterval> | null = null;
     private _scrubMoveListener: ((e: MouseEvent) => void) | null = null;
@@ -818,7 +1052,7 @@ export class TacticalConsole implements OnInit, OnDestroy {
 
     ngOnInit() {
       this._clockInterval = setInterval(() => {
-        if (this.scenario.runState() === 'RUNNING') {
+        if (this.scenario.runState() === 'RUNNING' && !this.sensorFeed.isReplay()) {
           this.scenario.tick();
         }
       }, 1000);
@@ -888,8 +1122,8 @@ export class TacticalConsole implements OnInit, OnDestroy {
             if (distanceWeight <= 0) continue;
 
             const headingRadians = (track.geometry.heading * Math.PI) / 180;
-            const headingVectorX = Math.cos(headingRadians);
-            const headingVectorY = Math.sin(headingRadians);
+            const headingVectorX = Math.sin(headingRadians);
+            const headingVectorY = Math.cos(headingRadians);
             const normalizedDistance = distance === 0 ? 1 : distance;
             const forwardBias = Math.max(0.35, ((dx / normalizedDistance) * headingVectorX) + ((dy / normalizedDistance) * headingVectorY));
             const intentWeight = this.intentWeight(track);
@@ -998,17 +1232,31 @@ export class TacticalConsole implements OnInit, OnDestroy {
       this._scrubStartX = event.clientX;
       this._scrubStartTime = this.scenario.simTime();
       this._wasRunning = this.scenario.runState() === 'RUNNING';
-      if (this._wasRunning) this.scenario.setRunState('PAUSED');
+      if (this._wasRunning) {
+        this.scenario.setRunState('PAUSED');
+        if (this.sensorFeed.isReplay()) {
+          this.sensorFeed.pauseReplay();
+        }
+      }
       this.isScrubbing.set(true);
 
       this._scrubMoveListener = (e: MouseEvent) => {
         const deltaSeconds = Math.round(-(e.clientX - this._scrubStartX) / 48 * 60);
-        this.scenario.setSimTime(Math.max(0, Math.min(9000, this._scrubStartTime + deltaSeconds)));
+        const nextTime = Math.max(0, Math.min(9000, this._scrubStartTime + deltaSeconds));
+        this.scenario.setSimTime(nextTime);
+        if (this.sensorFeed.isReplay()) {
+          this.sensorFeed.seekReplay(nextTime);
+        }
       };
 
       this._scrubUpListener = () => {
         this.isScrubbing.set(false);
-        if (this._wasRunning) this.scenario.setRunState('RUNNING');
+        if (this._wasRunning) {
+          this.scenario.setRunState('RUNNING');
+          if (this.sensorFeed.isReplay()) {
+            this.sensorFeed.resumeReplay();
+          }
+        }
         if (this._scrubMoveListener) window.removeEventListener('mousemove', this._scrubMoveListener);
         if (this._scrubUpListener) window.removeEventListener('mouseup', this._scrubUpListener);
         this._scrubMoveListener = null;
@@ -1020,13 +1268,20 @@ export class TacticalConsole implements OnInit, OnDestroy {
     }
 
     togglePlayback(): void {
-      if (this.scenario.runState() === 'RUNNING') {
-        this.scenario.setRunState('PAUSED');
-        this.sensorFeed.setFeedMode('LIVE');
-      } else {
-        this.scenario.setRunState('RUNNING');
-        this.sensorFeed.setFeedMode('REPLAY');
+      if (this.sensorFeed.isReplay()) {
+        if (this.scenario.runState() === 'RUNNING') {
+          this.scenario.setRunState('PAUSED');
+          this.sensorFeed.pauseReplay();
+        } else {
+          this.scenario.setRunState('RUNNING');
+          this.sensorFeed.resumeReplay();
+        }
+        return;
       }
+
+      this.scenario.setSimTime(0);
+      this.scenario.setRunState('RUNNING');
+      this.sensorFeed.setFeedMode('REPLAY');
     }
 
     formatSimTime(seconds: number): string {
@@ -1074,6 +1329,16 @@ export class TacticalConsole implements OnInit, OnDestroy {
 
     @HostListener('window:mouseup')
     onMouseUp() {
+        this.isDragging.set(false);
+    }
+
+    @HostListener('window:mouseleave')
+    onMouseLeave() {
+        this.isDragging.set(false);
+    }
+
+    @HostListener('window:blur')
+    onWindowBlur() {
         this.isDragging.set(false);
     }
 
@@ -1169,9 +1434,54 @@ export class TacticalConsole implements OnInit, OnDestroy {
         return `translate(${track.geometry.x}, ${track.geometry.y})`;
     }
 
+    getTrackRotation(track: ThreatTwin): number {
+        // Theater headings use 0=south, 90=east, 180=north, 270=west.
+        // The COP threat symbol points east by default, so convert accordingly.
+        return 90 - track.geometry.heading;
+    }
+
     getBaseReadiness(name: string): number {
         const base = this.readiness.bases().find(b => b.name === name);
         return base ? base.readiness : 0.8;
+    }
+
+    getBaseStatus(name: string): 'OPERATIONAL' | 'DEGRADED' | 'DISABLED' {
+        const base = this.readiness.bases().find(b => b.name === name);
+        return base?.runwayStatus ?? 'OPERATIONAL';
+    }
+
+    getEventPosition(evt: TheaterEvent): { x: number; y: number } | null {
+        const details = evt.details as Record<string, unknown>;
+        if (evt.eventType === 'BASE_STRIKE' || evt.eventType === 'BASE_DEGRADED' || evt.eventType === 'BASE_DESTROYED') {
+            const baseId = details['baseId'] as string;
+            const base = this.readiness.bases().find(b => b.id === baseId);
+            if (base) {
+                const feature = this.mapFeatures.find(f =>
+                    f.recordType === 'location' && f.subtype === 'air_base' && f.name === base.name && f.x !== undefined
+                );
+                if (feature?.x !== undefined && feature?.y !== undefined) {
+                    return { x: feature.x, y: feature.y };
+                }
+            }
+        }
+        if (evt.eventType === 'INTERCEPT_SUCCESS' || evt.eventType === 'INTERCEPT_FAILURE') {
+            const trackId = details['trackId'] as string;
+            const track = this.tactical.tracks().find(t => t.id === trackId);
+            if (track) {
+                return { x: track.geometry.x, y: track.geometry.y };
+            }
+            const baseId = details['baseId'] as string;
+            const base = this.readiness.bases().find(b => b.id === baseId);
+            if (base) {
+                const feature = this.mapFeatures.find(f =>
+                    f.recordType === 'location' && f.subtype === 'air_base' && f.name === base.name && f.x !== undefined
+                );
+                if (feature?.x !== undefined && feature?.y !== undefined) {
+                    return { x: feature.x, y: feature.y };
+                }
+            }
+        }
+        return null;
     }
 
     getEngagementPath(track: ThreatTwin): { targetX: number, targetY: number } | null {
@@ -1188,8 +1498,8 @@ export class TacticalConsole implements OnInit, OnDestroy {
 
         // Default to a vector showing predicted track if no assignment or no mapped base
         return {
-            targetX: track.geometry.x + Math.cos(track.geometry.heading * Math.PI / 180) * 100,
-            targetY: track.geometry.y + Math.sin(track.geometry.heading * Math.PI / 180) * 100
+            targetX: track.geometry.x + Math.sin(track.geometry.heading * Math.PI / 180) * 100,
+            targetY: track.geometry.y + Math.cos(track.geometry.heading * Math.PI / 180) * 100
         };
     }
 
@@ -1221,6 +1531,54 @@ export class TacticalConsole implements OnInit, OnDestroy {
         if (feature.subtype === 'air_base' || feature.subtype === 'capital') return true;
         if (zoom > 2) return true;
         return false;
+    }
+
+    eventIcon(eventType: string): string {
+        switch (eventType) {
+            case 'INTERCEPT_SUCCESS': return 'check_circle';
+            case 'INTERCEPT_FAILURE': return 'warning';
+            case 'BASE_STRIKE': return 'gps_fixed';
+            case 'BASE_DEGRADED': return 'report_problem';
+            case 'BASE_DESTROYED': return 'dangerous';
+            case 'THREAT_IMMINENT': return 'notifications_active';
+            case 'PHASE_SHIFT': return 'sync';
+            default: return 'info';
+        }
+    }
+
+    eventLabel(eventType: string): string {
+        switch (eventType) {
+            case 'INTERCEPT_SUCCESS': return 'INTERCEPT';
+            case 'INTERCEPT_FAILURE': return 'MISSED';
+            case 'BASE_STRIKE': return 'BASE STRIKE';
+            case 'BASE_DEGRADED': return 'BASE DEGRADED';
+            case 'BASE_DESTROYED': return 'BASE DESTROYED';
+            case 'THREAT_IMMINENT': return 'IMMINENT';
+            case 'PHASE_SHIFT': return 'PHASE SHIFT';
+            default: return eventType;
+        }
+    }
+
+    eventDescription(evt: TheaterEvent): string {
+        const d = evt.details as Record<string, unknown>;
+        switch (evt.eventType) {
+            case 'INTERCEPT_SUCCESS':
+                return `${d['trackId']} → ${d['baseName'] || d['baseId']} (${d['effectorType']})`;
+            case 'INTERCEPT_FAILURE':
+                return `${d['trackId']} missed by ${d['baseName'] || d['baseId']} — re-acquiring`;
+            case 'BASE_STRIKE':
+                return `${d['threatClass']} struck ${d['baseName'] || d['baseId']} — readiness ${Math.round((d['readinessAfter'] as number ?? 0) * 100)}%`;
+            case 'BASE_DEGRADED':
+                return `${d['baseName'] || d['baseId']} now DEGRADED — readiness ${Math.round((d['readinessAfter'] as number ?? 0) * 100)}%`;
+            case 'BASE_DESTROYED':
+                return `${d['baseName'] || d['baseId']} DESTROYED — runway offline`;
+            case 'THREAT_IMMINENT':
+                return `${d['threatClass']} ${d['trackId']} approaching ${d['targetName'] || d['targetId']} — ${d['timeToTarget']}s`;
+            case 'PHASE_SHIFT':
+                return `${d['fromPhase']} → ${d['toPhase']}`;
+            default:
+                return JSON.stringify(d).slice(0, 60);
+        }
     }
 
     pointInPolygon(x: number, y: number, polygon: [number, number][]): boolean {

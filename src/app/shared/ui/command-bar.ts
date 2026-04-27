@@ -10,24 +10,26 @@ import { DecisionFabricStore } from '../../core/state/decision-fabric.store';
 import { CapabilityOrchestrator } from '../../core/services/capability-orchestrator';
 import { RationaleOrchestrator } from './rationale-drawer';
 import { CapabilityLayerSwitch } from './capability-layer-switch';
+import { ScenarioSelector } from './scenario-selector';
 import { TelemetryService } from '../../core/services/telemetry.service';
 import { ShellLayoutService } from '../../core/services/shell-layout.service';
+import { SteelApiService } from '../../core/services/steel-api.service';
 
 @Component({
   selector: 'app-command-bar',
   standalone: true,
-  imports: [CommonModule, MatIconModule, RouterLink, CapabilityLayerSwitch],
+  imports: [CommonModule, MatIconModule, RouterLink, CapabilityLayerSwitch, ScenarioSelector],
   template: `
     <div class="flex h-14 w-full items-center justify-between border-b border-boreal-border bg-boreal-panel/80 px-4 backdrop-blur-md">
       <!-- Left: Context & Brand -->
       <div class="flex items-center gap-4 lg:gap-6">
         <div class="flex gap-4">
             <div class="flex flex-col">
-                <span class="text-[8px] font-mono font-black text-blue-400 uppercase tracking-widest">⚡ INF</span>
+                <span class="text-[8px] font-mono font-black text-blue-400 uppercase tracking-widest"><mat-icon class="!text-[8px] !w-[8px] !h-[8px] align-middle mr-0.5">bolt</mat-icon>INF</span>
                 <span class="text-[10px] font-mono font-bold">{{telemetry.inferenceLatency()}}ms</span>
             </div>
             <div class="flex flex-col">
-                <span class="text-[8px] font-mono font-black text-green-400 uppercase tracking-widest">⇌ RTT</span>
+                <span class="text-[8px] font-mono font-black text-green-400 uppercase tracking-widest"><mat-icon class="!text-[8px] !w-[8px] !h-[8px] align-middle mr-0.5">swap_horiz</mat-icon>RTT</span>
                 <span class="text-[10px] font-mono font-bold">{{telemetry.networkRTT()}}ms</span>
             </div>
             <div class="w-2 h-2 rounded-full mt-2" [class.bg-green-500]="telemetry.syncStatus() === 'CONNECTED'" [class.bg-red-500]="telemetry.syncStatus() === 'DISCONNECTED'"></div>
@@ -42,10 +44,7 @@ import { ShellLayoutService } from '../../core/services/shell-layout.service';
           <mat-icon class="!text-base">{{ layout.navOpen() ? 'close' : 'menu' }}</mat-icon>
         </button>
 
-        <div class="flex min-w-0 flex-col">
-          <span class="text-[8px] font-mono font-black text-boreal-text-muted uppercase tracking-[0.2em]">Scenario</span>
-          <span class="truncate text-[11px] font-bold uppercase tracking-tight text-boreal-text-primary sm:text-[12px]">{{scenario.scenarioName()}}</span>
-        </div>
+        <app-scenario-selector />
 
         <div class="hidden h-6 w-px bg-boreal-border lg:block"></div>
 
@@ -177,6 +176,7 @@ export class CommandBar {
   sensorFeed = inject(SensorFeedStore);
   layout = inject(ShellLayoutService);
   telemetry = inject(TelemetryService);
+  api = inject(SteelApiService);
 
   alertCount = computed(() => this.audit.logs().length);
 
@@ -201,17 +201,30 @@ export class CommandBar {
   }
 
   togglePlayback(): void {
-    if (this.scenario.runState() === 'RUNNING') {
-      this.scenario.setRunState('PAUSED');
-      this.sensorFeed.setFeedMode('LIVE');
-    } else {
-      this.scenario.setRunState('RUNNING');
-      this.sensorFeed.setFeedMode('REPLAY');
+    if (this.sensorFeed.isReplay()) {
+      if (this.scenario.runState() === 'RUNNING') {
+        this.scenario.setRunState('PAUSED');
+        this.sensorFeed.pauseReplay();
+      } else {
+        this.scenario.setRunState('RUNNING');
+        this.sensorFeed.resumeReplay();
+      }
+      return;
     }
+
+    this.scenario.setSimTime(0);
+    this.scenario.setRunState('RUNNING');
+    this.sensorFeed.setFeedMode('REPLAY');
   }
 
   resetScenario(): void {
-    this.scenario.reset();
+    this.api.resetScenario().subscribe({
+      next: (res) => {
+        this.scenario.setScenarioName(res.scenarioName || 'Boreal Sentinel I');
+        this.scenario.setSimTime(res.simTime || 0);
+        this.scenario.setRunState('IDLE');
+      },
+    });
     this.sensorFeed.setFeedMode('LIVE');
   }
 

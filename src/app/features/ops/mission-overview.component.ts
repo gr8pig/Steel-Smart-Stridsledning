@@ -63,8 +63,8 @@ import { ENGAGEMENT_MAP_FEATURES } from '../../shared/domain/engagement-map.data
                 </div>
             </div>
             
-            <div class="flex-grow relative bg-boreal-canvas/40 group">
-                <svg class="absolute inset-0 w-full h-full opacity-30 pointer-events-none p-8" viewBox="0 0 1670 1300" preserveAspectRatio="xMidYMid slice">
+            <div class="boreal-map-surface flex-grow relative bg-boreal-canvas/40 group">
+                <svg class="absolute inset-0 w-full h-full opacity-30 pointer-events-none p-8" viewBox="0 0 1670 1300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Mission overview engagement geography preview">
                     @for (feature of mapFeatures; track feature.name) {
                         @if (feature.recordType === 'terrain' && feature.coordinates) {
                             <polygon 

@@ -118,51 +118,59 @@ interface DragState {
           </div>
 
           <div
-            class="absolute left-4 top-4 z-20 flex max-w-[70%] flex-wrap gap-2 pointer-events-none"
+            class="absolute left-4 top-4 z-20 flex max-w-[50%] flex-col gap-3 pointer-events-none"
           >
-            @for (category of categories; track category) {
-              <button
-                type="button"
-                class="rounded-sm border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] transition-colors pointer-events-auto"
-                [class.border-sky-400]="
-                  store.activeCategories().includes(category)
-                "
-                [class.bg-sky-400/10]="
-                  store.activeCategories().includes(category)
-                "
-                [class.text-sky-200]="
-                  store.activeCategories().includes(category)
-                "
-                [class.border-white/10]="
-                  !store.activeCategories().includes(category)
-                "
-                [class.text-slate-400]="
-                  !store.activeCategories().includes(category)
-                "
-                (click)="toggleCategory(category)"
-              >
-                {{ category }}
-              </button>
-            }
-          </div>
+            <!-- Area Filters -->
+            <div class="flex flex-col gap-1.5">
+              <div class="text-[8px] font-black uppercase tracking-[0.25em] text-slate-500 pl-1">Platform Areas</div>
+              <div class="flex flex-wrap gap-2">
+                @for (area of areas; track area) {
+                  <button
+                    type="button"
+                    class="rounded-sm border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] transition-colors pointer-events-auto"
+                    [class.border-sky-400]="store.activeAreas().includes(area)"
+                    [class.bg-sky-400/10]="store.activeAreas().includes(area)"
+                    [class.text-sky-200]="store.activeAreas().includes(area)"
+                    [class.border-white/10]="!store.activeAreas().includes(area)"
+                    [class.text-slate-400]="!store.activeAreas().includes(area)"
+                    (click)="toggleArea(area)"
+                  >
+                    {{ area }}
+                  </button>
+                }
+              </div>
+            </div>
 
-          <div
-            class="absolute right-4 top-4 z-20 flex max-w-[30%] flex-wrap justify-end gap-2 pointer-events-none"
-          >
-            @for (area of areas; track area) {
-              <button
-                type="button"
-                class="rounded-sm border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] transition-colors pointer-events-auto"
-                [class.border-sky-400]="store.activeAreas().includes(area)"
-                [class.bg-sky-400/10]="store.activeAreas().includes(area)"
-                [class.text-sky-200]="store.activeAreas().includes(area)"
-                [class.border-white/10]="!store.activeAreas().includes(area)"
-                [class.text-slate-400]="!store.activeAreas().includes(area)"
-                (click)="toggleArea(area)"
-              >
-                {{ area }}
-              </button>
-            }
+            <!-- Category Filters -->
+            <div class="flex flex-col gap-1.5">
+              <div class="text-[8px] font-black uppercase tracking-[0.25em] text-slate-500 pl-1">Node Categories</div>
+              <div class="flex flex-wrap gap-2">
+                @for (category of categories; track category) {
+                  <button
+                    type="button"
+                    class="rounded-sm border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] transition-colors pointer-events-auto"
+                    [class.border-sky-400]="
+                      store.activeCategories().includes(category)
+                    "
+                    [class.bg-sky-400/10]="
+                      store.activeCategories().includes(category)
+                    "
+                    [class.text-sky-200]="
+                      store.activeCategories().includes(category)
+                    "
+                    [class.border-white/10]="
+                      !store.activeCategories().includes(category)
+                    "
+                    [class.text-slate-400]="
+                      !store.activeCategories().includes(category)
+                    "
+                    (click)="toggleCategory(category)"
+                  >
+                    {{ category }}
+                  </button>
+                }
+              </div>
+            </div>
           </div>
 
           <div

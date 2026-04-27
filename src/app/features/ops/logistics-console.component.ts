@@ -16,7 +16,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../../shared/dom
   standalone: true,
   imports: [CommonModule, MatIconModule],
   template: `
-    <div class="logistics-shell h-full w-full flex overflow-hidden">
+    <div class="logistics-shell boreal-map-surface h-full w-full flex overflow-hidden">
 
       <!-- Left Panel: Supply Node Status -->
       <div class="logistics-panel logistics-panel--left w-80 border-r border-boreal-border bg-boreal-panel flex flex-col z-20 shadow-2xl">
@@ -103,7 +103,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../../shared/dom
       </div>
 
       <!-- Center: Logistics Map -->
-      <div class="logistics-map flex-grow bg-boreal-canvas relative overflow-hidden flex flex-col">
+      <div class="logistics-map boreal-map-surface flex-grow bg-boreal-canvas relative overflow-hidden flex flex-col">
         <!-- Header strip -->
         <div class="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-2 bg-boreal-panel/70 backdrop-blur border-b border-boreal-border">
           <div class="flex items-center gap-3">
@@ -123,7 +123,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../../shared/dom
 
         <!-- SVG logistics map -->
         <div class="flex-grow mt-10 relative overflow-hidden">
-          <svg class="w-full h-full" viewBox="0 0 1670 1300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <svg class="w-full h-full" viewBox="0 0 1670 1300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Logistics and reinforcement map">
             <defs>
               <marker id="arrowBlue" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                 <path d="M0,0 L0,6 L6,3 z" fill="var(--boreal-blue)" opacity="0.7" />
@@ -151,7 +151,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../../shared/dom
                 <circle [attr.cx]="feature.x" [attr.cy]="feature.y" r="8"
                   class="fill-boreal-blue/10 stroke-boreal-blue/30" stroke-width="1" />
                 <text [attr.x]="feature.x" [attr.y]="feature.y + 20"
-                  text-anchor="middle" class="text-[8px] fill-boreal-blue/50 font-mono uppercase" style="font-size: 8px;">
+                  text-anchor="middle" class="text-[8px] fill-boreal-blue/50 font-mono uppercase" style="font-size: 8.5px;">
                   {{ feature.name.substring(0, 10) }}
                 </text>
               }
@@ -175,7 +175,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../../shared/dom
                   [attr.y]="getMidY(corridor.waypoints) - 6"
                   text-anchor="middle"
                   class="fill-boreal-text-muted"
-                  style="font-size: 7px; font-family: monospace;"
+                  style="font-size: 7.75px; font-family: monospace;"
                   opacity="0.6">
                   {{ corridor.name }} ({{ corridor.estimatedHours }}h)
                 </text>
@@ -195,7 +195,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../../shared/dom
                   [class.opacity-60]="node.status === 'OFFLINE'"
                 />
                 <!-- Type icon text -->
-                <text y="3.5" text-anchor="middle" style="font-size: 6px; font-family: monospace; font-weight: bold;" class="fill-boreal-text-primary select-none pointer-events-none">
+                <text y="3.5" text-anchor="middle" style="font-size: 6.5px; font-family: monospace; font-weight: bold;" class="fill-boreal-text-primary select-none pointer-events-none">
                   {{ nodeTypeCode(node.type) }}
                 </text>
                 <!-- Selection indicator -->
@@ -208,7 +208,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../../shared/dom
                 }
                 <!-- Label -->
                 <text y="20" text-anchor="middle"
-                  style="font-size: 7px; font-family: monospace; font-weight: bold;"
+                  style="font-size: 7.75px; font-family: monospace; font-weight: bold;"
                   class="fill-boreal-text-secondary select-none pointer-events-none">
                   {{ node.id }}
                 </text>
@@ -229,7 +229,7 @@ import { SupplyNode, SupplyCorridor, ReinforcementGroup } from '../../shared/dom
                   <circle r="16" fill="none" class="stroke-boreal-amber/40 animate-ping" stroke-width="0.5" />
                 }
                 <text y="22" text-anchor="middle"
-                  style="font-size: 7px; font-family: monospace;"
+                  style="font-size: 7.75px; font-family: monospace;"
                   class="fill-boreal-text-muted select-none pointer-events-none">
                   {{ rnf.id }} ({{ rnf.eta }})
                 </text>

@@ -109,6 +109,12 @@ class DecisionFabricRuntimeState:
 
         trust = max(0.1, supply_health)
         audit = _clamp01(1.0 - failure_probability)
+        operator_load = _clamp01(
+            (1.0 - cognitive)
+            + (1.0 - tempo) * 0.35
+            + failure_probability * 0.25
+            + (1.0 - trust) * 0.20
+        )
         score = calculate_resilience(
             {
                 "trust": trust,
@@ -137,7 +143,7 @@ class DecisionFabricRuntimeState:
             "c2ResilienceScore": round(score, 4),
             "trustEntropy": round(_clamp01(1.0 - trust), 4),
             "authorityFriction": round(_clamp01(1.0 - tempo), 4),
-            "operatorLoad": round(_clamp01(1.0 - cognitive), 4),
+            "operatorLoad": round(operator_load, 4),
             "auditCompleteness": round(audit, 4),
             "failureProbability": round(failure_probability, 4),
             "projectedCollapseSec": None if collapse_sec is None else round(collapse_sec, 3),

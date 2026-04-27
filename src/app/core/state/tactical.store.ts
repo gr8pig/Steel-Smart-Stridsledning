@@ -51,6 +51,14 @@ export class TacticalStore {
   );
 
   activeThreats = computed(() =>
+    this._tracks().filter(t => t.status !== 'NEUTRALIZED' && t.status !== 'LEAKED')
+  );
+
+  leakedThreats = computed(() =>
+    this._tracks().filter(t => t.status === 'LEAKED')
+  );
+
+  allVisibleThreats = computed(() =>
     this._tracks().filter(t => t.status !== 'NEUTRALIZED')
   );
 
@@ -94,6 +102,12 @@ export class TacticalStore {
       }
       if (delta.simTime !== undefined) {
         this.scenario.setSimTime(delta.simTime);
+      }
+      if (delta.scenarioName) {
+        this.scenario.setScenarioName(delta.scenarioName);
+      }
+      if (delta.phase) {
+        this.scenario.syncPhaseFromBackend(delta.phase);
       }
       this._sync.set({
         source: 'AUTHORITATIVE',
@@ -163,11 +177,8 @@ export class TacticalStore {
     this._engagements.update(e => ({ ...e, [trackId]: { status, rationale } }));
     this.audit.log({ actor: 'OPERATOR', action: `Engagement Action: ${status}`, rationale, category: 'TACTICAL' });
     if (status === 'ACCEPTED' && !options?.deferLocalResolution) {
-      setTimeout(() => {
-        this._tracks.update(tracks => tracks.map(t =>
-          t.id === trackId ? { ...t, status: 'NEUTRALIZED' } : t
-        ));
-      }, 2000);
+      // Mark as ENGAGED locally — backend will resolve to NEUTRALIZED or back to TRACKING
+      // No longer optimistically marking as NEUTRALIZED; the WS delta drives truth
     }
   }
 

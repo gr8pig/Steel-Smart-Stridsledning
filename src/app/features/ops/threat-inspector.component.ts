@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { TacticalStore } from '../../core/state/tactical.store';
 import { PolicyStore } from '../../core/state/policy.store';
 import { CapabilityOrchestrator } from '../../core/services/capability-orchestrator';
+import { CapabilityLayerStore } from '../../core/state/capability-layer.store';
 
 @Component({
   selector: 'app-threat-inspector',
@@ -40,10 +41,10 @@ import { CapabilityOrchestrator } from '../../core/services/capability-orchestra
                     <mat-icon class="!text-xs">list</mat-icon>
                     <span>Analysis Queue</span>
                 </div>
-                <span class="text-boreal-blue font-mono font-bold">{{ tactical.tracks().length }} TRACKS</span>
+                <span class="text-boreal-blue font-mono font-bold">{{ capabilityStore.remappedTracks().length }} TRACKS</span>
             </div>
             <div class="flex-grow overflow-y-auto pt-1 scrollbar-thin">
-                @for (track of tactical.tracks(); track track.id) {
+                @for (track of capabilityStore.remappedTracks(); track track.id) {
                     <button (click)="tactical.selectTrack(track.id)"
                         class="w-full text-left p-4 border-b border-boreal-border hover:bg-boreal-panel-muted/50 cursor-pointer transition-all focus:outline-none group relative"
                         [class.bg-boreal-blue/10]="tactical.selectedTrackId() === track.id">
@@ -52,9 +53,12 @@ import { CapabilityOrchestrator } from '../../core/services/capability-orchestra
                             <div class="absolute inset-y-0 left-0 w-1 bg-boreal-blue"></div>
                         }
  
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[11px] font-black text-boreal-text-primary tracking-widest uppercase">{{track.id}}</span>
-                            <span class="text-[8px] font-mono text-boreal-text-muted uppercase tracking-tighter">{{track.class}}</span>
+                        <div class="flex items-start justify-between gap-3 mb-2">
+                            <div class="min-w-0 flex flex-col gap-0.5">
+                                <span class="truncate text-[11px] font-black text-boreal-text-primary tracking-tight uppercase">{{ track.displayLabel }}</span>
+                                <span class="truncate text-[8px] font-mono text-boreal-text-muted uppercase tracking-tighter">{{ track.id }} · {{ track.class }}</span>
+                            </div>
+                            <span class="text-[8px] font-mono text-boreal-text-muted uppercase tracking-tighter">{{ track.originCountry || 'OTHER' }}</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
@@ -88,7 +92,7 @@ import { CapabilityOrchestrator } from '../../core/services/capability-orchestra
                     <!-- Data Grid Background -->
                     <div class="absolute inset-0 opacity-[0.03] pointer-events-none" [style.background-image]="'radial-gradient(circle, var(--boreal-text-primary) 1px, transparent 1px)'" style="background-size: 40px 40px;"></div>
  
-                    @if (tactical.selectedTrack(); as selected) {
+                    @if (capabilityStore.selectedTrack(); as selected) {
                         <div class="relative w-85 h-85 border border-boreal-border rounded-full flex items-center justify-center">
                             <div class="absolute inset-0 bg-boreal-blue/5 rounded-full scale-110 blur-3xl opacity-20"></div>
                             <div class="absolute inset-2 border border-dashed border-boreal-border rounded-full"></div>
@@ -97,12 +101,12 @@ import { CapabilityOrchestrator } from '../../core/services/capability-orchestra
                             <!-- Track Marker -->
                             <div class="relative z-10 flex flex-col items-center">
                                 <mat-icon class="!text-boreal-red !w-12 !h-12 !text-5xl drop-shadow-[0_0_15px_var(--boreal-red)]" 
-                                          [style.transform]="'rotate(' + (selected.geometry.heading || 0) + 'deg)'">
+                                          [style.transform]="'rotate(' + (180 - (selected.geometry.heading || 0)) + 'deg)'">
                                     navigation
                                 </mat-icon>
                                 <div class="mt-4 px-3 py-1 bg-boreal-canvas/90 border border-boreal-border rounded-sm flex flex-col items-center gap-0.5 shadow-2xl">
-                                    <span class="text-[10px] font-black text-boreal-text-primary uppercase tracking-widest">{{ selected.id }}</span>
-                                    <span class="text-[8px] font-mono text-boreal-text-muted tracking-tighter">{{ selected.class }} // IDENTIFIED</span>
+                                    <span class="text-[10px] font-black text-boreal-text-primary uppercase tracking-widest text-center">{{ selected.displayLabel }}</span>
+                                    <span class="text-[8px] font-mono text-boreal-text-muted tracking-tighter text-center">{{ selected.id }} // {{ selected.originCountry || 'OTHER' }} // {{ selected.class }}</span>
                                 </div>
                             </div>
  
@@ -227,14 +231,54 @@ import { CapabilityOrchestrator } from '../../core/services/capability-orchestra
                         <mat-icon class="!text-xs">analytics</mat-icon>
                         <span>ThreatTwin Analysis Console</span>
                       </div>
-                      @if (tactical.selectedTrack(); as selected) {
-                        <span class="text-boreal-text-muted font-mono font-bold tracking-[0.2em]">{{ selected.id }}</span>
+                      @if (capabilityStore.selectedTrack(); as selected) {
+                        <span class="text-boreal-text-muted font-mono font-bold tracking-[0.12em]">{{ selected.id }} · {{ selected.displayLabel }}</span>
                       }
                   </div>
                   
                   @if (analysis(); as res) {
                      <div class="p-6 flex-grow flex flex-col overflow-y-auto scrollbar-thin">
-                        
+                        @if (capabilityStore.selectedTrack(); as selectedTrack) {
+                          <div class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3 sm:col-span-2 xl:col-span-2">
+                              <span class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Platform Profile</span>
+                              <div class="mt-2 text-[13px] font-black uppercase tracking-[0.16em] text-boreal-text-primary">{{ selectedTrack.displayLabel }}</div>
+                              <div class="mt-1 text-[9px] font-mono uppercase tracking-[0.14em] text-boreal-text-muted">{{ selectedTrack.id }} · {{ selectedTrack.originCountry || 'OTHER' }} · {{ selectedTrack.displayTypeLabel }}</div>
+                              @if (selectedTrack.armaments?.length) {
+                                <div class="mt-3 flex flex-wrap gap-1.5">
+                                  @for (armament of selectedTrack.armaments; track armament) {
+                                    <span class="rounded-sm border border-boreal-border bg-boreal-panel-elevated/60 px-2 py-1 text-[8px] font-black uppercase tracking-tight text-boreal-text-secondary">{{ armament }}</span>
+                                  }
+                                </div>
+                              }
+                            </div>
+
+                            <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
+                              <span class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Max Speed</span>
+                              <div class="mt-2 text-lg font-mono font-bold text-boreal-text-primary">{{ selectedTrack.catalogPlatform?.max_speed_kmh ?? selectedTrack.geometry.velocity }}</div>
+                              <div class="text-[8px] uppercase tracking-[0.2em] text-boreal-text-muted">km/h</div>
+                            </div>
+
+                            <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
+                              <span class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Combat Radius</span>
+                              <div class="mt-2 text-lg font-mono font-bold text-boreal-text-primary">{{ selectedTrack.catalogPlatform?.combat_radius_km ?? 'N/A' }}</div>
+                              <div class="text-[8px] uppercase tracking-[0.2em] text-boreal-text-muted">km</div>
+                            </div>
+
+                            <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
+                              <span class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Ceiling</span>
+                              <div class="mt-2 text-lg font-mono font-bold text-boreal-text-primary">{{ selectedTrack.catalogPlatform?.service_ceiling_m ?? 'N/A' }}</div>
+                              <div class="text-[8px] uppercase tracking-[0.2em] text-boreal-text-muted">m</div>
+                            </div>
+
+                            <div class="rounded-sm border border-boreal-border bg-boreal-canvas/60 p-3">
+                              <span class="text-[8px] font-black uppercase tracking-[0.2em] text-boreal-text-muted">Radar Range</span>
+                              <div class="mt-2 text-lg font-mono font-bold text-boreal-text-primary">{{ selectedTrack.catalogPlatform?.radar_range_km ?? 'N/A' }}</div>
+                              <div class="text-[8px] uppercase tracking-[0.2em] text-boreal-text-muted">km</div>
+                            </div>
+                          </div>
+                        }
+                         
                         <!-- High Uncertainty Banner -->
                         @if (res.humanReviewRequired) {
                             <div class="mb-8 p-4 bg-boreal-amber/10 border border-boreal-amber/30 flex items-start gap-4 shadow-[0_0_15px_var(--boreal-amber)]">
@@ -376,6 +420,7 @@ export class ThreatInspector {
     tactical = inject(TacticalStore);
     policy = inject(PolicyStore);
     orchestrator = inject(CapabilityOrchestrator);
+    capabilityStore = inject(CapabilityLayerStore);
     router = inject(Router);
 
     analysis = computed(() => {

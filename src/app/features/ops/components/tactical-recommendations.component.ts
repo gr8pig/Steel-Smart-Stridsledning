@@ -9,6 +9,7 @@ import { CapabilityOrchestrator } from '../../../core/services/capability-orches
 import { SensorFeedStore } from '../../../core/state/sensor-feed.store';
 import { SteelApiService } from '../../../core/services/steel-api.service';
 import { OperationalDirectiveQueueService } from '../../../core/services/operational-directive-queue.service';
+import { CapabilityLayerStore } from '../../../core/state/capability-layer.store';
 import { COATwin } from '../../../shared/domain/models';
 
 @Component({
@@ -256,6 +257,7 @@ export class TacticalRecommendationsComponent {
   sensorFeed = inject(SensorFeedStore);
   api = inject(SteelApiService);
   directiveQueue = inject(OperationalDirectiveQueueService);
+  capabilityStore = inject(CapabilityLayerStore);
 
   alternativeExpanded = signal(false);
   _pendingConfirm = signal(false);
@@ -268,6 +270,7 @@ export class TacticalRecommendationsComponent {
 
   recommendation = computed(() => {
     const track = this.tactical.selectedTrack();
+    const remappedTrack = this.capabilityStore.selectedTrack();
     const activePolicy = this.policy.activePolicy();
     const selectedCOA = this.policy.selectedCOA();
     const engagements = this.tactical.engagements();
@@ -287,9 +290,11 @@ export class TacticalRecommendationsComponent {
     if (activePolicy && activePolicy.weights.safety > 0.8) focusText = 'Max-Protection Response';
     if (track.intent === 'FEINT') focusText = 'Conservation-Heavy Approach';
 
+    const trackLabel = remappedTrack?.displayLabel ?? track.id;
+
     const dynamicRationale = track.intent === 'STRIKE' 
-        ? `High-lethality strike profile detected. ${focusText} prioritizes ${base?.name || 'Northern Vanguard'} for immediate kinetic neutralization despite ${ (Math.abs(readinessDelta) * 100).toFixed(1) }% depletion.`
-        : `Track ID ${track.id} displays ${track.intent} characteristics. ${focusText} leverages ${base?.name || 'Theater Reserves'} to maintain coverage while preserving strategic effector depth.`;
+        ? `${trackLabel} presents a high-lethality strike profile. ${focusText} prioritizes ${base?.name || 'Northern Vanguard'} for immediate kinetic neutralization despite ${ (Math.abs(readinessDelta) * 100).toFixed(1) }% depletion.`
+        : `${trackLabel} displays ${track.intent} characteristics. ${focusText} leverages ${base?.name || 'Theater Reserves'} to maintain coverage while preserving strategic effector depth.`;
 
     return {
         trackId: track.id,

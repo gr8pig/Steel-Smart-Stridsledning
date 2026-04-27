@@ -12,6 +12,8 @@ export interface TheaterDelta {
   threats: unknown[];
   bases: unknown[];
   phase: string;
+  scenarioName?: string;
+  events?: unknown[];
 }
 
 @Injectable({ providedIn: 'root' })

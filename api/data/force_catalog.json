@@ -1,0 +1,4848 @@
+{
+  "metadata": {
+    "title": "Open-source structured force-capability dataset",
+    "generated_at": "2026-04-27",
+    "timezone": "Europe/Stockholm",
+    "scope": "Public/open-source capability fields for requested Blue/Red force systems, augmented with declassified/formerly classified public intelligence context where it can be safely included.",
+    "classification_handling": {
+      "policy": "This dataset includes only material that is publicly releasable: official public data, declassified/formerly classified releases, public intelligence assessments, and clearly labelled OSINT estimates. It does not include active classified information, non-public operational data, or leaked classified material.",
+      "why_active_classified_not_included": "Information remains sensitive when it is still classified, derived from leaks, or would expose current operational readiness, sensor performance, electronic-warfare parameters, target-quality locations, tactics, or vulnerabilities. Those fields are retained as null with explanatory notes rather than filled with unverified or unsafe values.",
+      "unknown_values": "Fields that are classified, disputed, or not credibly public are set to null with explanatory notes.",
+      "pk_values": "Probability-of-kill values are usually test-condition-dependent and classified; public marketing claims are marked low confidence when included.",
+      "radar_vs_stealth": "Radar range against stealth targets is not credibly public and is left null unless a source gives a non-sensitive generic statement.",
+      "ew_jam_probability": "Jamming probabilities, waveforms, bands, and exact effects are scenario-dependent and generally not credibly public; left null.",
+      "corrections": [
+        "Swedish NH90 service designation is Helikopter 14 (Hkp 14), not Helikopter 15. Helikopter 15 is the AgustaWestland A109 LUH.",
+        "RBS 15F is the air-launched Gripen anti-ship missile. Land/coastal RBS 15 systems are usually RBS 15KA or newer land-based RBS15 Mk3/Mk4/Gungnir concepts.",
+        "Russian Steregushchiy Project 20380 corvettes normally carry Kh-35 Uran and Redut, not Kalibr; Project 20385 derivatives carry UKSK/Kalibr."
+      ],
+      "releasability_categories": {
+        "official_public": "Published by a manufacturer, military, government, or international organization for public release.",
+        "formerly_classified_declassified": "Previously classified or intelligence-derived material that has been officially declassified/released.",
+        "public_intelligence_assessment": "Unclassified public assessment by a government intelligence/defense body.",
+        "osint_estimate": "Open-source estimate from defense reference works, research institutes, or reputable reporting; uncertainty must remain explicit.",
+        "media_report_unverified": "Public reporting that may be useful for awareness but is not authoritative enough for precision modelling.",
+        "not_included_active_classified_or_leaked": "Requested or plausible field is withheld because it is not public, appears derived from leaks, or would be operationally sensitive."
+      }
+    },
+    "field_model": {
+      "value_object": {
+        "value": "number/string/list/null",
+        "unit": "optional",
+        "confidence": "high|medium|low|unknown",
+        "note": "optional",
+        "source_ids": "optional list",
+        "releasability": "official_public|formerly_classified_declassified|public_intelligence_assessment|osint_estimate|media_report_unverified|not_included_active_classified_or_leaked",
+        "operational_sensitivity": "low|medium|high",
+        "use_in_simulation": "recommended|use_as_range_only|not_recommended"
+      },
+      "units": "Metric unless otherwise stated."
+    },
+    "updated_at": "2026-04-27"
+  },
+  "forces": {
+    "blue_force_sweden": {
+      "aircraft_air_units": {
+        "JAS_39_Gripen_C_D": {
+          "type": "single-engine multirole fighter",
+          "crew_count": {
+            "value": {
+              "C": 1,
+              "D": 2
+            },
+            "unit": "persons",
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_GRIPEN_C"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "range": {
+            "value": 3000,
+            "unit": "km",
+            "confidence": "medium",
+            "note": "Approximate ferry/maximum range; mission range varies strongly with tanks, loadout and profile.",
+            "source_ids": [
+              "SAAB_GRIPEN_C"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "combat_radius": {
+            "value": 800,
+            "unit": "km",
+            "confidence": "low",
+            "note": "Common open-source planning estimate; not an official Saab figure and varies by mission profile.",
+            "source_ids": [
+              "SAAB_GRIPEN_C"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 2.0,
+              "kmh": 2469
+            },
+            "confidence": "medium",
+            "note": "Mach/true speed varies by altitude and load.",
+            "source_ids": [
+              "SAAB_GRIPEN_C"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "service_ceiling": {
+            "value": 15240,
+            "unit": "m",
+            "confidence": "low",
+            "note": "Common open-source estimate.",
+            "source_ids": [
+              "SAAB_GRIPEN_C"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "armament_stations": {
+            "value": 8,
+            "unit": "hardpoints",
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_GRIPEN_C"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "gun": {
+            "value": "Mauser BK-27 27 mm cannon on C; D typically lacks internal gun",
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_GRIPEN_C"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "typical_loadouts": [
+            {
+              "mission": "QRA / air policing",
+              "stores": [
+                "2-4x IRIS-T",
+                "2-4x AIM-120 AMRAAM or Meteor",
+                "external tanks as required"
+              ],
+              "confidence": "medium"
+            },
+            {
+              "mission": "BVR air defence",
+              "stores": [
+                "Meteor",
+                "AIM-120 AMRAAM",
+                "IRIS-T",
+                "external tanks"
+              ],
+              "confidence": "medium"
+            },
+            {
+              "mission": "maritime strike",
+              "stores": [
+                "RBS 15F anti-ship missile",
+                "IRIS-T for self-defence",
+                "external tanks"
+              ],
+              "confidence": "medium"
+            }
+          ],
+          "radar": {
+            "type": {
+              "value": "PS-05/A pulse-Doppler multimode X-band mechanically scanned radar",
+              "confidence": "medium",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "low",
+              "use_in_simulation": "recommended"
+            },
+            "public_detection_range": {
+              "fighter": {
+                "value": 120,
+                "unit": "km",
+                "confidence": "low",
+                "note": "Frequently cited open-source figure; exact radar performance is classified.",
+                "releasability": "osint_estimate",
+                "operational_sensitivity": "medium",
+                "use_in_simulation": "use_as_range_only"
+              },
+              "bomber_large_target": {
+                "value": 180,
+                "unit": "km",
+                "confidence": "low",
+                "note": "Estimate scaled from larger RCS targets; not authoritative.",
+                "releasability": "osint_estimate",
+                "operational_sensitivity": "medium",
+                "use_in_simulation": "use_as_range_only"
+              },
+              "stealth_low_observable": {
+                "value": null,
+                "confidence": "unknown",
+                "note": "No credible public range. Depends on aspect, frequency, RCS, environment and EW.",
+                "releasability": "not_included_active_classified_or_leaked",
+                "operational_sensitivity": "high",
+                "use_in_simulation": "not_recommended",
+                "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+              }
+            },
+            "modes": [
+              "air-to-air search/track",
+              "track-while-scan",
+              "air-to-ground ranging/mapping",
+              "sea search",
+              "weapon support"
+            ]
+          },
+          "source_ids": [
+            "SAAB_GRIPEN_C"
+          ]
+        },
+        "JAS_39E_Gripen": {
+          "type": "single-engine multirole fighter",
+          "crew_count": {
+            "value": {
+              "E": 1,
+              "F": 2
+            },
+            "unit": "persons",
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_GRIPEN_E"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "range": {
+            "value": 4000,
+            "unit": "km",
+            "confidence": "low",
+            "note": "Open-source ferry-range estimate for Gripen E/NG; official Saab page emphasizes capability but does not publish all performance figures.",
+            "source_ids": [
+              "SAAB_GRIPEN_E"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "combat_radius": {
+            "value": 1300,
+            "unit": "km",
+            "confidence": "low",
+            "note": "Broad public estimate; actual radius depends on profile/loadout.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 2.0,
+              "kmh": 2469
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "service_ceiling": {
+            "value": 16000,
+            "unit": "m",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "armament_stations": {
+            "value": 10,
+            "unit": "hardpoints",
+            "confidence": "medium",
+            "note": "Open-source Gripen E figure; Gripen C official figure is 8.",
+            "source_ids": [
+              "SAAB_GRIPEN_E"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "typical_loadouts": [
+            {
+              "mission": "air superiority",
+              "stores": [
+                "Meteor",
+                "IRIS-T",
+                "external tanks or EW/targeting pods as required"
+              ],
+              "confidence": "medium"
+            },
+            {
+              "mission": "maritime strike",
+              "stores": [
+                "RBS15 Mk4/Gungnir family integration planned for Swedish Gripen E",
+                "IRIS-T/Meteor for self-defence"
+              ],
+              "confidence": "low"
+            },
+            {
+              "mission": "strike/SEAD support",
+              "stores": [
+                "precision-guided bombs/missiles subject to national integration",
+                "EW suite"
+              ],
+              "confidence": "low"
+            }
+          ],
+          "radar": {
+            "type": {
+              "value": "Leonardo Raven ES-05 AESA radar",
+              "confidence": "high",
+              "source_ids": [
+                "LEONARDO_RAVEN_ES05",
+                "SAAB_GRIPEN_E"
+              ],
+              "releasability": "official_public",
+              "operational_sensitivity": "low",
+              "use_in_simulation": "recommended"
+            },
+            "public_detection_range": {
+              "fighter": {
+                "value": null,
+                "confidence": "unknown",
+                "note": "Exact ES-05 detection range is not credibly public.",
+                "releasability": "not_included_active_classified_or_leaked",
+                "operational_sensitivity": "high",
+                "use_in_simulation": "not_recommended",
+                "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+              },
+              "bomber_large_target": {
+                "value": null,
+                "confidence": "unknown",
+                "note": "Exact ES-05 detection range is not credibly public.",
+                "releasability": "not_included_active_classified_or_leaked",
+                "operational_sensitivity": "high",
+                "use_in_simulation": "not_recommended",
+                "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+              },
+              "stealth_low_observable": {
+                "value": null,
+                "confidence": "unknown",
+                "note": "No credible public range.",
+                "releasability": "not_included_active_classified_or_leaked",
+                "operational_sensitivity": "high",
+                "use_in_simulation": "not_recommended",
+                "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+              }
+            },
+            "modes": [
+              "AESA air-to-air",
+              "air-to-ground",
+              "air-to-sea",
+              "electronic protection features; exact modes classified"
+            ]
+          },
+          "source_ids": [
+            "SAAB_GRIPEN_E",
+            "LEONARDO_RAVEN_ES05"
+          ]
+        },
+        "S_100B_Argus_AEW": {
+          "type": "Saab 340 AEW&C with Erieye radar",
+          "radar_range": {
+            "value": {
+              "typical_air_target": 300,
+              "large/high_altitude_target": 400
+            },
+            "unit": "km",
+            "confidence": "medium",
+            "note": "Erieye-family public figures are commonly 300-450 km depending on platform/altitude/target.",
+            "source_ids": [
+              "SAAB_GRIPEN_E"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "endurance": {
+            "value": 5.5,
+            "unit": "hours",
+            "confidence": "low",
+            "note": "Saab 340 platform estimate; Saab 2000 Erieye is >9h but S 100B is smaller.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": {
+              "flight_crew": 2,
+              "mission_crew_estimate": 3
+            },
+            "unit": "persons",
+            "confidence": "low",
+            "note": "Exact Swedish mission crew varies and is not consistently published.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "dash_speed": {
+            "value": 520,
+            "unit": "km/h",
+            "confidence": "low",
+            "note": "Saab 340 turboprop class estimate.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "escort_requirements": {
+            "value": "Requires fighter escort or standoff routing in contested airspace; not a self-defending penetration platform.",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "USAF_E3"
+          ]
+        },
+        "S_102D_Korpen_SIGINT": {
+          "type": "Swedish Gulfstream-based SIGINT/ELINT platform; Swedish public designations more commonly reference S 102B/D Korpen family.",
+          "collection_range": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "SIGINT collection range depends on emitter power, frequency, altitude, antenna geometry and processing; exact figures are classified.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "endurance": {
+            "value": 7,
+            "unit": "hours",
+            "confidence": "low",
+            "note": "Gulfstream IV/SP class endurance estimate; Swedish mission configuration may differ.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": 6,
+            "unit": "persons",
+            "confidence": "low",
+            "note": "Commonly cited mix of 2 pilots plus operators; exact mission crew can vary.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "source_ids": []
+        },
+        "TP_84_Hercules_Transport_Tanker": {
+          "type": "Swedish C-130H/TP 84 transport; some aircraft configured for aerial refuelling trials/tanker role.",
+          "fuel_offload_capacity": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Swedish TP 84T offload by profile is not reliably public. C-130 tanker offload depends on fuel load, range and reserve assumptions.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "range": {
+            "value": 3800,
+            "unit": "km",
+            "confidence": "medium",
+            "note": "C-130H class value; varies by payload.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "cargo": {
+            "value": {
+              "max_payload_kg": 19900,
+              "troops": 91,
+              "paratroops": 64,
+              "litters": 74
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": []
+        },
+        "Hkp_16_Black_Hawk": {
+          "type": "UH-60M tactical transport/MEDEVAC helicopter",
+          "range": {
+            "value": 590,
+            "unit": "km",
+            "confidence": "medium",
+            "note": "UH-60M class range; mission equipment and reserves vary.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "payload": {
+            "value": {
+              "internal_troops": 11,
+              "internal_payload_kg": 1100,
+              "external_sling_kg": 4100
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "roles": [
+            "MEDEVAC",
+            "CSAR support",
+            "tactical transport",
+            "air assault/logistics"
+          ],
+          "source_ids": []
+        },
+        "Hkp_14_NH90_corrected_from_Hkp_15": {
+          "type": "NH90 / Swedish Helikopter 14, not Hkp 15",
+          "range": {
+            "value": 982,
+            "unit": "km",
+            "confidence": "high",
+            "source_ids": [
+              "AIRBUS_NH90_TECH",
+              "NHINDUSTRIES_NH90"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "endurance": {
+            "value": 5,
+            "unit": "hours",
+            "confidence": "high",
+            "source_ids": [
+              "AIRBUS_NH90_TECH",
+              "NHINDUSTRIES_NH90"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "payload": {
+            "value": {
+              "troops": 20,
+              "sling_load_kg": 2500,
+              "litters": 12
+            },
+            "confidence": "medium",
+            "source_ids": [
+              "NHINDUSTRIES_NH90"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "roles": [
+            "ASW in Hkp 14F/SAR-ASW configuration",
+            "SAR",
+            "troop transport",
+            "MEDEVAC"
+          ],
+          "note": "Hkp 15 is AgustaWestland A109 LUH; included here as the NH90 correction requested by the user.",
+          "source_ids": [
+            "AIRBUS_NH90_TECH",
+            "NHINDUSTRIES_NH90"
+          ]
+        }
+      },
+      "gbad_systems": {
+        "RBS_23_BAMSE": {
+          "engagement_range": {
+            "value": 15000,
+            "unit": "m",
+            "confidence": "medium",
+            "note": "Some public sources cite >15 km; other Saab-era claims cite up to 20 km.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude_envelope": {
+            "value": 15000,
+            "unit": "m",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "pk": {
+            "drone": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            },
+            "missile": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            },
+            "aircraft": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          },
+          "reload_time": {
+            "value": "<4",
+            "unit": "minutes per MCC complete reload",
+            "confidence": "low",
+            "note": "Open-source claim for Missile Control Centre reload.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew_requirement": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Battery/MCC crew counts are not reliably public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "missile_count_per_battery": {
+            "value": {
+              "ready_to_fire_per_MCC": 6,
+              "MCCs_per_battery": "2-4",
+              "ready_to_fire_total_estimate": "12-24"
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": []
+        },
+        "RBS_70_and_RBS_70_NG": {
+          "engagement_range": {
+            "value": ">9000",
+            "unit": "m",
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_RBS70NG"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude_envelope": {
+            "value": "0-5000",
+            "unit": "m",
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_RBS70NG"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "pk": {
+            "drone": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            },
+            "missile": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            },
+            "aircraft": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          },
+          "reload_time": {
+            "value": "<5",
+            "unit": "seconds",
+            "confidence": "high",
+            "note": "MANPADS configuration.",
+            "source_ids": [
+              "SAAB_RBS70NG"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "crew_requirement": {
+            "value": "2-3",
+            "unit": "persons",
+            "confidence": "medium",
+            "note": "Saab describes a two-man team for RBS 70 NG; legacy teams often 3.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "missile_count_per_battery": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Battery organization varies; a firing post has 1 missile loaded plus local reloads.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "guidance": {
+            "value": "laser beam-riding; described by Saab as unjammable laser guidance",
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_RBS70NG"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "SAAB_RBS70NG"
+          ]
+        },
+        "IRIS_T_SLS_RBS_98": {
+          "engagement_range": {
+            "value": 12,
+            "unit": "km",
+            "confidence": "medium",
+            "note": "IRIS-T SLS/RBS 98 public estimate.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude_envelope": {
+            "value": "6-8",
+            "unit": "km",
+            "confidence": "low",
+            "note": "Public estimates vary between Swedish RBS 98 and generic SLS.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "drone": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            },
+            "missile": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            },
+            "aircraft": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          },
+          "reload_time": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Launcher reload time is not reliably public; depends on support vehicle/crane procedure.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "crew_requirement": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Crew varies by vehicle integration and command-post setup.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "missile_count_per_battery": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Battery composition varies; retain launcher-level missile count when known by configuration.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "source_ids": [
+            "REUTERS_IRIST_2026"
+          ]
+        },
+        "Patriot_PAC_3_Swedish_Lv_103": {
+          "engagement_range": {
+            "value": {
+              "PAC_3_CRI": 45,
+              "PAC_3_MSE_estimate": 60,
+              "GEM_T_air_breathing_target_estimate": 160
+            },
+            "unit": "km",
+            "confidence": "low",
+            "note": "Different missiles have different envelopes; exact Swedish firing doctrine is not public.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "altitude_envelope": {
+            "value": {
+              "PAC_3_CRI": 12,
+              "PAC_3_MSE_estimate": 20,
+              "GEM_T_estimate": 24
+            },
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "drone": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            },
+            "missile": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            },
+            "aircraft": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Not publicly available or likely classified; field retained for schema completeness.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          },
+          "reload_time": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational reload times are unit- and safety-procedure-dependent and not reliably public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "crew_requirement": {
+            "value": "battery-level dozens of personnel",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "missile_count_per_battery": {
+            "value": {
+              "PAC_3_per_M903_launcher": 16,
+              "GEM_T_per_M903_launcher": 4,
+              "launchers_per_battery_estimate": "2-4"
+            },
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "source_ids": [
+            "REUTERS_IRIST_2026"
+          ]
+        },
+        "RBS_15F_and_coastal_RBS15": {
+          "range": {
+            "value": {
+              "RBS_15F_legacy": ">70",
+              "RBS15_Mk3": ">200",
+              "RBS15_Mk4_Gungnir": ">300"
+            },
+            "unit": "km",
+            "confidence": "medium",
+            "note": "RBS15F is air-launched; newer Gungnir family is multi-platform.",
+            "source_ids": [
+              "SAAB_RBS15_GUNGNIR"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "warhead": {
+            "value": 200,
+            "unit": "kg",
+            "confidence": "medium",
+            "note": "RBS15 family public figure; variant-specific warhead may vary.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "launch_platform": {
+            "value": [
+              "JAS 39 Gripen for RBS 15F",
+              "ships",
+              "truck/coastal launchers for land-based RBS15 variants"
+            ],
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_RBS15_GUNGNIR"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "SAAB_RBS15_GUNGNIR"
+          ]
+        }
+      },
+      "sensors": {
+        "Giraffe_AMB_and_8A": {
+          "detection_ranges_by_target_type": {
+            "Giraffe_AMB_air_surveillance": {
+              "value": 120,
+              "unit": "km",
+              "confidence": "medium",
+              "note": "Commonly associated with Giraffe/Sky Sabre AMB-family public range; target-dependent.",
+              "source_ids": [
+                "SAAB_GIRAFFE_AMB",
+                "UK_ARMY_SKY_SABRE"
+              ],
+              "releasability": "official_public",
+              "operational_sensitivity": "low",
+              "use_in_simulation": "recommended"
+            },
+            "Giraffe_AMB_small_UAV": {
+              "value": "not public; lower than fighter-sized targets",
+              "confidence": "unknown",
+              "source_ids": [
+                "SAAB_GIRAFFE_AMB"
+              ],
+              "releasability": "official_public",
+              "operational_sensitivity": "low",
+              "use_in_simulation": "recommended"
+            },
+            "Giraffe_8A_long_range_air_target": {
+              "value": 470,
+              "unit": "km",
+              "confidence": "low",
+              "note": "Broad open-source estimate for 8A class; verify against customer configuration.",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            }
+          },
+          "altitude_coverage": {
+            "value": "3D coverage; AMB supports low-altitude targets from 12 m mast; 8A supports high-altitude/BMD surveillance",
+            "confidence": "medium",
+            "source_ids": [
+              "SAAB_GIRAFFE_AMB"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "jamming_resistance": {
+            "value": "ECCM: frequency agility, low sidelobes and high update-rate features publicly described for Giraffe family; exact resistance not public",
+            "confidence": "medium",
+            "source_ids": [
+              "SAAB_GIRAFFE_AMB"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "SAAB_GIRAFFE_AMB",
+            "UK_ARMY_SKY_SABRE"
+          ]
+        },
+        "PS_860_HARD": {
+          "detection_ranges_by_target_type": {
+            "large_aircraft": {
+              "value": "350-400",
+              "unit": "km",
+              "confidence": "low",
+              "note": "Open-source estimate for Swedish fixed long-range air surveillance radar; exact configuration not public.",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            },
+            "fighter": {
+              "value": "200-300",
+              "unit": "km",
+              "confidence": "low",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            },
+            "stealth_low_observable": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "No credible public range.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          },
+          "altitude_coverage": {
+            "value": "long-range 3D air surveillance; exact public altitude envelope not confirmed",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "jamming_resistance": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "ECCM details not credibly public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        },
+        "PS_05A_Gripen": {
+          "detection_ranges_by_target_type": {
+            "fighter": {
+              "value": 120,
+              "unit": "km",
+              "confidence": "low",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            },
+            "bomber": {
+              "value": 180,
+              "unit": "km",
+              "confidence": "low",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            },
+            "stealth_low_observable": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "No credible public range.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          },
+          "modes": [
+            "air-to-air search",
+            "track-while-scan",
+            "air-to-ground",
+            "sea search",
+            "weapon cueing"
+          ],
+          "source_ids": [
+            "SAAB_GRIPEN_C"
+          ]
+        },
+        "Erieye_AEW_radar": {
+          "detection_ranges_by_target_type": {
+            "fighter_or_cruise_missile": {
+              "value": "300-400",
+              "unit": "km",
+              "confidence": "medium",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "low",
+              "use_in_simulation": "recommended"
+            },
+            "large_high_altitude_aircraft": {
+              "value": "400-450",
+              "unit": "km",
+              "confidence": "medium",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "low",
+              "use_in_simulation": "recommended"
+            },
+            "surface_ship": {
+              "value": "target and sea-state dependent",
+              "confidence": "unknown",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "low",
+              "use_in_simulation": "recommended"
+            }
+          },
+          "modes": [
+            "air surveillance",
+            "maritime surveillance",
+            "IFF/correlation",
+            "track management"
+          ],
+          "source_ids": [
+            "USAF_E3"
+          ]
+        }
+      },
+      "ground_forces_future_expansion": {
+        "mechanized_battalion_stridsgruppen": {
+          "organization": [
+            "battalion HQ/staff",
+            "2-3 mechanized infantry companies",
+            "tank or direct-fire element depending on brigade design",
+            "mortar/fire-support company",
+            "anti-tank/air-defence attachments",
+            "logistics/maintenance/medical company"
+          ],
+          "vehicle_types": [
+            "CV9040 / Strf 9040 infantry fighting vehicles",
+            "Strv 122 tanks when attached",
+            "Patgb 360/Patria-type wheeled APCs in some units",
+            "Bv 410 tracked articulated vehicles in suitable terrain"
+          ],
+          "weapons": [
+            "40 mm autocannon on CV9040",
+            "120 mm tank guns on Strv 122",
+            "anti-tank guided missiles",
+            "81/120 mm mortars",
+            "small arms and crew-served weapons"
+          ],
+          "mobility": {
+            "value": {
+              "road_speed_kmh": "50-70 tracked vehicles",
+              "cross_country": "terrain-dependent; forest/wetland restrictive"
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          }
+        },
+        "Artilleriregemente_Archer_FH77BW": {
+          "range": {
+            "value": {
+              "standard_155mm": 30,
+              "extended_range": 40,
+              "precision_extended_estimate": 50
+            },
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "rate_of_fire": {
+            "value": {
+              "burst": "3 rounds in ~15 seconds",
+              "sustained": "6-8 rounds/min short duration"
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "crew": {
+            "value": 3,
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ammo_types": [
+            "155 mm HE",
+            "smoke",
+            "illumination",
+            "bonus/top-attack submunitions where authorized",
+            "Excalibur/GPS-guided rounds where integrated"
+          ],
+          "onboard_ammunition": {
+            "value": 21,
+            "unit": "rounds",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          }
+        },
+        "Amfibieregementet_amphibious": {
+          "landing_craft": [
+            "CB90 fast assault craft",
+            "support boats",
+            "small craft for archipelago mobility"
+          ],
+          "coastal_defense_capability": [
+            "coastal ranger reconnaissance",
+            "mines/obstacles",
+            "RBS 17 Hellfire-type coastal missile historically/currently used",
+            "sensor-to-shooter support for anti-ship missiles",
+            "harbour/archipelago denial"
+          ],
+          "mobility": "Optimized for Swedish archipelago, littoral raids, coastal security and dispersed basing."
+        }
+      },
+      "naval": {
+        "Visby_class_corvette": {
+          "speed": {
+            "value": "35+",
+            "unit": "knots",
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_VISBY"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "endurance": {
+            "value": {
+              "range_nm": 2500,
+              "speed_for_range_knots": 15
+            },
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "weapons": [
+            "57 mm Bofors gun",
+            "RBS 15 anti-ship missiles depending fit/modernization",
+            "400 mm torpedo tubes for Torped 45/47 family",
+            "mines/depth charges",
+            "planned/enhanced air defence fit varies by modernization"
+          ],
+          "sensors": [
+            "Sea Giraffe/3D radar family",
+            "fire-control radar/electro-optics",
+            "hull sonar",
+            "variable-depth/towed sonar depending fit"
+          ],
+          "crew": {
+            "value": 43,
+            "unit": "persons",
+            "confidence": "high",
+            "source_ids": [
+              "SAAB_VISBY"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "SAAB_VISBY"
+          ]
+        },
+        "Gotland_class_submarine": {
+          "speed": {
+            "value": {
+              "surfaced": 11,
+              "submerged_battery": 20,
+              "AIP": 5
+            },
+            "unit": "knots",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "endurance": {
+            "value": "weeks submerged on Stirling AIP; >14 days often cited without snorkeling",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "torpedoes": [
+            "4x 533 mm tubes",
+            "2x 400 mm tubes",
+            "Torpedo 62 heavyweight / Torpedo 45/47 lightweight depending loadout",
+            "mines"
+          ],
+          "sensors": [
+            "CSU 90 sonar suite / Swedish combat system family"
+          ],
+          "crew": {
+            "value": "24-32",
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          }
+        },
+        "Goteborg_Gavle_class_corvette": {
+          "speed": {
+            "value": 30,
+            "unit": "knots",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "endurance": {
+            "value": {
+              "range_nm": 2000
+            },
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "weapons": [
+            "57 mm gun",
+            "40 mm gun on earlier configuration",
+            "up to 8x RBS 15 Mk2",
+            "400 mm torpedo tubes",
+            "ASW mortars",
+            "mines/depth charges"
+          ],
+          "sensors": [
+            "Sea Giraffe radar",
+            "navigation/fire-control radars",
+            "hull/towed/variable-depth sonar depending upgrade"
+          ],
+          "crew": {
+            "value": 41,
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          }
+        }
+      }
+    },
+    "blue_force_nato": {
+      "aircraft": {
+        "F_35A_B": {
+          "range": {
+            "value": {
+              "F_35A": 2200,
+              "F_35B": 1670
+            },
+            "unit": "km",
+            "confidence": "medium",
+            "note": "A-model official RAAF figure; B-model public estimate.",
+            "source_ids": [
+              "RAAF_F35A"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "combat_radius": {
+            "value": {
+              "F_35A": 1093,
+              "F_35B": 833
+            },
+            "unit": "km",
+            "confidence": "medium",
+            "note": "A-model official RAAF figure; B-model public estimate.",
+            "source_ids": [
+              "RAAF_F35A"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 1.6,
+              "kmh": 1960
+            },
+            "confidence": "high",
+            "source_ids": [
+              "RAAF_F35A"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ceiling": {
+            "value": 50000,
+            "unit": "ft",
+            "confidence": "high",
+            "source_ids": [
+              "RAAF_F35A"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "internal_bay_loadouts": [
+            "stealth air-to-air: 4x AIM-120-class internally on mature blocks, plus internal gun on A",
+            "stealth strike: 2x AIM-120 + 2x JDAM/SDB-class weapons depending block/variant",
+            "beast mode: external stores increase payload but reduce low-observable advantage"
+          ],
+          "radar": {
+            "type": "AN/APG-81 AESA",
+            "public_range": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Exact radar range is classified.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          },
+          "role": [
+            "SEAD/DEAD sensor-shooter node",
+            "air superiority",
+            "strike",
+            "ISR/data fusion"
+          ],
+          "source_ids": [
+            "RAAF_F35A"
+          ]
+        },
+        "F_16_Fighting_Falcon_NATO": {
+          "range": {
+            "value": 4220,
+            "unit": "km ferry",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "combat_radius": {
+            "value": ">860",
+            "unit": "km",
+            "confidence": "high",
+            "note": "USAF states >500 miles in air-to-surface mission.",
+            "source_ids": [
+              "USAF_F16"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 2.0,
+              "kmh": 2120
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ceiling": {
+            "value": 50000,
+            "unit": "ft",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "loadouts": [
+            "AIM-120 AMRAAM",
+            "AIM-9 Sidewinder/IRIS-T on some NATO variants",
+            "JDAM/LGB",
+            "AGM-88 HARM for SEAD",
+            "external tanks/targeting pods"
+          ],
+          "radar": {
+            "type": "AN/APG-68 mechanically scanned or AN/APG-83 AESA on F-16V/modernized aircraft",
+            "public_range": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Exact ranges vary by block/radar and are not public.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          },
+          "role": [
+            "multirole",
+            "air defence",
+            "strike",
+            "SEAD with HARM-equipped operators"
+          ],
+          "source_ids": [
+            "USAF_F16"
+          ]
+        },
+        "Eurofighter_Typhoon": {
+          "range": {
+            "value": 2900,
+            "unit": "km",
+            "confidence": "medium",
+            "note": "Public operational/ferry range figure varies.",
+            "source_ids": [
+              "EUROFIGHTER"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "combat_radius": {
+            "value": 1390,
+            "unit": "km",
+            "confidence": "low",
+            "note": "Open-source estimate; mission-specific.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 2.0,
+              "kmh": 2495
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ceiling": {
+            "value": 55000,
+            "unit": "ft",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "loadouts": [
+            "Meteor",
+            "AMRAAM",
+            "IRIS-T/ASRAAM",
+            "Paveway/Storm Shadow/Brimstone depending operator integration",
+            "external tanks"
+          ],
+          "radar": {
+            "type": "CAPTOR-M mechanically scanned or CAPTOR-E AESA on upgraded aircraft",
+            "public_range": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Exact range is not credibly public.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          },
+          "role": [
+            "air superiority",
+            "quick reaction alert",
+            "swing-role strike"
+          ],
+          "source_ids": [
+            "EUROFIGHTER"
+          ]
+        },
+        "E_3_Sentry_AWACS": {
+          "radar_range": {
+            "value": ">375.5",
+            "unit": "km",
+            "confidence": "high",
+            "note": "USAF states >250 miles.",
+            "source_ids": [
+              "USAF_E3"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "endurance": {
+            "value": 8,
+            "unit": "hours without refuelling",
+            "confidence": "high",
+            "source_ids": [
+              "USAF_E3"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "crew": {
+            "value": "flight crew plus mission crew; often 13-23 total depending configuration",
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "USAF_E3"
+          ]
+        },
+        "RC_135_Rivet_Joint": {
+          "sigint_range": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Collection range depends on emitter, altitude, antenna and processing; exact values are classified.",
+            "source_ids": [
+              "USAF_RC135"
+            ],
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "crew": {
+            "value": ">30",
+            "unit": "persons",
+            "confidence": "high",
+            "source_ids": [
+              "USAF_RC135"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "role": [
+            "SIGINT",
+            "ELINT",
+            "COMINT",
+            "electronic order of battle support"
+          ],
+          "source_ids": [
+            "USAF_RC135"
+          ]
+        }
+      },
+      "gbad": {
+        "Patriot_PAC_3_MSE": {
+          "engagement_range": {
+            "value": {
+              "PAC_3_MSE_ballistic_missile_estimate": "60+",
+              "GEM_T_air_breathing_target_estimate": "160"
+            },
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "altitude": {
+            "value": "20-24",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Pk is classified and scenario-dependent.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "reload": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Reload varies by launcher, crane/transport assets and safety procedures.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "crew": {
+            "value": "battery-level dozens",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "source_ids": []
+        },
+        "NASAMS": {
+          "engagement_range": {
+            "value": {
+              "AIM_120_AMRAAM_estimate": "25-40",
+              "AMRAAM_ER_estimate": "50-60"
+            },
+            "unit": "km",
+            "confidence": "medium",
+            "note": "AMRAAM-ER expands NASAMS engagement volume; exact envelope depends on missile and fire-control integration.",
+            "source_ids": [
+              "KONGSBERG_NASAMS"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude": {
+            "value": {
+              "AMRAAM_estimate": "15-21",
+              "AMRAAM_ER_estimate": "25-35"
+            },
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational Pk not public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "reload": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Launcher reload times not consistently public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "crew": {
+            "value": "low manning requirement; exact crew varies by battery design",
+            "confidence": "medium",
+            "source_ids": [
+              "KONGSBERG_NASAMS"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "KONGSBERG_NASAMS"
+          ]
+        },
+        "IRIS_T_SLM": {
+          "engagement_range": {
+            "value": 40,
+            "unit": "km",
+            "confidence": "high",
+            "note": "Reuters reports around 40 km.",
+            "source_ids": [
+              "REUTERS_IRIST_2026"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude": {
+            "value": 20,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "pk": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational Pk not public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "reload": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Fire-unit reload not reliably public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "crew": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Crew depends on national fire-unit organization.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "source_ids": [
+            "REUTERS_IRIST_2026"
+          ]
+        },
+        "CAMM_ER": {
+          "engagement_range": {
+            "value": ">40",
+            "unit": "km",
+            "confidence": "medium",
+            "note": "MBDA describes medium-range; public sources commonly state >40 km.",
+            "source_ids": [
+              "MBDA_CAMM_ER"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude": {
+            "value": 10,
+            "unit": "km",
+            "confidence": "low",
+            "note": "Public estimate; not stated on MBDA page.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational Pk not public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "reload": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Launcher reload is configuration-dependent.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "crew": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Battery crew depends on EMADS/Sky Sabre/CAMM-ER implementation.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "source_ids": [
+            "MBDA_CAMM_ER",
+            "UK_ARMY_SKY_SABRE"
+          ]
+        }
+      },
+      "naval_baltic_north_sea_relevant": {
+        "Arleigh_Burke_destroyer": {
+          "speed": {
+            "value": ">30",
+            "unit": "knots",
+            "confidence": "high",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "weapons": [
+            "SM-2",
+            "SM-3",
+            "SM-6",
+            "ESSM",
+            "Tomahawk",
+            "ASROC",
+            "5-inch gun",
+            "CIWS/SeaRAM on some ships",
+            "Mk 46/50/54 torpedoes"
+          ],
+          "vls_cells": {
+            "value": {
+              "Flight_I_II": 90,
+              "Flight_IIA_III": 96
+            },
+            "unit": "Mk 41 cells",
+            "confidence": "high",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "radar": {
+            "value": "AN/SPY-1D PESA on Flights I/II/IIA; AN/SPY-6 AESA on Flight III",
+            "confidence": "high",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "crew": {
+            "value": "303-323",
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "US_NAVY_DDG"
+          ]
+        },
+        "Type_26_frigate_UK_City_class": {
+          "speed": {
+            "value": ">26",
+            "unit": "knots",
+            "confidence": "high",
+            "source_ids": [
+              "ROYAL_NAVY_TYPE26"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "endurance": {
+            "value": 60,
+            "unit": "days",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "range": {
+            "value": ">7000",
+            "unit": "nmi",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "weapons": [
+            "Sea Ceptor/CAMM",
+            "24-cell Mk 41 VLS for strike/ASW missiles",
+            "5-inch gun",
+            "30 mm guns",
+            "Phalanx CIWS",
+            "Merlin/Wildcat helicopters"
+          ],
+          "radar": {
+            "value": "Type 997 Artisan 3D radar; navigation radars; towed array sonar for ASW",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "crew": {
+            "value": 157,
+            "unit": "core crew",
+            "confidence": "high",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "ROYAL_NAVY_TYPE26"
+          ]
+        },
+        "F_125_Baden_Wurttemberg_Germany": {
+          "speed": {
+            "value": "26-28",
+            "unit": "knots",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "range": {
+            "value": "4000-8000",
+            "unit": "nmi",
+            "confidence": "low",
+            "note": "Public sources vary by profile.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "weapons": [
+            "127 mm gun",
+            "2x RAM launchers",
+            "8x Harpoon",
+            "27 mm remote guns",
+            "helicopters",
+            "IRIS-T SLM integration studied/tested as upgrade"
+          ],
+          "radar": {
+            "value": "Hensoldt TRS-4D AESA fixed arrays",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "crew": {
+            "value": {
+              "standard": 110,
+              "capacity": 190
+            },
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "NAVALNEWS_F125_IRIST"
+          ]
+        }
+      }
+    },
+    "red_force_russia": {
+      "aircraft": {
+        "Su_35S_Flanker_E": {
+          "range": {
+            "value": 3600,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "combat_radius": {
+            "value": 1500,
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 2.25,
+              "kmh": 2400
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ceiling": {
+            "value": 18000,
+            "unit": "m",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "typical_armament": [
+            "R-77-1/RVV-SD",
+            "R-73/RVV-MD",
+            "R-37M on some integrations",
+            "Kh-31P/A",
+            "guided/unguided bombs"
+          ],
+          "radar": {
+            "type": "N035 Irbis-E PESA",
+            "range": {
+              "value": {
+                "large_target": "350-400",
+                "fighter_target": 200
+              },
+              "unit": "km",
+              "confidence": "low",
+              "note": "Public claims; target RCS and conditions matter.",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            }
+          }
+        },
+        "Su_34_Fullback": {
+          "range": {
+            "value": 4000,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "combat_radius": {
+            "value": 1100,
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 1.8,
+              "kmh": 1900
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ceiling": {
+            "value": 15000,
+            "unit": "m",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "typical_armament": [
+            "R-77/R-73 self-defence",
+            "Kh-31",
+            "Kh-59",
+            "KAB-series guided bombs",
+            "UMPK glide bombs",
+            "unguided bombs/rockets"
+          ],
+          "radar": {
+            "type": "Leninets V004 / upgraded Pika-M on reconnaissance/modernized aircraft",
+            "range": {
+              "value": {
+                "fighter": 120,
+                "ground_mapping_or_large_target": 300
+              },
+              "unit": "km",
+              "confidence": "low",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            }
+          }
+        },
+        "MiG_31BM_Foxhound": {
+          "range": {
+            "value": 3000,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "combat_radius": {
+            "value": "720-1450",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 2.83,
+              "kmh": 3000
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ceiling": {
+            "value": 20600,
+            "unit": "m",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "typical_armament": [
+            "R-37M",
+            "R-33S",
+            "R-77 on some integrations",
+            "R-73",
+            "Kinzhal on MiG-31K variant"
+          ],
+          "radar": {
+            "type": "Zaslon-AM PESA",
+            "range": {
+              "value": {
+                "large_aircraft": 320,
+                "fighter": 280
+              },
+              "unit": "km",
+              "confidence": "low",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            }
+          }
+        },
+        "Tu_22M3_Backfire": {
+          "range": {
+            "value": "6000-7000",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "combat_radius": {
+            "value": 2400,
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 1.88,
+              "kmh": 2000
+            },
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ceiling": {
+            "value": 13300,
+            "unit": "m",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "typical_armament": [
+            "Kh-22",
+            "Kh-32",
+            "FAB bombs",
+            "mines; modernized variants may carry additional guided weapons"
+          ],
+          "radar": {
+            "type": "Leninets PN-A/modernized variants",
+            "range": {
+              "value": null,
+              "confidence": "unknown",
+              "note": "Search/attack radar details vary by variant and are not reliably public.",
+              "releasability": "not_included_active_classified_or_leaked",
+              "operational_sensitivity": "high",
+              "use_in_simulation": "not_recommended",
+              "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+            }
+          }
+        },
+        "A_50_Mainstay_AEW": {
+          "radar_range": {
+            "value": {
+              "fighter": "230-300",
+              "bomber": 400,
+              "surface_ship": 300
+            },
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "endurance": {
+            "value": "4-7",
+            "unit": "hours",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": "10-15",
+            "unit": "persons",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "Il_20M_Coot_A_SIGINT": {
+          "collection_capability": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "ELINT/COMINT collection ranges and bands are classified.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "endurance": {
+            "value": 12,
+            "unit": "hours",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": "10-13",
+            "unit": "persons",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        }
+      },
+      "gbad_surface_to_air": {
+        "S_400_Triumf": {
+          "range_by_missile": {
+            "value": {
+              "40N6E": "380-400",
+              "48N6E2_E3": "200-250",
+              "48N6E": 150,
+              "9M96E2": 120,
+              "9M96E": 40
+            },
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude_envelope": {
+            "value": {
+              "maximum_aerodynamic_target": "27-30",
+              "9M96E2_public_claim": 30
+            },
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "aircraft": {
+              "value": 0.9,
+              "unit": "single missile public claim for 9M96 class",
+              "confidence": "low",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            },
+            "uav": {
+              "value": 0.8,
+              "unit": "public claim",
+              "confidence": "low",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            },
+            "cruise_missile": {
+              "value": 0.7,
+              "unit": "public claim",
+              "confidence": "low",
+              "releasability": "osint_estimate",
+              "operational_sensitivity": "medium",
+              "use_in_simulation": "use_as_range_only"
+            }
+          },
+          "reload_time": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational reload time varies and is not reliably public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "battery_composition": {
+            "value": {
+              "battery": "radar/control center plus ~6 TELs typical public composition",
+              "battalion": "2 batteries often cited"
+            },
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Crew counts vary by element and are not consistently public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        },
+        "S_300V4": {
+          "range_by_missile": {
+            "value": {
+              "9M82MD": "350-400",
+              "9M83M": "150-200"
+            },
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "altitude_envelope": {
+            "value": "25-37",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational Pk not public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "reload_time": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not publicly available or likely classified; field retained for schema completeness.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "battery_composition": {
+            "value": "tracked TELAR/TELs, sector search radar, engagement radar, command post; exact battery varies",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not publicly available or likely classified; field retained for schema completeness.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        },
+        "Pantsir_S1": {
+          "range": {
+            "value": {
+              "missile": 20,
+              "guns": 4
+            },
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude": {
+            "value": {
+              "missile": 15,
+              "guns": 3
+            },
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "pk": {
+            "value": "0.7-0.95 public claims; combat performance varies widely",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "reload_time": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Public reload usually described with transporter-loader; exact time varies.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "crew": {
+            "value": "2-3",
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ready_missiles": {
+            "value": 12,
+            "unit": "missiles",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          }
+        },
+        "Tor_M2": {
+          "range": {
+            "value": "12-16",
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude": {
+            "value": 10,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "pk": {
+            "value": "0.45-0.8 public claims depending target",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "reload_time": {
+            "value": "18-20",
+            "unit": "minutes",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": 3,
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "ready_missiles": {
+            "value": 16,
+            "unit": "missiles",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          }
+        },
+        "Buk_M3": {
+          "range": {
+            "value": 70,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude": {
+            "value": 35,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "pk": {
+            "value": "up to 0.95 public claim; operational Pk unknown",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "reload_time": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not publicly available or likely classified; field retained for schema completeness.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "crew": {
+            "value": "3-4 per TELAR",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "ready_missiles": {
+            "value": 6,
+            "unit": "per TELAR",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          }
+        }
+      },
+      "drones_missiles": {
+        "Orlan_10": {
+          "range": {
+            "value": {
+              "radio_control_radius": 120,
+              "autonomous_radius": 500
+            },
+            "unit": "km",
+            "confidence": "high",
+            "source_ids": [
+              "ROE_ORLAN10E"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "endurance": {
+            "value": "10-16",
+            "unit": "hours",
+            "confidence": "medium",
+            "note": "Rosoboronexport Orlan-10E says not less than 10h; other Orlan-10 sources cite up to 16h.",
+            "source_ids": [
+              "ROE_ORLAN10E"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "speed": {
+            "value": 100,
+            "unit": "km/h cruise",
+            "confidence": "high",
+            "source_ids": [
+              "ROE_ORLAN10E"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "payload": {
+            "value": "4.5-6",
+            "unit": "kg",
+            "confidence": "medium",
+            "source_ids": [
+              "ROE_ORLAN10E"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "role": [
+            "ISR",
+            "artillery spotting",
+            "EW relay/jammer in multi-UAV teams"
+          ],
+          "cost": {
+            "value": {
+              "system_with_2_UAVs_2013_estimate_usd": 150000,
+              "single_air_vehicle_modern_estimate_usd": 87000
+            },
+            "unit": "USD",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "Shahed_136": {
+          "range": {
+            "value": "1000-2500",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "speed": {
+            "value": "150-185",
+            "unit": "km/h",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "warhead": {
+            "value": "40-50",
+            "unit": "kg",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "cost": {
+            "value": "20000-50000 production estimate; export/contract prices can be higher",
+            "unit": "USD",
+            "confidence": "low",
+            "source_ids": [
+              "CSIS_SHAHED_COST"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "role": "one-way attack munition"
+        },
+        "Geran_2": {
+          "range": {
+            "value": ">1000",
+            "unit": "km",
+            "confidence": "low",
+            "note": "Russian-produced Shahed-136 derivative; heavier-warhead variants may reduce range.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "speed": {
+            "value": "150-185",
+            "unit": "km/h",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "warhead": {
+            "value": "50-90",
+            "unit": "kg",
+            "confidence": "low",
+            "note": "Russian variants reportedly include heavier warheads.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "cost": {
+            "value": "30000-80000 estimated after Russian modifications",
+            "unit": "USD",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "Kalibr_3M_14": {
+          "range": {
+            "value": "1500-2500",
+            "unit": "km",
+            "confidence": "high",
+            "source_ids": [
+              "CSIS_KALIBR"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "speed": {
+            "value": "subsonic cruise ~Mach 0.7-0.8",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "warhead": {
+            "value": 450,
+            "unit": "kg",
+            "confidence": "high",
+            "source_ids": [
+              "CSIS_KALIBR"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "launch_platform": [
+            "surface ships",
+            "submarines"
+          ],
+          "source_ids": [
+            "CSIS_KALIBR"
+          ]
+        },
+        "Iskander_M_9K720": {
+          "range": {
+            "value": 500,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "speed": {
+            "value": "terminal quasi-ballistic; often cited Mach 6-7",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "warhead": {
+            "value": "480-700",
+            "unit": "kg",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "cep": {
+            "value": "5-30",
+            "unit": "m",
+            "confidence": "low",
+            "note": "Open-source estimates vary.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "Kh_47M2_Kinzhal": {
+          "range": {
+            "value": "1500-2000",
+            "unit": "km including launch aircraft",
+            "confidence": "high",
+            "source_ids": [
+              "CSIS_KINZHAL"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "speed": {
+            "value": "reported up to Mach 10",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "launch_aircraft": [
+            "MiG-31K/BM-modified",
+            "Tu-22M3M reported/planned",
+            "other integrations reported but uncertain"
+          ],
+          "warhead": {
+            "value": 480,
+            "unit": "kg",
+            "confidence": "high",
+            "source_ids": [
+              "CSIS_KINZHAL"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "CSIS_KINZHAL"
+          ]
+        },
+        "Kh_31P": {
+          "range": {
+            "value": {
+              "min": 15,
+              "max": 110
+            },
+            "unit": "km",
+            "confidence": "high",
+            "source_ids": [
+              "ROE_KH31P"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "speed": {
+            "value": 1000,
+            "unit": "m/s",
+            "confidence": "high",
+            "source_ids": [
+              "ROE_KH31P"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "seeker_type": {
+            "value": "passive radar seeker; broad frequency band; automatic search/external-control homing modes",
+            "confidence": "high",
+            "source_ids": [
+              "ROE_KH31P"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "warhead": {
+            "value": 87,
+            "unit": "kg",
+            "confidence": "high",
+            "source_ids": [
+              "ROE_KH31P"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "ROE_KH31P"
+          ]
+        }
+      },
+      "naval_baltic_fleet_relevant": {
+        "Steregushchiy_class_Project_20380": {
+          "speed": {
+            "value": 27,
+            "unit": "knots",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "weapons": [
+            "Kh-35 Uran anti-ship missiles on Project 20380",
+            "Redut SAM",
+            "A-190 100 mm gun",
+            "Paket-NK torpedoes",
+            "ASW helicopter"
+          ],
+          "sensors": [
+            "Furke/Monument radar variants",
+            "sonar suite; newer ships vary"
+          ],
+          "crew": {
+            "value": "90-100",
+            "unit": "persons",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "note": "Kalibr is associated with Project 20385 derivatives, not baseline Steregushchiy."
+        },
+        "Buyan_M_class_corvette": {
+          "speed": {
+            "value": 25,
+            "unit": "knots",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "weapons": [
+            "8-cell UKSK VLS for Kalibr/Oniks family",
+            "A-190 100 mm gun",
+            "Gibka/short-range air defence",
+            "30 mm CIWS"
+          ],
+          "sensors": [
+            "Pozitiv-ME radar",
+            "navigation/fire-control radars"
+          ],
+          "crew": {
+            "value": 52,
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          }
+        },
+        "Improved_Kilo_Project_636_3": {
+          "endurance": {
+            "value": 45,
+            "unit": "days",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "speed": {
+            "value": {
+              "surfaced": "10-12",
+              "submerged": "17-20"
+            },
+            "unit": "knots",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "weapons": [
+            "533 mm torpedoes",
+            "mines",
+            "Kalibr-PL cruise missiles"
+          ],
+          "sensors": [
+            "MGK-400EM sonar family",
+            "ESM/periscope sensors"
+          ],
+          "crew": {
+            "value": 52,
+            "unit": "persons",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          }
+        },
+        "Lada_Project_677": {
+          "endurance": {
+            "value": 45,
+            "unit": "days",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "speed": {
+            "value": {
+              "surfaced": 10,
+              "submerged": 21
+            },
+            "unit": "knots",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "weapons": [
+            "533 mm torpedoes",
+            "mines",
+            "Kalibr-capable reports vary by unit/configuration"
+          ],
+          "sensors": [
+            "Lira sonar suite"
+          ],
+          "crew": {
+            "value": 35,
+            "unit": "persons",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        }
+      },
+      "ground_forces_baltic_theater_relevant": {
+        "motor_rifle_battalion": {
+          "organization": [
+            "battalion HQ",
+            "3 motor-rifle companies",
+            "tank company or attached tank platoon/company depending formation",
+            "mortar/artillery battery",
+            "ATGM platoon",
+            "air-defence platoon",
+            "reconnaissance",
+            "engineer",
+            "logistics/medical"
+          ],
+          "vehicles": [
+            "BMP-3 or BMP-2 in tracked units",
+            "BTR-82A in wheeled units",
+            "T-72B3/T-80BVM/T-90M tanks as attached/organic depending unit"
+          ],
+          "artillery": [
+            "2S19 Msta-S at brigade/regiment level",
+            "2S3/2S1 legacy",
+            "BM-21/Tornado-G MLRS"
+          ],
+          "notes": "Exact ORBAT changes by district, mobilization status and wartime task organization."
+        },
+        "Iskander_M_brigade": {
+          "launcher_count": {
+            "value": 12,
+            "unit": "TELs",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "reload_time": {
+            "value": "20-60",
+            "unit": "minutes",
+            "confidence": "low",
+            "note": "Depends on transloader, crew, concealment and safety procedures.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "missiles_per_launcher": {
+            "value": 2,
+            "unit": "ready missiles",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "reloads": {
+            "value": "2 missiles per transporter-loader typical; brigade missile stock not public",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        }
+      }
+    },
+    "red_force_china": {
+      "aircraft": {
+        "J_20_Mighty_Dragon": {
+          "range": {
+            "value": "3200 nmi / ~5900 km public estimate",
+            "confidence": "low",
+            "source_ids": [
+              "MITCHELL_J20"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "combat_radius": {
+            "value": "1080 nmi / ~2000 km public estimate; other estimates lower",
+            "confidence": "low",
+            "source_ids": [
+              "MITCHELL_J20"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 2.0
+            },
+            "confidence": "low",
+            "source_ids": [
+              "MITCHELL_J20"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "ceiling": {
+            "value": 20000,
+            "unit": "m",
+            "confidence": "medium",
+            "source_ids": [
+              "MITCHELL_J20"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "internal_bay_loadouts": [
+            "main bay: PL-15/PL-12/PL-21-class BVR AAMs depending integration",
+            "side bays: PL-10 short-range AAMs",
+            "precision-guided munitions possible but less documented"
+          ],
+          "radar_type": {
+            "value": "Chinese AESA fire-control radar; exact designation/performance not confirmed publicly",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "J_16": {
+          "range": {
+            "value": 3900,
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "combat_radius": {
+            "value": 1500,
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": 2.0
+            },
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "ceiling": {
+            "value": 18000,
+            "unit": "m",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "loadouts": [
+            "PL-15",
+            "PL-10",
+            "PL-12",
+            "YJ/KD-series strike weapons",
+            "precision-guided bombs",
+            "EW pods"
+          ],
+          "radar_type": {
+            "value": "AESA radar on J-16; exact designation/performance not public",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "J_10C": {
+          "range": {
+            "value": 1850,
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "combat_radius": {
+            "value": "1000-1240",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "max_speed": {
+            "value": {
+              "mach": "1.8-2.2"
+            },
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "ceiling": {
+            "value": 17000,
+            "unit": "m",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "loadouts": [
+            "PL-15",
+            "PL-10",
+            "PL-12",
+            "laser/GPS-guided bombs",
+            "anti-radiation/anti-ship weapons depending integration"
+          ],
+          "radar_type": {
+            "value": "AESA radar; exact model/range disputed in open sources",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "H_6K_N_bomber": {
+          "range": {
+            "value": 6000,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "combat_radius": {
+            "value": 3500,
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "payload": {
+            "value": "9000-12000",
+            "unit": "kg",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "cruise_missile_payload": [
+            "up to 6 CJ-20/CJ-10K-class ALCMs on H-6K",
+            "H-6N configured for air-launched ballistic/large missiles"
+          ],
+          "crew": {
+            "value": 4,
+            "unit": "persons",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "KJ_500_AEW": {
+          "radar_range": {
+            "value": "300-470",
+            "unit": "km",
+            "confidence": "low",
+            "note": "Open-source estimate; target and altitude dependent.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "endurance": {
+            "value": "8-12",
+            "unit": "hours",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": "5-10",
+            "unit": "persons",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        }
+      },
+      "gbad": {
+        "HQ_9B": {
+          "range": {
+            "value": "200-300",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "altitude": {
+            "value": "27-30",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational Pk not public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "battery_composition": {
+            "value": "typical public description: engagement radar, command vehicle, 6-8 TELs with 4 missiles each, support vehicles",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "reload_time": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational reload time not reliably public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        },
+        "HQ_22": {
+          "range": {
+            "value": 170,
+            "unit": "km",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude": {
+            "value": 27000,
+            "unit": "m",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational Pk not public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "battery_composition": {
+            "value": "4-8 TELs, 4 missiles per TEL, target acquisition and engagement radar vehicles",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "reload_time": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not publicly available or likely classified; field retained for schema completeness.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        },
+        "HQ_17A": {
+          "range": {
+            "value": "15-20",
+            "unit": "km",
+            "confidence": "medium",
+            "source_ids": [
+              "TRADOC_HQ17A"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "altitude": {
+            "value": 10,
+            "unit": "km",
+            "confidence": "medium",
+            "source_ids": [
+              "TRADOC_HQ17A"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "pk": {
+            "value": "0.45-0.80 public claim against aircraft",
+            "confidence": "low",
+            "source_ids": [
+              "TRADOC_HQ17A"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "battery_composition": {
+            "value": "self-contained TELAR with radar and 16 vertical-launch missiles; batteries network multiple vehicles",
+            "confidence": "medium",
+            "source_ids": [
+              "TRADOC_HQ17A"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "reload_time": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Reload not reliably public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "source_ids": [
+            "TRADOC_HQ17A"
+          ]
+        },
+        "Type_625E_CIWS_SHORAD": {
+          "range": {
+            "value": {
+              "gun_effective": "2.5-4",
+              "missile_if_fitted": 6
+            },
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "rate_of_fire": {
+            "value": "4000-5000",
+            "unit": "rounds/min",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "pk": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Operational Pk not public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "role": "mobile gun/missile SHORAD and counter-UAS/point-defence system"
+        }
+      },
+      "drones_missiles": {
+        "Wing_Loong_II": {
+          "range": {
+            "value": 4000,
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "endurance": {
+            "value": 20,
+            "unit": "hours",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "payload": {
+            "value": 480,
+            "unit": "kg",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "speed": {
+            "value": 370,
+            "unit": "km/h",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "CH_4_Rainbow": {
+          "range": {
+            "value": "2000-5000",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "endurance": {
+            "value": "30-40",
+            "unit": "hours",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "payload": {
+            "value": "345-400",
+            "unit": "kg",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "speed": {
+            "value": 235,
+            "unit": "km/h cruise",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "CJ_100_DF_100": {
+          "range": {
+            "value": "2000-3000",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "speed": {
+            "value": "supersonic/high-supersonic; often claimed Mach 4+",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "warhead": {
+            "value": "conventional, likely 300-500 kg class",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "DF_21D": {
+          "range": {
+            "value": "1450-1550",
+            "unit": "km",
+            "confidence": "high",
+            "source_ids": [
+              "CSIS_DF21"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "speed": {
+            "value": "ballistic; terminal speed highly profile-dependent",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "warhead": {
+            "value": "conventional MaRV; payload often estimated ~600 kg",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "role": "anti-ship ballistic missile",
+          "source_ids": [
+            "CSIS_DF21"
+          ]
+        },
+        "YJ_18": {
+          "range": {
+            "value": "220-540",
+            "unit": "km",
+            "confidence": "high",
+            "source_ids": [
+              "CSIS_YJ18"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "speed": {
+            "value": {
+              "cruise": "Mach 0.8",
+              "terminal": "Mach 2.5-3.0"
+            },
+            "confidence": "high",
+            "source_ids": [
+              "CSIS_YJ18"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "warhead": {
+            "value": "150-300",
+            "unit": "kg",
+            "confidence": "high",
+            "source_ids": [
+              "CSIS_YJ18"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "launch_platform": [
+            "Type 052D destroyer",
+            "Type 055 cruiser/destroyer",
+            "Yuan/Shang/Song submarine classes",
+            "possible coastal defence variants"
+          ],
+          "source_ids": [
+            "CSIS_YJ18"
+          ]
+        },
+        "DF_26": {
+          "range": {
+            "value": 4000,
+            "unit": "km",
+            "confidence": "high",
+            "source_ids": [
+              "CSIS_DF26"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "speed": {
+            "value": "ballistic IRBM; terminal speed profile-dependent",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "warhead": {
+            "value": "nuclear or conventional MaRV; exact payload not public",
+            "confidence": "medium",
+            "source_ids": [
+              "CSIS_DF26"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "cep": {
+            "value": "150-450",
+            "unit": "m",
+            "confidence": "medium",
+            "source_ids": [
+              "CSIS_DF26"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "source_ids": [
+            "CSIS_DF26"
+          ]
+        }
+      },
+      "naval_future_indo_pacific": {
+        "Type_055_destroyer_cruiser": {
+          "speed": {
+            "value": 30,
+            "unit": "knots",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "weapons": [
+            "112 VLS cells",
+            "HHQ-9B SAM",
+            "YJ-18 ASCM",
+            "CJ-10 land-attack missile",
+            "Yu-8 ASW missile",
+            "130 mm gun",
+            "CIWS/HHQ-10"
+          ],
+          "vls_cells": {
+            "value": 112,
+            "unit": "cells",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "radar": {
+            "value": "Type 346B AESA multifunction radar",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": "300+",
+            "unit": "persons",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "Type_054A_frigate": {
+          "speed": {
+            "value": 27,
+            "unit": "knots",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "weapons": [
+            "32-cell VLS for HQ-16 SAM/ASW rockets",
+            "8x YJ-83 anti-ship missiles",
+            "76 mm gun",
+            "CIWS",
+            "torpedoes",
+            "helicopter"
+          ],
+          "vls_cells": {
+            "value": 32,
+            "unit": "cells",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "radar": {
+            "value": "Type 382/Sea Eagle 3D radar family",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": 165,
+            "unit": "persons",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "Type_039A_B_Yuan_submarine": {
+          "endurance": {
+            "value": "60 days patrol; AIP submerged endurance days-weeks depending speed",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "speed": {
+            "value": {
+              "surfaced": 12,
+              "submerged": 20
+            },
+            "unit": "knots",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "torpedoes": [
+            "533 mm torpedoes",
+            "mines",
+            "YJ-18/encapsulated ASCM reported"
+          ],
+          "crew": {
+            "value": "38-65",
+            "unit": "persons",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "Liaoning_Shandong_carriers": {
+          "air_wing_composition": [
+            "J-15 fighters",
+            "Z-18 AEW/ASW/SAR helicopters",
+            "Z-9/Z-20 helicopters depending deployment"
+          ],
+          "speed": {
+            "value": "29-31",
+            "unit": "knots",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "endurance": {
+            "value": "45 days; conventionally powered, limited by fuel/stores",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "crew": {
+            "value": "2000+",
+            "unit": "persons including air wing",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        }
+      },
+      "ground_forces": {
+        "combined_arms_battalion": {
+          "organization": [
+            "battalion HQ",
+            "tank company",
+            "mechanized infantry companies",
+            "firepower company",
+            "air defence/ATGM elements",
+            "reconnaissance",
+            "engineer",
+            "support/logistics"
+          ],
+          "vehicles": [
+            "ZBD-04A IFV",
+            "ZBL-08 wheeled IFV/APC in medium brigades",
+            "Type 99A or Type 96A/B tanks depending brigade type"
+          ],
+          "artillery": [
+            "PLZ-05 155 mm SPH at brigade/group-army level",
+            "PCL-181 wheeled 155 mm",
+            "122 mm rockets/mortars depending formation"
+          ],
+          "notes": "PLA combined-arms battalion design varies by heavy/medium/light brigade and theater command."
+        }
+      }
+    }
+  },
+  "cross_cutting_data": {
+    "doctrine_tactics": {
+      "Sweden": {
+        "defensive_area_denial": "Layered air, coastal, ground and civil-defence measures to deny use of Swedish territory and littorals.",
+        "dispersed_basing": "Gripen and support units are designed for road-base/dispersed operations with rapid turnaround.",
+        "shoot_and_scoot": "Air defence, artillery and coastal missile units emphasize mobility and survivability.",
+        "total_defense_concept": "Military defence integrated with civil preparedness, continuity of government and societal resilience.",
+        "source_ids": [
+          "SAAB_GRIPEN_C"
+        ]
+      },
+      "NATO": {
+        "air_centric_coalition_ops": "Air tasking order, AWACS/C2, datalinks and coalition tanker/ISR networks.",
+        "SEAD_DEAD_workflows": "Find/fix/track/target/engage/assess cycles using ISR, EW, cyber, decoys, anti-radiation weapons and standoff fires.",
+        "A2AD_penetration_playbooks": "Integrated EW, stealth, standoff weapons, decoys, cruise missiles, cyber and kinetic attacks against sensors/C2/shooters.",
+        "caveat": "Exact playbooks and weaponeering are classified; this is a generic doctrinal abstraction."
+      },
+      "Russia": {
+        "hybrid_probing": "Political, cyber, information and military probes may precede conventional escalation.",
+        "PROBE_FEINT_SATURATION": "Generic escalation model: reconnaissance/probing, feints to stimulate sensors, then fires/drones/missiles to saturate.",
+        "EW_integration": "EW used to disrupt C2, GNSS, drones and radars; effects are localized and scenario-dependent.",
+        "drone_first_reconnaissance": "UAS/artillery kill-chain use emphasizes Orlan-type ISR, Lancet/FPV and counter-battery support."
+      },
+      "China": {
+        "A2AD_layered_defense": "Long-range missiles, integrated air defence, maritime strike, space/cyber/EW and naval/air forces to complicate adversary access.",
+        "long_range_missile_saturation": "Rocket Force and naval/air-launched missiles can be used for salvos against bases, ports and naval forces.",
+        "drone_swarm_tactics": "Public doctrine discusses intelligentized/unmanned systems; exact swarm concepts not public.",
+        "joint_operations_doctrine": "The PLA emphasizes joint theater commands, systems confrontation and multi-domain operations."
+      }
+    },
+    "electronic_warfare": {
+      "Swedish_EW_systems": {
+        "examples": [
+          "Gripen C/D EWS",
+          "Gripen E advanced EW suite",
+          "shipborne ESM/decoy systems",
+          "ground tactical EW not fully public"
+        ],
+        "range": {
+          "value": null,
+          "confidence": "unknown",
+          "note": "Emitter-dependent and not public.",
+          "releasability": "not_included_active_classified_or_leaked",
+          "operational_sensitivity": "high",
+          "use_in_simulation": "not_recommended",
+          "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+        },
+        "effect": {
+          "jam_probability": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not public; depends on geometry, waveform, power, antenna gain and ECCM.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "track_degradation": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        }
+      },
+      "Russian_EW": {
+        "Krasukha_4": {
+          "range": {
+            "value": "150-300",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "bands": {
+            "value": "radar bands; exact coverage disputed",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "effects": [
+            "radar/airborne sensor jamming claims",
+            "satellite/UAV radar disruption claims"
+          ],
+          "jam_probability": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not publicly available or likely classified; field retained for schema completeness.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        },
+        "Murmansk_BN": {
+          "range": {
+            "value": "3000-5000",
+            "unit": "km",
+            "confidence": "low",
+            "note": "Public claims for HF communications jamming; operational effect uncertain.",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "bands": "HF",
+          "effects": [
+            "long-range HF communications disruption"
+          ],
+          "jam_probability": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not publicly available or likely classified; field retained for schema completeness.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        },
+        "Rychag_AV_corrected_from_Rychost_A": {
+          "range": {
+            "value": "100+",
+            "unit": "km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "bands": "radar/air-defence fire-control bands claimed",
+          "effects": [
+            "self/escort protection jamming from helicopter platform"
+          ],
+          "jam_probability": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not publicly available or likely classified; field retained for schema completeness.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        }
+      },
+      "Chinese_EW": {
+        "DJ_11": {
+          "range": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Open-source details sparse/uncertain.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "bands": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not reliably public.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          },
+          "effects": [
+            "communications/radar jamming reported in open sources"
+          ],
+          "jam_probability": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not publicly available or likely classified; field retained for schema completeness.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        },
+        "Type_726": {
+          "type": "shipborne decoy/soft-kill launcher family",
+          "range": {
+            "value": "decoy deployment local ship self-defence",
+            "confidence": "medium",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "effects": [
+            "chaff",
+            "flare/IR",
+            "active decoy rounds depending load"
+          ],
+          "jam_probability": {
+            "value": null,
+            "confidence": "unknown",
+            "note": "Not publicly available or likely classified; field retained for schema completeness.",
+            "releasability": "not_included_active_classified_or_leaked",
+            "operational_sensitivity": "high",
+            "use_in_simulation": "not_recommended",
+            "sensitivity_note": "Not credibly public or operationally sensitive; do not infer a value."
+          }
+        }
+      }
+    },
+    "logistics_sustainment": {
+      "fuel_consumption_rates": {
+        "aircraft_sortie_fuel_estimates": {
+          "JAS_39C": {
+            "value": "2.4 t internal; sortie burn commonly 2-5 t depending profile",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "JAS_39E": {
+            "value": "3.4 t internal estimate; sortie burn commonly 3-6 t depending profile",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "F_16": {
+            "value": "3.2 t internal; sortie burn 3-7 t depending tanks/profile",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "F_35A": {
+            "value": "8.3 t internal fuel official RAAF; sortie burn 5-10+ t depending profile",
+            "confidence": "medium",
+            "source_ids": [
+              "RAAF_F35A"
+            ],
+            "releasability": "official_public",
+            "operational_sensitivity": "low",
+            "use_in_simulation": "recommended"
+          },
+          "Su_35S": {
+            "value": "9-11 t internal fuel estimate; sortie burn highly profile-dependent",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "vehicle_km_per_litre_or_l_per_km_estimates": {
+          "MBT": {
+            "value": "3-7 L/km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "IFV_tracked": {
+            "value": "1.5-3 L/km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "APC_wheeled": {
+            "value": "0.5-1.5 L/km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "heavy_truck": {
+            "value": "0.3-0.8 L/km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "light_vehicle": {
+            "value": "0.1-0.3 L/km",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        }
+      },
+      "ammunition_expenditure_rates_under_combat_conditions": {
+        "artillery_155mm": {
+          "value": {
+            "low": 20,
+            "medium": 80,
+            "high": 200
+          },
+          "unit": "rounds/tube/day",
+          "confidence": "low",
+          "note": "Scenario-dependent planning heuristic, not a national doctrine figure.",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "tank_120_125mm": {
+          "value": {
+            "low": 2,
+            "medium": 10,
+            "high": 25
+          },
+          "unit": "rounds/tank/day",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "IFV_autocannon": {
+          "value": {
+            "low": 50,
+            "medium": 200,
+            "high": 600
+          },
+          "unit": "rounds/vehicle/day",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "SAM_interceptors": {
+          "value": "threat-driven; salvo doctrine often 1-2 interceptors per target but varies by system and target",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        }
+      },
+      "resupply_timelines": {
+        "factory_to_national_depot": {
+          "value": "weeks to months for missiles/complex munitions; days to weeks for bulk consumables inside Europe",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "national_depot_to_forward_depot": {
+          "value": "1-7 days in permissive rear areas; longer under interdiction",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "forward_depot_to_base_or_firing_unit": {
+          "value": "0.5-2 days typical planning factor; minutes-hours for prepositioned stocks",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        }
+      },
+      "crew_fatigue_models": {
+        "fighter_pilots": {
+          "sustained": {
+            "value": "1-2 sorties/day",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "surge": {
+            "value": "3-4 sorties/day for short periods",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "rest": {
+            "value": "10-12 h protected rest per 24 h target",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "helicopter_crews": {
+          "sustained": {
+            "value": "4-6 flight hours/day",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          },
+          "surge": {
+            "value": "8+ flight hours/day short duration",
+            "confidence": "low",
+            "releasability": "osint_estimate",
+            "operational_sensitivity": "medium",
+            "use_in_simulation": "use_as_range_only"
+          }
+        },
+        "naval_crews": {
+          "watch_rotation": "3- or 4-section watch systems reduce fatigue; battle stations cannot be sustained indefinitely."
+        }
+      },
+      "maintenance_hours_per_flight_hour": {
+        "JAS_39C": {
+          "value": "~10",
+          "unit": "maintenance man-hours/flight hour",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "JAS_39E": {
+          "value": "10-15",
+          "unit": "maintenance man-hours/flight hour",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "F_16": {
+          "value": "16-20",
+          "unit": "maintenance man-hours/flight hour",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "F_35A": {
+          "value": "30-40",
+          "unit": "maintenance man-hours/flight hour",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "Eurofighter_Typhoon": {
+          "value": "20-30",
+          "unit": "maintenance man-hours/flight hour",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "Su_35S_Su_34": {
+          "value": "20-40",
+          "unit": "maintenance man-hours/flight hour",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "caveat": "Comparable maintenance metrics are notoriously inconsistent because air forces count personnel, contractor, depot, and fault-isolation hours differently."
+      }
+    },
+    "terrain_effects_baltic_theater": {
+      "movement_cost_modifiers": {
+        "forest": {
+          "wheeled": 0.4,
+          "tracked": 0.65,
+          "infantry": 0.7,
+          "notes": "Roads dominate mobility; off-road wheeled movement restricted."
+        },
+        "wetland_bog": {
+          "wheeled": 0.15,
+          "tracked": 0.35,
+          "infantry": 0.45,
+          "notes": "Can canalize movement to roads/causeways; seasonal freeze changes this."
+        },
+        "coastal_archipelago": {
+          "wheeled": 0.5,
+          "tracked": 0.6,
+          "amphibious": 0.85,
+          "notes": "Ferries/bridges/landing craft become key nodes."
+        },
+        "urban": {
+          "wheeled": 0.35,
+          "tracked": 0.45,
+          "infantry": 0.55,
+          "notes": "Rubble, obstacles and canalized streets slow vehicles."
+        },
+        "open_agricultural": {
+          "wheeled": 0.85,
+          "tracked": 0.9,
+          "infantry": 0.8,
+          "notes": "Best off-road mobility but lowest concealment."
+        }
+      },
+      "line_of_sight_ranges": {
+        "forest_ground_sensor": {
+          "value": "50-500 m",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "wetland_ground_sensor": {
+          "value": "0.5-3 km depending vegetation and elevation",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "coastal_ground_sensor": {
+          "value": "radar/EO horizon-limited; at 10 m sensor height radio horizon ~13 km to sea-skimming target plus target height",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "urban_ground_sensor": {
+          "value": "50-300 m street-level; high-rise sensors can extend to km-scale corridors",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "open_ground_sensor": {
+          "value": "2-10 km optical; radar horizon/elevation dependent",
+          "confidence": "low",
+          "releasability": "osint_estimate",
+          "operational_sensitivity": "medium",
+          "use_in_simulation": "use_as_range_only"
+        },
+        "horizon_formula": "distance_km ≈ 4.12 * (sqrt(sensor_height_m) + sqrt(target_height_m))"
+      },
+      "concealment_factors": {
+        "forest": {
+          "infantry": 0.9,
+          "vehicle": 0.75,
+          "radar_signature_reduction": "moderate due to clutter/masking"
+        },
+        "wetland": {
+          "infantry": 0.65,
+          "vehicle": 0.45,
+          "radar_signature_reduction": "moderate if reed/terrain masking; poor thermal cover in open bog"
+        },
+        "coastal": {
+          "infantry": 0.55,
+          "vehicle": 0.35,
+          "radar_signature_reduction": "low on open shore, higher among islands/rocks/harbours"
+        },
+        "urban": {
+          "infantry": 0.95,
+          "vehicle": 0.8,
+          "radar_signature_reduction": "high masking and multipath; UAV overhead still a major threat"
+        },
+        "open": {
+          "infantry": 0.25,
+          "vehicle": 0.15,
+          "radar_signature_reduction": "low"
+        }
+      }
+    }
+  },
+  "sources": [
+    {
+      "id": "SAAB_GRIPEN_C",
+      "title": "Saab Gripen C-series",
+      "url": "https://www.saab.com/products/gripen-c-series",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "SAAB_GRIPEN_E",
+      "title": "Saab Gripen E-series",
+      "url": "https://www.saab.com/products/gripen-e-series",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "LEONARDO_RAVEN_ES05",
+      "title": "Leonardo Raven ES-05",
+      "url": "https://electronics.leonardo.com/en/products/raven-1",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "SAAB_RBS70NG",
+      "title": "Saab RBS 70 NG",
+      "url": "https://www.saab.com/products/rbs-70-ng",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "SAAB_GIRAFFE_AMB",
+      "title": "Saab Giraffe AMB",
+      "url": "https://www.saab.com/products/giraffe-amb",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "SAAB_RBS15_GUNGNIR",
+      "title": "Saab RBS15 Gungnir",
+      "url": "https://www.saab.com/site-settings/html5/gungnir/index.html",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "SAAB_VISBY",
+      "title": "Saab Visby-class corvette",
+      "url": "https://www.saab.com/products/visby-class-corvette",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "NHINDUSTRIES_NH90",
+      "title": "NHIndustries NH90 helicopter platform overview",
+      "url": "https://www.nhindustries.com/nh90-helicopter/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "AIRBUS_NH90_TECH",
+      "title": "Airbus NH90 technical information",
+      "url": "https://www.airbus.com/en/products-services/helicopters/military-helicopters/nh90/nh90-technical-information",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "USAF_E3",
+      "title": "US Air Force E-3 Sentry fact sheet",
+      "url": "https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104504/e-3-sentry-awacs/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "RAAF_F35A",
+      "title": "Royal Australian Air Force F-35A Lightning II",
+      "url": "https://www.airforce.gov.au/aircraft/f-35a-lightning-ii",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "USAF_F16",
+      "title": "US Air Force F-16 Fighting Falcon fact sheet",
+      "url": "https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104505/f-16-fighting-falcon/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "EUROFIGHTER",
+      "title": "Eurofighter Typhoon official aircraft/features pages",
+      "url": "https://www.eurofighter.com/the-aircraft",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "USAF_RC135",
+      "title": "US Air Force RC-135V/W Rivet Joint fact sheet",
+      "url": "https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104608/rc-135vw-rivet-joint/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "KONGSBERG_NASAMS",
+      "title": "Kongsberg NASAMS Air Defence System",
+      "url": "https://www.kongsberg.com/what-we-do/what-we-do/defence-and-security/integrated-air-and-missile-defence/nasams-air-defence-system/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "REUTERS_IRIST_2026",
+      "title": "Reuters: Diehl to boost production of IRIS-T air defence used in Ukraine",
+      "url": "https://www.reuters.com/business/aerospace-defense/diehl-boost-production-iris-t-air-defence-used-ukraine-ceo-says-2026-01-22/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "MBDA_CAMM_ER",
+      "title": "MBDA CAMM-ER",
+      "url": "https://www.mbda-systems.com/products/force-protection/camm-family/camm-er",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "UK_ARMY_SKY_SABRE",
+      "title": "British Army Sky Sabre",
+      "url": "https://www.army.mod.uk/learn-and-explore/equipment/artillery-and-air-defence/sky-sabre/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "CSIS_KALIBR",
+      "title": "CSIS Missile Threat: 3M-14 Kalibr",
+      "url": "https://missilethreat.csis.org/missile/ss-n-30a/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "CSIS_KINZHAL",
+      "title": "CSIS Missile Threat: Kh-47M2 Kinzhal",
+      "url": "https://missilethreat.csis.org/missile/kinzhal/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "CSIS_DF21",
+      "title": "CSIS Missile Threat: DF-21",
+      "url": "https://missilethreat.csis.org/missile/df-21/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "CSIS_DF26",
+      "title": "CSIS Missile Threat: DF-26",
+      "url": "https://missilethreat.csis.org/missile/dong-feng-26-df-26/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "CSIS_YJ18",
+      "title": "CSIS Missile Threat: YJ-18",
+      "url": "https://missilethreat.csis.org/missile/yj-18/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "ROE_KH31P",
+      "title": "Rosoboronexport Kh-31P",
+      "url": "https://roe.ru/en/production/aerospace-forces/air-weapons/guided-weapons/aviatsionnye-upravlyaemye-rakety-klassa-vozdukh-rls-aviatsionnye-protivoradiolokatsionnye-rakety/kh-31p/?theme=",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "ROE_ORLAN10E",
+      "title": "Rosoboronexport Orlan-10E",
+      "url": "https://roe.ru/en/production/aerospace-forces/complexes-with-uavs/orlan-10e/?theme=",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "CSIS_SHAHED_COST",
+      "title": "CSIS: Calculating the Cost-Effectiveness of Russia's Drone Strikes",
+      "url": "https://www.csis.org/analysis/calculating-cost-effectiveness-russias-drone-strikes",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "KONGSBERG_NSM_MISC",
+      "title": "Kongsberg/Raytheon AMRAAM-ER NASAMS page",
+      "url": "https://www.kongsberg.com/what-we-do/what-we-do/defence-and-security/integrated-air-and-missile-defence/nasams-air-defence-system/rayhteon-missiles/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "US_NAVY_DDG",
+      "title": "US Navy destroyer ship class info page",
+      "url": "https://www.surflant.usff.navy.mil/Organization/Operational-Forces/Destroyers/Destroyer-Ship-Class-DDG-Info-Page/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "ROYAL_NAVY_TYPE26",
+      "title": "Royal Navy City Class / Type 26 frigates",
+      "url": "https://www.royalnavy.mod.uk/equipment/ships/city-class",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "NAVALNEWS_F125_IRIST",
+      "title": "Naval News: Germany studies IRIS-T SLM integration on F125 frigates",
+      "url": "https://www.navalnews.com/naval-news/2024/12/germany-studies-the-integration-of-iris-t-slm-missile-on-f125-frigates/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "TRADOC_HQ17A",
+      "title": "US Army ODIN: HQ-17A / FM-2000",
+      "url": "https://odin.t2com.army.mil/WEG/Asset/HQ-17A_%28FM-2000%29_Chinese_Short-Range_Air_Defense_Missile_System",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "AIR_UNIV_CHINA_RADARS",
+      "title": "Air University CASI: China's Air Defense Radar Industrial Base",
+      "url": "https://www.airuniversity.af.edu/Portals/10/CASI/documents/Research/Infrastructure/2025-03-10%20Air%20Defense%20Radars.pdf",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "MITCHELL_J20",
+      "title": "Mitchell Aerospace Power: J-20",
+      "url": "https://www.mitchellaerospacepower.org/weapons/j-20/",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "CSIS_DRONE_GULF",
+      "title": "CSIS: Unpacking Iran's Drone Campaign in the Gulf",
+      "url": "https://www.csis.org/analysis/unpacking-irans-drone-campaign-gulf-early-lessons-future-drone-warfare",
+      "source_category": "official_public_or_osint"
+    },
+    {
+      "id": "ODNI_ATA_PUBLIC",
+      "title": "Office of the Director of National Intelligence — Annual Threat Assessment, public/unclassified releases",
+      "url": "https://www.dni.gov/index.php/newsroom/reports-publications/reports-publications-2025",
+      "source_category": "public_intelligence_assessment"
+    },
+    {
+      "id": "DOD_CHINA_MILITARY_POWER_PUBLIC",
+      "title": "U.S. Department of Defense — Military and Security Developments Involving the People's Republic of China, public annual reports",
+      "url": "https://www.defense.gov/News/News-Stories/Article/Article/4014472/dod-releases-2024-report-on-military-and-security-developments-involving-the-pe/",
+      "source_category": "public_intelligence_assessment"
+    },
+    {
+      "id": "DIA_MILITARY_POWER_PUBLIC",
+      "title": "U.S. Defense Intelligence Agency — Military Power Publications, public/unclassified releases",
+      "url": "https://www.dia.mil/Military-Power-Publications/",
+      "source_category": "public_intelligence_assessment"
+    },
+    {
+      "id": "CIA_CREST_DECLASSIFIED",
+      "title": "CIA CREST — declassified historical records",
+      "url": "https://www.cia.gov/readingroom/collection/crest-25-year-program-archive",
+      "source_category": "formerly_classified_declassified"
+    },
+    {
+      "id": "NATO_STRATEGIC_CONCEPT_PUBLIC",
+      "title": "NATO 2022 Strategic Concept, public release",
+      "url": "https://www.nato.int/strategic-concept/",
+      "source_category": "official_public"
+    },
+    {
+      "id": "SWEDEN_TOTAL_DEFENCE_PUBLIC",
+      "title": "Government Offices of Sweden — Total defence public information",
+      "url": "https://www.government.se/government-policy/defence/",
+      "source_category": "official_public"
+    }
+  ],
+  "declassified_public_intelligence_context": {
+    "purpose": "Presentation layer for a wake-up-call audience: it distinguishes what is officially public, what is declassified/formerly classified, what is OSINT, and what is intentionally not included.",
+    "bottom_line": [
+      {
+        "statement": "Publicly released data alone shows that modern Baltic and Indo-Pacific scenarios are dominated by kill-chain speed: detect, classify, decide, launch, assess, reload.",
+        "releasability": "public_intelligence_assessment",
+        "confidence": "high",
+        "operational_sensitivity": "low"
+      },
+      {
+        "statement": "The most dangerous numbers are often not maximum ranges; they are readiness, stockpile depth, reload tempo, sensor discrimination, EW effectiveness, and command latency. Those are generally not public.",
+        "releasability": "osint_estimate",
+        "confidence": "high",
+        "operational_sensitivity": "medium"
+      },
+      {
+        "statement": "For public modelling, use wide uncertainty bands and scenario stressors rather than single-point classified-looking values.",
+        "releasability": "official_public",
+        "confidence": "high",
+        "operational_sensitivity": "low"
+      }
+    ],
+    "allowed_sensitive_but_public_examples": [
+      {
+        "topic": "Long-range missile threat envelopes",
+        "what_can_be_included": "Publicly stated or widely assessed ranges, generic warhead classes, and launch-platform categories.",
+        "what_stays_out": "Current targeting procedures, mission data, route planning, real stockpile counts, timing windows, and active intelligence on defended locations.",
+        "releasability": "public_intelligence_assessment",
+        "presentation_warning": "Even conservative public ranges force defenders to plan for multi-axis standoff attack rather than only border-adjacent threats."
+      },
+      {
+        "topic": "Integrated air defense systems",
+        "what_can_be_included": "Published launcher/radar family, nominal missile range bands, and generic layered-defense roles.",
+        "what_stays_out": "Actual emitter locations, radar modes, classified ECCM, operator tactics, kill probabilities, and live order of battle.",
+        "releasability": "osint_estimate",
+        "presentation_warning": "A single advertised range figure understates the problem; overlapping sensors, mobility, decoys, and EW create the real barrier."
+      },
+      {
+        "topic": "Airborne early warning and SIGINT",
+        "what_can_be_included": "Public endurance, aircraft type, general radar/SIGINT role, and broad public detection-range claims.",
+        "what_stays_out": "Collection priorities, emitter libraries, intercept geometry, processing performance, and classified target sets.",
+        "releasability": "official_public",
+        "presentation_warning": "AEW/SIGINT platforms do not need to shoot to be decisive; they compress the time between detection and engagement."
+      },
+      {
+        "topic": "Electronic warfare",
+        "what_can_be_included": "Public system names, broad roles such as communications jamming or radar interference, and broad non-operational range claims where officially released.",
+        "what_stays_out": "Waveforms, bands, power levels, effectiveness probabilities, vulnerabilities, and real-world sensor degradation values.",
+        "releasability": "osint_estimate",
+        "presentation_warning": "EW should be modelled as uncertainty and delay, not as a magic on/off switch."
+      },
+      {
+        "topic": "Drones and one-way attack munitions",
+        "what_can_be_included": "Public range/endurance/speed/payload/cost estimates and role in reconnaissance-strike cycles.",
+        "what_stays_out": "Current launch sites, flight routes, target lists, countermeasure effectiveness, and live tactical lessons that enable evasion.",
+        "releasability": "osint_estimate",
+        "presentation_warning": "Low-cost drones can force high-cost defensive decisions even when many are intercepted."
+      }
+    ],
+    "not_included_categories": [
+      {
+        "category": "active_classified_or_leaked_material",
+        "examples": [
+          "leaked intelligence slides or documents",
+          "non-public military readiness reports",
+          "classified sensor performance tables",
+          "classified EW effectiveness data",
+          "current operational plans, tasking, routes, or locations"
+        ],
+        "handling": "Do not include; use null fields and explanatory notes."
+      },
+      {
+        "category": "target_quality_operational_data",
+        "examples": [
+          "current SAM battery coordinates",
+          "defended asset coordinates",
+          "current patrol patterns",
+          "specific radar coverage gaps",
+          "specific resupply routes and timings"
+        ],
+        "handling": "Do not include; use high-level doctrine and public capability envelopes only."
+      },
+      {
+        "category": "weapon_effectiveness_single_point_claims",
+        "examples": [
+          "exact probability of kill",
+          "exact stealth detection range",
+          "exact missile endgame performance",
+          "exact countermeasure success probability"
+        ],
+        "handling": "Do not include as precise values; use qualitative bands or scenario sliders."
+      }
+    ],
+    "wake_up_call_talking_points": [
+      {
+        "headline": "Public data is already enough to show the scale of the threat.",
+        "speaker_note": "The absence of classified numbers should not be mistaken for safety. Public envelopes already show overlapping missile, sensor, EW, and drone layers.",
+        "classification_label": "public_analysis"
+      },
+      {
+        "headline": "The missing data is usually the most important data.",
+        "speaker_note": "Pk, stockpile depth, readiness, sensor discrimination, command latency, and crew fatigue decide outcomes but are not safe or credible to fill as exact public values.",
+        "classification_label": "public_analysis"
+      },
+      {
+        "headline": "Model uncertainty explicitly.",
+        "speaker_note": "For drawing-board simulations, include uncertainty bands, degraded comms, delayed detection, false tracks, and saturation instead of pretending exact numbers are known.",
+        "classification_label": "public_analysis"
+      },
+      {
+        "headline": "Layered defense is a system-of-systems problem.",
+        "speaker_note": "Aircraft, GBAD, naval sensors, EW, logistics, and civilian resilience should be briefed together; no single platform specification captures the fight.",
+        "classification_label": "public_analysis"
+      }
+    ],
+    "recommended_simulation_controls": {
+      "capability_values": "Use public values as upper-bound or nominal envelopes, not guaranteed combat performance.",
+      "pk": "Represent as scenario slider with low/medium/high bands; default to null unless public test data is available and clearly contextualized.",
+      "ew": "Represent as probabilistic latency, track-quality degradation, false tracks, or communications delay; do not assign precise jamming probabilities.",
+      "logistics": "Use sensitivity analysis for ammunition and fuel rather than exact classified stockpiles.",
+      "air_defense": "Model layers, mobility, reload limits, decoys, and command latency; do not model live locations."
+    }
+  },
+  "sensitive_field_overrides": {
+    "exact_probability_of_kill": {
+      "value": null,
+      "releasability": "not_included_active_classified_or_leaked",
+      "confidence": "unknown",
+      "operational_sensitivity": "high",
+      "use_in_simulation": "not_recommended",
+      "note": "Exact Pk depends on target profile, aspect, altitude, countermeasures, operator proficiency, weather, software, missile lot, and engagement geometry; generally not public."
+    },
+    "exact_radar_range_against_stealth": {
+      "value": null,
+      "releasability": "not_included_active_classified_or_leaked",
+      "confidence": "unknown",
+      "operational_sensitivity": "high",
+      "use_in_simulation": "not_recommended",
+      "note": "Public values are not credible for exact stealth detection. Use qualitative detection/track/engage bands and uncertainty."
+    },
+    "exact_ew_jam_probability": {
+      "value": null,
+      "releasability": "not_included_active_classified_or_leaked",
+      "confidence": "unknown",
+      "operational_sensitivity": "high",
+      "use_in_simulation": "not_recommended",
+      "note": "EW effectiveness is highly scenario-dependent and not safely represented as a public single-point probability."
+    },
+    "current_order_of_battle_locations": {
+      "value": null,
+      "releasability": "not_included_active_classified_or_leaked",
+      "confidence": "unknown",
+      "operational_sensitivity": "high",
+      "use_in_simulation": "not_recommended",
+      "note": "Use notional locations or historical/public exercise data only; do not include current target-quality deployments."
+    },
+    "classified_or_leaked_documents": {
+      "value": null,
+      "releasability": "not_included_active_classified_or_leaked",
+      "confidence": "unknown",
+      "operational_sensitivity": "high",
+      "use_in_simulation": "not_recommended",
+      "note": "Not included, even if found online. Use official declassified/public releases instead."
+    }
+  }
+}

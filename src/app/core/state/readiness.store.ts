@@ -3,8 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { BaseTwin } from '../../shared/domain/models';
 import { AuditLogger } from '../services/audit-logger';
-import { TheaterWsService } from '../services/theater-ws.service';
 import { SteelLocalPersistenceService } from '../services/steel-local-persistence.service';
+import { SensorFeedStore } from './sensor-feed.store';
 
 function _upsertBases(current: BaseTwin[], incoming: BaseTwin[]): BaseTwin[] {
   if (!incoming?.length) return current;
@@ -16,7 +16,7 @@ function _upsertBases(current: BaseTwin[], incoming: BaseTwin[]): BaseTwin[] {
 @Injectable({ providedIn: 'root' })
 export class ReadinessStore {
   private audit = inject(AuditLogger);
-  private ws = inject(TheaterWsService);
+  private sensorFeed = inject(SensorFeedStore);
   private persistence = inject(SteelLocalPersistenceService);
   private destroyRef = inject(DestroyRef);
   private http = inject(HttpClient);
@@ -37,7 +37,7 @@ export class ReadinessStore {
       this._bases.set(cached.bases);
     }
 
-    this.ws.messages$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(delta => {
+    this.sensorFeed.frames$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(delta => {
       if (delta.type === 'FULL_SNAPSHOT') {
         this._bases.set((delta.bases ?? []) as BaseTwin[]);
       } else if (delta.bases?.length) {

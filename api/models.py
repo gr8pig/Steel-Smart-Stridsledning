@@ -97,7 +97,7 @@ ArmamentLoadout = Literal[
     "HYBRID_DECEPTION",
 ]
 
-OriginCountry = Literal["SWEDEN", "NATO", "RUSSIA", "OTHER"]
+OriginCountry = Literal["SWEDEN", "NATO", "RUSSIA", "CHINA", "OTHER"]
 
 class ThreatTwinModel(SSSModel):
     id: str
@@ -274,6 +274,32 @@ class LabRationaleRequest(SSSModel):
     run_result: LabRunResult
 
 
+class RedirectTracksRequest(SSSModel):
+    track_ids: Optional[list[str]] = None
+    heading: Optional[float] = None
+    velocity: Optional[float] = None
+    target_id: Optional[str] = None
+
+
+class TheaterEventModel(SSSModel):
+    id: str
+    event_type: str = Field(
+        serialization_alias="eventType",
+        validation_alias=AliasChoices("eventType", "event_type"),
+    )
+    sim_time: float = Field(
+        serialization_alias="simTime",
+        validation_alias=AliasChoices("simTime", "sim_time"),
+    )
+    details: dict
+    timestamp: Optional[float] = None
+
+
+class SetJammingRequest(SSSModel):
+    active: bool
+    severity: float = 0.7
+
+
 class InjectTracksRequest(SSSModel):
     count: int
     type: Literal["FEINT", "KINETIC", "MIXED", "DRONE"]
@@ -286,6 +312,7 @@ class CampaignSnapshot(SSSModel):
     coas: list[COATwinModel]
     sim_time: float
     phase: str
+    scenario_name: Optional[str] = None
 
 
 class TheaterDelta(SSSModel):
@@ -294,3 +321,20 @@ class TheaterDelta(SSSModel):
     threats: list[ThreatTwinModel]
     bases: list[BaseTwinModel]
     phase: str
+    scenario_name: Optional[str] = None
+    events: Optional[list[TheaterEventModel]] = None
+
+
+class ScenarioSimRequest(SSSModel):
+    scenario_name: str = "boreal-strike"
+    policy_sweep: Optional[dict[str, list[float]]] = None
+    jammer_sweep: Optional[list[float]] = None
+    n_runs: int = 1000
+
+
+class ScenarioCompareRequest(SSSModel):
+    scenario_a: str = "boreal-strike"
+    scenario_b: str = "ghost-feint"
+    policy_sweep: Optional[dict[str, list[float]]] = None
+    jammer_sweep: Optional[list[float]] = None
+    n_runs: int = 1000

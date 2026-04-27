@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Optional, Sequence
 
 import numpy as np
 
@@ -17,6 +17,7 @@ from .models import (
     SimulationContext,
     TheaterStateVector,
 )
+from .random_forest_model import ScenarioRFInference, build_feature_vector
 
 
 import math
@@ -115,13 +116,18 @@ class EnsembleInference:
     The class keeps the original mock-ensemble pathway used by the existing
     tests, but also supports a richer simulation context with assets/units,
     forecast bands, ensemble-member traces, and feature diagnostics.
+
+    When a ScenarioRFInference model is provided, predictions are grounded
+    in the Random Forest trained on scenario-dependent data rather than
+    pure heuristics.
     """
 
-    def __init__(self, models: list[Any] | None = None):
+    def __init__(self, models: list[Any] | None = None, rf_model: Optional[ScenarioRFInference] = None):
         if models is None:
             self.models = [SurrogateModel() for _ in range(5)]
         else:
             self.models = models
+        self.rf_model = rf_model
 
     def predict_trajectory(self, state: TheaterStateVector | SimulationContext) -> PredictedTrajectory:
         if isinstance(state, SimulationContext):
@@ -160,6 +166,36 @@ class EnsembleInference:
         selected = self._select_asset(assets, context.selected_asset_id)
         digest = self._scenario_digest(context)
         rng = np.random.default_rng(self._seed_from_digest(digest))
+
+        # Store scenario context for RF feature vector construction
+        self._scenario_name = context.theater.scenario_name or ""
+        self._threat_count = context.theater.track_count
+        self._avg_velocity = context.theater.avg_velocity
+        self._strike_prior = 0.3
+        if assets:
+            strike_priors = [1.0 if a.side == "RED" else 0.1 for a in assets]
+            self._strike_prior = sum(strike_priors) / max(1, len(strike_priors))
+
+        # Build and cache feature vector for ensemble member predictions
+        if self.rf_model is not None:
+            self._latest_features = build_feature_vector(
+                readiness_mean=context.theater.base_readiness_mean,
+                cluster_density=context.theater.cluster_density,
+                jammer_intensity=context.theater.jammer_intensity,
+                safety=context.theater.policy_deltas.safety,
+                sustainability=context.theater.policy_deltas.sustainability,
+                asset_readiness=selected.readiness,
+                sensor_quality=selected.sensor_quality,
+                exposed_risk=selected.exposed_risk,
+                mobility=selected.mobility,
+                endurance=selected.endurance,
+                scenario_name=context.theater.scenario_name or "",
+                threat_count=context.theater.track_count,
+                avg_velocity=context.theater.avg_velocity,
+                strike_prior=self._strike_prior,
+            )
+        else:
+            self._latest_features = None
 
         horizon = list(context.horizon_minutes or [0, 5, 10, 15, 20, 25, 30])
         selected_bundle = self._simulate_asset_bundle(context, selected, horizon, rng)
@@ -356,6 +392,33 @@ class EnsembleInference:
     ) -> list[FeatureContribution]:
         theater = context.theater
         policy = theater.policy_deltas
+
+        if self.rf_model is not None:
+            rf_imp = self.rf_model.feature_importances()
+            reference = float(reference_bundle["p50"][0])
+            raw_rows = [
+                ("asset.readiness", "asset", selected.readiness, rf_imp.get("asset_readiness", 0.14)),
+                ("asset.sensor_quality", "asset", selected.sensor_quality, rf_imp.get("sensor_quality", 0.10)),
+                ("asset.exposed_risk", "asset", 1.0 - selected.exposed_risk, rf_imp.get("exposed_risk", 0.16)),
+                ("asset.waypoint_complexity", "asset", 1.0 - selected.waypoint_complexity, rf_imp.get("mobility", 0.06)),
+                ("asset.endurance", "asset", selected.endurance, rf_imp.get("endurance", 0.05)),
+                ("theater.base_readiness_mean", "theater", theater.base_readiness_mean, rf_imp.get("readiness_mean", 0.12)),
+                ("theater.cluster_density", "theater", 1.0 - theater.cluster_density, rf_imp.get("cluster_density", 0.08)),
+                ("policy.safety", "policy", policy.safety, rf_imp.get("safety", 0.07)),
+                ("policy.sustainability", "policy", policy.sustainability, rf_imp.get("sustainability", 0.05)),
+                ("policy.resilience", "policy", getattr(policy, "resilience", 0.0), rf_imp.get("sustainability", 0.04)),
+            ]
+            total_imp = sum(abs(w) for _, _, _, w in raw_rows) or 1.0
+            return [
+                FeatureContribution(
+                    name=name,
+                    category=category,
+                    value=round(float(val), 4),
+                    impact=round(abs(w) / total_imp * (1.0 + reference * 0.1), 4),
+                )
+                for name, category, val, w in sorted(raw_rows, key=lambda item: abs(item[3]), reverse=True)
+            ]
+
         rows = [
             ("asset.readiness", "asset", selected.readiness * 0.22),
             ("asset.sensor_quality", "asset", selected.sensor_quality * 0.18),
@@ -419,21 +482,57 @@ class EnsembleInference:
         members: list[EnsembleMemberTrace] = []
         base = np.array(selected_p50, dtype=float)
         spread = max(0.01, (1.0 - trust_score) * 0.12 + 0.015)
-        for idx in range(count):
-            offset = np.linspace(-spread, spread, len(base))
-            noise = rng.normal(0.0, spread / 3.0, len(base))
-            values = np.clip(base + offset * ((idx / max(1, count - 1)) - 0.5) + noise, 0.0, 1.0)
-            variance = float(np.var(values - base))
-            agreement = float(np.clip(1.0 - variance * 8.0, 0.0, 1.0))
-            members.append(
-                EnsembleMemberTrace(
-                    id=f"member-{idx + 1}",
-                    label=f"Forest {idx + 1}",
-                    values=values.round(3).tolist(),
-                    agreement=round(agreement, 3),
-                    variance=round(variance, 4),
+
+        if self.rf_model is not None and hasattr(self, '_latest_features') and self._latest_features is not None:
+            tree_preds = self.rf_model.per_tree_predictions(self._latest_features, model="robustness")
+            n_trees = tree_preds.shape[0]
+            use_count = min(count, n_trees)
+            for idx in range(use_count):
+                tree_mean = float(np.mean(tree_preds[idx]))
+                offset = tree_mean - float(np.mean(base))
+                values = np.clip(base + offset * 0.15 + rng.normal(0.0, spread / 3.0, len(base)), 0.0, 1.0)
+                variance = float(np.var(values - base))
+                agreement = float(np.clip(1.0 - variance * 8.0, 0.0, 1.0))
+                members.append(
+                    EnsembleMemberTrace(
+                        id=f"member-{idx + 1}",
+                        label=f"Forest {idx + 1}",
+                        values=values.round(3).tolist(),
+                        agreement=round(agreement, 3),
+                        variance=round(variance, 4),
+                    )
                 )
-            )
+            for idx in range(use_count, count):
+                offset = np.linspace(-spread, spread, len(base))
+                noise = rng.normal(0.0, spread / 3.0, len(base))
+                values = np.clip(base + offset * ((idx / max(1, count - 1)) - 0.5) + noise, 0.0, 1.0)
+                variance = float(np.var(values - base))
+                agreement = float(np.clip(1.0 - variance * 8.0, 0.0, 1.0))
+                members.append(
+                    EnsembleMemberTrace(
+                        id=f"member-{idx + 1}",
+                        label=f"Forest {idx + 1}",
+                        values=values.round(3).tolist(),
+                        agreement=round(agreement, 3),
+                        variance=round(variance, 4),
+                    )
+                )
+        else:
+            for idx in range(count):
+                offset = np.linspace(-spread, spread, len(base))
+                noise = rng.normal(0.0, spread / 3.0, len(base))
+                values = np.clip(base + offset * ((idx / max(1, count - 1)) - 0.5) + noise, 0.0, 1.0)
+                variance = float(np.var(values - base))
+                agreement = float(np.clip(1.0 - variance * 8.0, 0.0, 1.0))
+                members.append(
+                    EnsembleMemberTrace(
+                        id=f"member-{idx + 1}",
+                        label=f"Forest {idx + 1}",
+                        values=values.round(3).tolist(),
+                        agreement=round(agreement, 3),
+                        variance=round(variance, 4),
+                    )
+                )
         return members
 
     def _trust_score(self, variance: float, asset: SimulationAsset, theater: TheaterStateVector) -> float:
@@ -474,6 +573,26 @@ class EnsembleInference:
         mobility: float,
         endurance: float,
     ) -> float:
+        if self.rf_model is not None:
+            features = build_feature_vector(
+                readiness_mean=readiness_mean,
+                cluster_density=cluster_density,
+                jammer_intensity=jammer_intensity,
+                safety=safety,
+                sustainability=sustainability,
+                asset_readiness=asset_readiness,
+                sensor_quality=sensor_quality,
+                exposed_risk=exposed_risk,
+                mobility=mobility,
+                endurance=endurance,
+                scenario_name=getattr(self, '_scenario_name', ''),
+                threat_count=getattr(self, '_threat_count', 3),
+                avg_velocity=getattr(self, '_avg_velocity', 250.0),
+                strike_prior=getattr(self, '_strike_prior', 0.3),
+            )
+            prediction = float(self.rf_model.predict_robustness(features)[0])
+            return self._clamp(prediction, 0.02, 0.98)
+
         return self._clamp(
             0.22
             + readiness_mean * 0.20

@@ -78,8 +78,26 @@ export class SensorFeedStore implements OnDestroy {
   setReplaySpeed(multiplier: number): void {
     this._replaySpeed.set(Math.max(0.25, Math.min(8, multiplier)));
     if (this._feedMode() === 'REPLAY') {
-      // Restart replay adapter with new speed
-      this.setFeedMode('REPLAY');
+      this._stopAdapter();
+      this._startAdapter(new ReplaySensorAdapter(buildReplayScenario(60), this._replaySpeed()));
+    }
+  }
+
+  seekReplay(simTime: number): void {
+    if (this._adapter?.mode === 'REPLAY') {
+      this._adapter.seek?.(simTime);
+    }
+  }
+
+  pauseReplay(): void {
+    if (this._adapter?.mode === 'REPLAY') {
+      this._adapter.setPaused?.(true);
+    }
+  }
+
+  resumeReplay(): void {
+    if (this._adapter?.mode === 'REPLAY') {
+      this._adapter.setPaused?.(false);
     }
   }
 

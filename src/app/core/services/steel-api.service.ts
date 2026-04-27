@@ -16,6 +16,16 @@ import {
   DeepSimJobMetadata,
 } from '../ml/counterfactual-lab.models';
 
+export interface ScenarioInfo {
+  id: string;
+  name: string;
+  description: string;
+  phase: string;
+  threatCount: number;
+  baseCount: number;
+  source: 'prebuilt' | 'drawing-board';
+}
+
 export interface LogisticsContext {
   supplyHealth: number;
   openCorridors: number;
@@ -91,6 +101,59 @@ export interface LabRunConfig {
   overrides?: Record<string, number>;
 }
 
+export interface ScenarioSweepPoint {
+  policy: { safety: number; sustainability: number; resilience: number };
+  jammerIntensity: number;
+  trustScore: number;
+  avgBlueRobustness: number;
+  avgFailureProbability: number;
+  avgRedRisk: number;
+  assetResults: {
+    assetId: string;
+    label: string;
+    unitType: string;
+    side: string;
+    robustnessScore: number;
+    readinessFloor: number;
+    failureProbability: number;
+    asymmetryRatio: number;
+    deltaRobustness: number;
+  }[];
+}
+
+export interface ScenarioSimResult {
+  scenarioName: string;
+  phase: string;
+  baseCount: number;
+  threatCount: number;
+  sweepCount: number;
+  elapsedMs: number;
+  sweepPoints: ScenarioSweepPoint[];
+  aggregate: {
+    overallRobustness: number;
+    overallFailureProbability: number;
+    overallTrust: number;
+    robustnessRange: { min: number; max: number; std: number };
+    bestPolicy: { safety: number; sustainability: number; resilience: number };
+    worstPolicy: { safety: number; sustainability: number; resilience: number };
+  };
+}
+
+export interface ScenarioCompareResult {
+  scenarioA: { name: string; threatCount: number; baseCount: number; overallRobustness: number; overallFailureProbability: number };
+  scenarioB: { name: string; threatCount: number; baseCount: number; overallRobustness: number; overallFailureProbability: number };
+  deltas: { robustness: number; failureProbability: number; trust: number; verdict: string };
+  pairedSweep: {
+    policy: { safety: number; sustainability: number; resilience: number };
+    jammerIntensity: number;
+    robustnessA: number;
+    robustnessB: number;
+    deltaRobustness: number;
+  }[];
+  bestPolicyA: { safety: number; sustainability: number; resilience: number };
+  bestPolicyB: { safety: number; sustainability: number; resilience: number };
+}
+
 export interface ActionReplayMetadata {
   clientActionId?: string;
   deviceId?: string;
@@ -99,14 +162,14 @@ export interface ActionReplayMetadata {
 
 @Injectable({ providedIn: 'root' })
 export class SteelApiService {
-  private http = inject(HttpClient);
+  http = inject(HttpClient);
   private telemetry = inject(TelemetryService);
   private base = inject(API_BASE_URL);
 
   // ── Twin reads ──────────────────────────────────────────────────────────────
 
-  getCampaign(): Observable<{ bases: BaseTwin[], threats: ThreatTwin[], policy: PolicyTwin, coas: COATwin[], simTime: number, phase: string }> {
-    return this.http.get<{ bases: BaseTwin[], threats: ThreatTwin[], policy: PolicyTwin, coas: COATwin[], simTime: number, phase: string }>(`${this.base}/twins/campaign`);
+  getCampaign(): Observable<{ bases: BaseTwin[], threats: ThreatTwin[], policy: PolicyTwin, coas: COATwin[], simTime: number, phase: string, scenarioName?: string }> {
+    return this.http.get<{ bases: BaseTwin[], threats: ThreatTwin[], policy: PolicyTwin, coas: COATwin[], simTime: number, phase: string, scenarioName?: string }>(`${this.base}/twins/campaign`);
   }
 
   getBases(): Observable<BaseTwin[]> {
@@ -162,8 +225,24 @@ export class SteelApiService {
     return this.http.post<{ injected: number; ids: string[] }>(`${this.base}/twins/inject-tracks`, { count, type });
   }
 
-  resetScenario(): Observable<{ status: string; simTime: number; bases: number; threats: number }> {
-    return this.http.post<{ status: string; simTime: number; bases: number; threats: number }>(`${this.base}/twins/reset`, {});
+  resetScenario(): Observable<{ status: string; scenarioName?: string; simTime: number; bases: number; threats: number }> {
+    return this.http.post<{ status: string; scenarioName?: string; simTime: number; bases: number; threats: number }>(`${this.base}/twins/reset`, {});
+  }
+
+  loadScenario(scenarioName: string): Observable<{ status: string; scenario: string; scenarioName?: string; simTime: number; bases: number; threats: number }> {
+    return this.http.post<{ status: string; scenario: string; scenarioName?: string; simTime: number; bases: number; threats: number }>(`${this.base}/twins/scenario/${scenarioName}`, {});
+  }
+
+  listScenarios(): Observable<ScenarioInfo[]> {
+    return this.http.get<ScenarioInfo[]>(`${this.base}/twins/scenarios`);
+  }
+
+  redirectTracks(payload: { trackIds?: string[]; heading?: number; velocity?: number; targetId?: string }): Observable<{ redirected: number; ids: string[]; applied: { heading?: number; velocity?: number; targetId?: string } }> {
+    return this.http.post<{ redirected: number; ids: string[]; applied: { heading?: number; velocity?: number; targetId?: string } }>(`${this.base}/twins/redirect-tracks`, payload);
+  }
+
+  setJamming(active: boolean, severity = 0.7): Observable<{ jammingActive: boolean; severity: number; affectedTracks: number }> {
+    return this.http.post<{ jammingActive: boolean; severity: number; affectedTracks: number }>(`${this.base}/twins/set-jamming`, { active, severity });
   }
 
   // ── Scenarios ──────────────────────────────────────────────────────────────
@@ -213,7 +292,7 @@ export class SteelApiService {
 
   predictSketchIntent(sketch: SketchIntentRequest): Observable<IntentPredictionResponse> {
     const SPEED_MAP: Record<string, number> = {
-      AIRCRAFT: 0.90, DRONE: 0.72, HELICOPTER: 0.60,
+      AIRCRAFT: 0.90, DRONE: 0.72, DRONE_SWARM: 0.50, HELICOPTER: 0.60,
       SHIP_DESTROYER: 0.45, SHIP_CARRIER: 0.35, SHIP_SUBMARINE: 0.40,
       SHIP_PATROL: 0.55, ARMOR: 0.35, ARTILLERY: 0.25,
       INFANTRY: 0.18, SPECIAL_FORCES: 0.42,
@@ -299,6 +378,27 @@ export class SteelApiService {
     return this.http.get<{ id: string; status: string; output?: CounterfactualPrediction; error?: string }>(
       `${this.base}/ml/deep-sim/${jobId}/status`
     );
+  }
+
+  enableML(dockerImage?: string): Observable<{status: string; provider: string; endpoint_id?: string; template_id?: string; image?: string; message?: string}> {
+    return this.http.post<{status: string; provider: string; endpoint_id?: string; template_id?: string; image?: string; message?: string}>(
+      `${this.base}/ml/enable`,
+      dockerImage ? { dockerImage } : {},
+    );
+  }
+
+  getMLStatus(): Observable<{provider: string; endpoint_id: string | null; rf_model_loaded: boolean; pending_jobs: number}> {
+    return this.http.get<{provider: string; endpoint_id: string | null; rf_model_loaded: boolean; pending_jobs: number}>(`${this.base}/ml/status`);
+  }
+
+  // ── Scenario Simulation ───────────────────────────────────────────────────────
+
+  runScenarioSim(request: { scenarioName: string; policySweep?: Record<string, number[]>; jammerSweep?: number[]; nRuns?: number }): Observable<ScenarioSimResult> {
+    return this.http.post<ScenarioSimResult>(`${this.base}/ml/scenario-sim`, request);
+  }
+
+  runScenarioCompare(request: { scenarioA: string; scenarioB: string; policySweep?: Record<string, number[]>; jammerSweep?: number[]; nRuns?: number }): Observable<ScenarioCompareResult> {
+    return this.http.post<ScenarioCompareResult>(`${this.base}/ml/scenario-compare`, request);
   }
 
   // ── Logistics ───────────────────────────────────────────────────────────────

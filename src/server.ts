@@ -22,7 +22,9 @@ app.use((_req, res, next) => {
 });
 app.use(express.urlencoded({ extended: false }));
 
-const angularApp = new AngularNodeAppEngine();
+const angularApp = new AngularNodeAppEngine({
+  allowedHosts: ['localhost', '127.0.0.1', '.a.run.app'],
+});
 
 // ── Static files ──────────────────────────────────────────────────────────────
 
@@ -451,6 +453,7 @@ function renderLockPage(message = ''): string {
         <button type="submit">INITIALIZE SESSION</button>
       </form>
       <a href="/showcase" style="display:block;text-align:center;margin-top:12px;padding:12px 20px;border:1px solid rgba(148,189,255,0.2);border-radius:14px;color:rgba(156,176,199,0.8);font-size:13px;text-decoration:none;letter-spacing:0.04em;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(92,167,255,0.5)';this.style.color='#edf5ff'" onmouseout="this.style.borderColor='rgba(148,189,255,0.2)';this.style.color='rgba(156,176,199,0.8)'">Visa presentation →</a>
+      <a href="/showcase/final" style="display:block;text-align:center;margin-top:10px;padding:12px 20px;border:1px solid rgba(124,224,190,0.24);border-radius:14px;color:rgba(207,255,239,0.86);font-size:13px;text-decoration:none;letter-spacing:0.04em;transition:all 0.2s;background:rgba(124,224,190,0.05);" onmouseover="this.style.borderColor='rgba(124,224,190,0.55)';this.style.color='#edf5ff';this.style.background='rgba(124,224,190,0.12)'" onmouseout="this.style.borderColor='rgba(124,224,190,0.24)';this.style.color='rgba(207,255,239,0.86)';this.style.background='rgba(124,224,190,0.05)'">Visa Final →</a>
       <div class="hint">The command fabric is locked pending authentication.</div>
       <div class="tiny">Access token applies to SSR, API, and WebSocket channels.</div>
       <div class="footer">

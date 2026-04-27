@@ -8,6 +8,7 @@ so tracks cross the theater in a few minutes of real time.
 from __future__ import annotations
 import math
 import random
+import time
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -16,27 +17,55 @@ MAP_KM_PER_UNIT = 0.25       # 1 map unit = 0.25 km  (1400-unit canvas ≈ 350 k
 DEMO_SPEED_FACTOR = 20        # multiplier so tracks cross map in minutes, not hours
 TICK_INTERVAL_S = 2.0         # WebSocket tick every 2 seconds
 IMMINENT_THRESHOLD_UNITS = 50.0 / MAP_KM_PER_UNIT  # 50 km → 200 map units
+LEAK_THRESHOLD_UNITS = 15.0   # Threat within 15 map units of target → LEAKED
 
 EFFECTOR_SPECS: dict[str, dict] = {
     'interceptor_short': {
-        'range_km': 80,   'speed_km_s': 0.8,
+        'range_km': 9,
+        'speed_km_s': 0.8,
         'pk': {'DRONE': 0.75, 'MISSILE': 0.65, 'AIRCRAFT': 0.55, 'UNKNOWN': 0.50},
         'cost_units': 1,
+        'catalog_ref': 'RBS_70_and_RBS_70_NG',
+        'note': 'RBS 70 NG public range >9km; Pk values are test-condition estimates (low confidence).',
     },
     'interceptor_mid': {
-        'range_km': 180,  'speed_km_s': 0.6,
+        'range_km': 25,
+        'speed_km_s': 1.2,
         'pk': {'DRONE': 0.55, 'MISSILE': 0.80, 'AIRCRAFT': 0.70, 'UNKNOWN': 0.50},
         'cost_units': 4,
+        'catalog_ref': 'IRIS_T_SLS_RBS_98',
+        'note': 'IRIS-T SLS public range ~25km; Pk values are test-condition estimates (low confidence).',
     },
     'interceptor_long': {
-        'range_km': 350,  'speed_km_s': 0.4,
+        'range_km': 160,
+        'speed_km_s': 1.0,
         'pk': {'DRONE': 0.30, 'MISSILE': 0.85, 'AIRCRAFT': 0.90, 'UNKNOWN': 0.50},
         'cost_units': 12,
+        'catalog_ref': 'Patriot_PAC_3_Swedish_Lv_103',
+        'note': 'Patriot PAC-3 MSE public range ~160km; Pk values are test-condition estimates (low confidence).',
     },
 }
 
 # Readiness score weights (must sum to 1 for positive + negative terms)
 _W = dict(airframe=0.20, crew=0.20, missiles=0.25, fuel=0.15, fatigue=0.10, maint=0.10)
+
+# ── Theater Event ─────────────────────────────────────────────────────────────
+
+EVENT_TYPE_INTERCEPT_SUCCESS = 'INTERCEPT_SUCCESS'
+EVENT_TYPE_INTERCEPT_FAILURE = 'INTERCEPT_FAILURE'
+EVENT_TYPE_BASE_STRIKE = 'BASE_STRIKE'
+EVENT_TYPE_BASE_DEGRADED = 'BASE_DEGRADED'
+EVENT_TYPE_BASE_DESTROYED = 'BASE_DESTROYED'
+EVENT_TYPE_THREAT_IMMINENT = 'THREAT_IMMINENT'
+EVENT_TYPE_PHASE_SHIFT = 'PHASE_SHIFT'
+
+@dataclass
+class TheaterEvent:
+    id: str
+    eventType: str
+    simTime: float
+    details: dict
+    timestamp: float = field(default_factory=time.time)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -176,6 +205,11 @@ class ThreatState:
     sensor_quality: float = 1.0
     jamming_probability: float = 0.0
     uncertainty_source: str = ""
+    # Platform identification from force catalog
+    platform: Optional[str] = None
+    armaments: Optional[list[str]] = None
+    armament: Optional[str] = None
+    origin_country: Optional[str] = None
     engaged_by_base_id: Optional[str] = None
     engaged_effector_type: Optional[str] = None
     pending_engagement_pk: Optional[float] = None
@@ -251,8 +285,26 @@ class CampaignTwin:
         self.coas: list[dict] = []
         self.sim_time: float = 0.0
         self.phase: str = "INITIAL_ASSESSMENT"
+        self.scenario_name: str = "Boreal Sentinel I"
         self._jamming_active: bool = False
         self._jammer_severity: float = 0.0
+        self.events: list[TheaterEvent] = []
+        self._event_seq: int = 0
+
+    @property
+    def jammer_severity(self) -> float:
+        return self._jammer_severity
+
+    def _emit_event(self, event_type: str, details: dict) -> TheaterEvent:
+        self._event_seq += 1
+        evt = TheaterEvent(
+            id=f"EVT-{self._event_seq:04d}",
+            eventType=event_type,
+            simTime=self.sim_time,
+            details=details,
+        )
+        self.events.append(evt)
+        return evt
 
     # ── Tick ─────────────────────────────────────────────────────────────────
 
@@ -261,6 +313,8 @@ class CampaignTwin:
         self._move_threats()
         self._update_intent_distributions()
         self._check_threat_status()
+        self._apply_resource_depletion()
+        self._advance_phase()
 
     def _move_threats(self) -> None:
         for t in self.threats:
@@ -330,10 +384,127 @@ class CampaignTwin:
             if t.status in ('NEUTRALIZED', 'LEAKED', 'ENGAGED'):
                 continue
             dist = euclidean(t.x, t.y, t.target_x, t.target_y)
-            if dist < 15:
+            if dist < LEAK_THRESHOLD_UNITS:
                 t.status = 'LEAKED'
+                self._handle_base_strike(t)
             elif dist < IMMINENT_THRESHOLD_UNITS and t.status == 'TRACKING':
                 t.status = 'IDENTIFIED'
+                base = next((b for b in self.bases if b.id == t.target_id), None)
+                self._emit_event(EVENT_TYPE_THREAT_IMMINENT, {
+                    'trackId': t.id,
+                    'threatClass': t.threat_class,
+                    'intent': t.intent,
+                    'targetId': t.target_id,
+                    'targetName': base.name if base else t.target_id,
+                    'timeToTarget': round(t.display_time_to_target, 1),
+                    'distance': round(dist, 1),
+                })
+
+    def _handle_base_strike(self, threat: ThreatState) -> None:
+        base = next((b for b in self.bases if b.id == threat.target_id), None)
+        if not base:
+            return
+
+        if threat.threat_class == 'MISSILE':
+            damage_severity = 0.35
+        elif threat.threat_class == 'AIRCRAFT':
+            damage_severity = 0.25
+        else:
+            damage_severity = 0.15
+
+        if threat.intent in ('STRIKE', 'SATURATION'):
+            damage_severity *= 1.4
+        elif threat.intent == 'FEINT':
+            damage_severity *= 0.7
+
+        base.airframe_availability = max(0.05, base.airframe_availability - damage_severity * 0.5)
+        base.crew_availability = max(0.05, base.crew_availability - damage_severity * 0.3)
+        base.fuel = max(0.05, base.fuel - damage_severity * 0.4)
+        base.maintenance_backlog = min(1.0, base.maintenance_backlog + damage_severity * 0.3)
+
+        short_destroyed = int(base.interceptor_short * damage_severity * 0.4)
+        mid_destroyed = int(base.interceptor_mid * damage_severity * 0.4)
+        long_destroyed = int(base.interceptor_long * damage_severity * 0.4)
+        base.interceptor_short = max(0, base.interceptor_short - short_destroyed)
+        base.interceptor_mid = max(0, base.interceptor_mid - mid_destroyed)
+        base.interceptor_long = max(0, base.interceptor_long - long_destroyed)
+
+        prev_status = base.runway_status
+        if base.readiness_score < 0.25:
+            base.runway_status = 'DISABLED'
+        elif base.readiness_score < 0.50:
+            base.runway_status = 'DEGRADED'
+
+        event_details = {
+            'trackId': threat.id,
+            'threatClass': threat.threat_class,
+            'intent': threat.intent,
+            'baseId': base.id,
+            'baseName': base.name,
+            'damageSeverity': round(damage_severity, 3),
+            'readinessAfter': round(base.readiness_score, 3),
+            'runwayStatusAfter': base.runway_status,
+            'interceptorsLost': {
+                'short': short_destroyed,
+                'mid': mid_destroyed,
+                'long': long_destroyed,
+            },
+        }
+
+        if base.runway_status == 'DISABLED' and prev_status != 'DISABLED':
+            self._emit_event(EVENT_TYPE_BASE_DESTROYED, event_details)
+        elif base.runway_status == 'DEGRADED' and prev_status != 'DEGRADED':
+            self._emit_event(EVENT_TYPE_BASE_DEGRADED, event_details)
+        else:
+            self._emit_event(EVENT_TYPE_BASE_STRIKE, event_details)
+
+    def _apply_resource_depletion(self) -> None:
+        for base in self.bases:
+            if base.runway_status == 'DISABLED':
+                continue
+            drain = base.depletion_rate * TICK_INTERVAL_S / 3600.0
+            base.fuel = max(0.0, base.fuel - drain * 0.3)
+            base.maintenance_backlog = min(1.0, base.maintenance_backlog + drain * 0.1)
+            base.fatigue = min(1.0, base.fatigue + drain * 0.05)
+            active_threats_for_base = sum(
+                1 for t in self.threats
+                if t.target_id == base.id and t.status in ('TRACKING', 'IDENTIFIED', 'ENGAGED')
+            )
+            if active_threats_for_base > 0:
+                base.fuel = max(0.0, base.fuel - 0.001 * active_threats_for_base)
+                base.fatigue = min(1.0, base.fatigue + 0.002 * active_threats_for_base)
+
+    def _advance_phase(self) -> None:
+        active_threats = [t for t in self.threats if t.status not in ('NEUTRALIZED', 'LEAKED')]
+        leaked_threats = [t for t in self.threats if t.status == 'LEAKED']
+        bases_degraded = sum(1 for b in self.bases if b.runway_status != 'OPERATIONAL')
+        bases_destroyed = sum(1 for b in self.bases if b.runway_status == 'DISABLED')
+
+        if bases_destroyed >= 2:
+            new_phase = 'CRITICAL_FAILURE'
+        elif bases_degraded >= 3 or leaked_threats and bases_degraded >= 2:
+            new_phase = 'SUSTAINED_ENGAGEMENT'
+        elif active_threats and leaked_threats:
+            new_phase = 'KINETIC_STRIKE'
+        elif active_threats:
+            new_phase = 'INITIAL_ASSESSMENT'
+        else:
+            if not leaked_threats:
+                new_phase = 'ALL_CLEAR'
+            else:
+                new_phase = 'SUSTAINED_ENGAGEMENT'
+
+        if new_phase != self.phase:
+            old_phase = self.phase
+            self.phase = new_phase
+            self._emit_event(EVENT_TYPE_PHASE_SHIFT, {
+                'fromPhase': old_phase,
+                'toPhase': new_phase,
+                'activeThreats': len(active_threats),
+                'leakedThreats': len(leaked_threats),
+                'basesDegraded': bases_degraded,
+                'basesDestroyed': bases_destroyed,
+            })
 
     # ── Engagement ────────────────────────────────────────────────────────────
 
@@ -374,15 +545,12 @@ class CampaignTwin:
             if threat.engagement_resolve_at is None or self.sim_time < threat.engagement_resolve_at:
                 continue
 
-            # Recalculate Pk from current threat/base state — threat may have manoeuvred
-            # or sensor quality dropped since the order was issued
             base = next((b for b in self.bases if b.id == threat.engaged_by_base_id), None)
             eff_type = threat.engaged_effector_type
             if base and eff_type and eff_type in EFFECTOR_SPECS:
                 spec = EFFECTOR_SPECS[eff_type]
                 pk_base = spec['pk'].get(threat.threat_class, 0.50)
                 ecm_factor = 1.0 - threat.jamming_probability
-                # Nonlinear fatigue: minimal below 0.3, steep above 0.6
                 f = base.fatigue
                 if f < 0.3:
                     fatigue_penalty = f * 0.05
@@ -398,8 +566,28 @@ class CampaignTwin:
 
             if random.random() <= pk:
                 threat.status = 'NEUTRALIZED'
+                self._emit_event(EVENT_TYPE_INTERCEPT_SUCCESS, {
+                    'trackId': threat.id,
+                    'threatClass': threat.threat_class,
+                    'intent': threat.intent,
+                    'baseId': threat.engaged_by_base_id or '',
+                    'baseName': base.name if base else '',
+                    'effectorType': eff_type or '',
+                    'pk': round(pk, 3),
+                    'simTime': self.sim_time,
+                })
             else:
                 threat.status = 'TRACKING'
+                self._emit_event(EVENT_TYPE_INTERCEPT_FAILURE, {
+                    'trackId': threat.id,
+                    'threatClass': threat.threat_class,
+                    'intent': threat.intent,
+                    'baseId': threat.engaged_by_base_id or '',
+                    'baseName': base.name if base else '',
+                    'effectorType': eff_type or '',
+                    'pk': round(pk, 3),
+                    'simTime': self.sim_time,
+                })
             threat.pending_engagement_pk = None
             threat.engagement_resolve_at = None
 
@@ -407,6 +595,7 @@ class CampaignTwin:
 
     def inject_tracks(self, count: int, track_type: str) -> list[ThreatState]:
         """Add new tracks from the north edge of the map."""
+        from api.force_catalog import PLATFORM_CATALOG, THREAT_CLASS_VELOCITIES
         new_tracks: list[ThreatState] = []
         target_bases = [b for b in self.bases if b.runway_status != 'DISABLED']
         if not target_bases:
@@ -417,18 +606,33 @@ class CampaignTwin:
             while any(t.id == tid for t in self.threats):
                 tid = f"INJ-{random.randint(1000, 9999)}"
 
+            platform_key = None
+            armaments_list = None
+            armament_val = None
+            origin_val = None
+
             if track_type == 'DRONE':
                 tc = 'DRONE'
                 vel = 120.0
+                platform_key = random.choice(['ORLAN_10', 'SHAHED_136', 'GENERIC_DRONE'])
             elif track_type == 'KINETIC':
                 tc = 'MISSILE'
                 vel = 450.0
+                platform_key = random.choice(['KALIBR', 'ISKANDER', 'GENERIC_MISSILE'])
             elif track_type == 'FEINT':
                 tc = random.choice(['AIRCRAFT', 'DRONE'])
+                platform_key = random.choice(['SU_35', 'SU_34', 'ORLAN_10']) if tc == 'AIRCRAFT' else random.choice(['ORLAN_10', 'GENERIC_DRONE'])
                 vel = 250.0
             else:  # MIXED
                 tc = random.choice(['DRONE', 'MISSILE', 'AIRCRAFT'])
+                platform_key = random.choice(['SU_35', 'KALIBR', 'ORLAN_10', 'GENERIC_DRONE', 'GENERIC_MISSILE'])
                 vel = random.choice([120.0, 250.0, 350.0, 450.0])
+
+            if platform_key and platform_key in PLATFORM_CATALOG:
+                plat = PLATFORM_CATALOG[platform_key]
+                armaments_list = plat.get('armaments')
+                armament_val = plat.get('armament')
+                origin_val = plat.get('origin_country')
 
             target = random.choice(target_bases)
             spawn_x = random.uniform(200, 1100)
@@ -459,6 +663,10 @@ class CampaignTwin:
                 classification_confidence=0.6,
                 sensor_quality=1.0,
                 jamming_probability=0.0,
+                platform=platform_key,
+                armaments=armaments_list,
+                armament=armament_val,
+                origin_country=origin_val,
             )
             new_tracks.append(t)
 
@@ -475,8 +683,11 @@ class CampaignTwin:
         self.coas = []
         self.sim_time = 0.0
         self.phase = "INITIAL_ASSESSMENT"
+        self.scenario_name = "Boreal Sentinel I"
         self._jamming_active = False
         self._jammer_severity = 0.0
+        self.events = []
+        self._event_seq = 0
 
     # ── Policy helpers ────────────────────────────────────────────────────────
 
@@ -492,6 +703,37 @@ class CampaignTwin:
         for t in self.get_active_threats():
             t.sensor_quality = max(0.2, 1.0 - severity * 0.3) if active else 1.0
             t.jamming_probability = severity if active else 0.0
+
+    def redirect_tracks(
+        self,
+        track_ids: list[str] | None = None,
+        heading: float | None = None,
+        velocity: float | None = None,
+        target_id: str | None = None,
+    ) -> list[ThreatState]:
+        if track_ids is None:
+            targets = self.get_active_threats()
+        else:
+            targets = [t for t in self.threats if t.id in track_ids and t.status not in ('NEUTRALIZED', 'LEAKED')]
+
+        base_lookup = {b.id: b for b in self.bases}
+
+        for t in targets:
+            if velocity is not None:
+                t.velocity = velocity
+
+            dest_base = base_lookup.get(target_id) if target_id else None
+            if dest_base:
+                t.target_id = dest_base.id
+                t.target_x = dest_base.x
+                t.target_y = dest_base.y
+
+            if heading is not None:
+                t.heading = heading
+            elif dest_base is not None or velocity is not None:
+                t.heading = math.degrees(math.atan2(t.target_x - t.x, t.target_y - t.y)) % 360
+
+        return targets
 
     def get_active_threats(self) -> list[ThreatState]:
         return [t for t in self.threats if t.status not in ('NEUTRALIZED', 'LEAKED')]
@@ -574,19 +816,33 @@ class CampaignTwin:
             'threats': [self._threat_dict(t) for t in self.threats],
             'bases':   [self._base_dict(b)   for b in self.bases],
             'phase':   self.phase,
+            'scenarioName': self.scenario_name,
+            'events':  [self._event_dict(e) for e in self.events],
         }
 
     def compute_delta(self) -> dict:
+        new_events = [e for e in self.events if e.simTime >= self.sim_time - TICK_INTERVAL_S]
         return {
             'type':    'DELTA',
             'simTime': self.sim_time,
             'threats': [self._threat_dict(t) for t in self.threats],
             'bases':   [self._base_dict(b)   for b in self.bases],
             'phase':   self.phase,
+            'scenarioName': self.scenario_name,
+            'events':  [self._event_dict(e) for e in new_events],
+        }
+
+    def _event_dict(self, e: TheaterEvent) -> dict:
+        return {
+            'id':        e.id,
+            'eventType': e.eventType,
+            'simTime':   round(e.simTime, 1),
+            'details':   e.details,
+            'timestamp': e.timestamp,
         }
 
     def _threat_dict(self, t: ThreatState) -> dict:
-        return {
+        d = {
             'id':      t.id,
             'class':   t.threat_class,
             'intent':  t.intent,
@@ -608,6 +864,15 @@ class CampaignTwin:
             'sensorQuality':   round(t.sensor_quality, 3),
             'jammingProbability': round(t.jamming_probability, 3),
         }
+        if t.platform is not None:
+            d['platform'] = t.platform
+        if t.armaments is not None:
+            d['armaments'] = t.armaments
+        if t.armament is not None:
+            d['armament'] = t.armament
+        if t.origin_country is not None:
+            d['originCountry'] = t.origin_country
+        return d
 
     def _base_dict(self, b: BaseState) -> dict:
         return {

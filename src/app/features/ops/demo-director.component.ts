@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { ScenarioStore } from '../../core/state/scenario.store';
@@ -77,6 +77,39 @@ import { SteelApiService } from '../../core/services/steel-api.service';
 
             <!-- Mission Path Shortcuts -->
              <section class="bg-boreal-panel border border-boreal-border rounded-sm overflow-hidden flex flex-col shadow-2xl">
+                <div class="panel-header uppercase tracking-widest text-[9px] text-boreal-text-muted bg-boreal-panel-muted/20 text-boreal-text-muted px-4 py-2">Scenario Presets</div>
+                <div class="p-4 grid grid-cols-2 gap-3">
+                    <button 
+                        (click)="launchScenarioA()"
+                        class="p-4 bg-boreal-panel-elevated border border-boreal-red/20 rounded-sm hover:border-boreal-red/60 transition-all flex flex-col gap-2 text-left group shadow-lg"
+                    >
+                        <div class="flex items-center gap-2">
+                            <mat-icon class="text-boreal-red !w-6 !h-6 !text-lg">rocket_launch</mat-icon>
+                            <span class="text-[9px] text-boreal-red font-mono font-bold uppercase tracking-widest">SCENARIO A</span>
+                        </div>
+                        <div class="space-y-0.5">
+                            <h4 class="text-xs font-bold text-boreal-text-primary uppercase tracking-tight">Boreal Strike</h4>
+                            <p class="text-[10px] text-boreal-text-secondary leading-relaxed">5 HI-VAL missiles inbound on Highridge Command. Classic kinetic strike.</p>
+                        </div>
+                    </button>
+
+                    <button 
+                        (click)="launchScenarioB()"
+                        class="p-4 bg-boreal-panel-elevated border border-boreal-amber/20 rounded-sm hover:border-boreal-amber/60 transition-all flex flex-col gap-2 text-left group shadow-lg"
+                    >
+                        <div class="flex items-center gap-2">
+                            <mat-icon class="text-boreal-amber !w-6 !h-6 !text-lg">psychology</mat-icon>
+                            <span class="text-[9px] text-boreal-amber font-mono font-bold uppercase tracking-widest">SCENARIO B</span>
+                        </div>
+                        <div class="space-y-0.5">
+                            <h4 class="text-xs font-bold text-boreal-text-primary uppercase tracking-tight">Ghost Feint</h4>
+                            <p class="text-[10px] text-boreal-text-secondary leading-relaxed">10 slow aircraft (PROBE/FEINT). Then jamming + redirect → STRIKE.</p>
+                        </div>
+                    </button>
+                </div>
+             </section>
+
+             <section class="bg-boreal-panel border border-boreal-border rounded-sm overflow-hidden flex flex-col shadow-2xl">
                 <div class="panel-header uppercase tracking-widest text-[9px] text-boreal-text-muted bg-boreal-panel-muted/20 text-boreal-text-muted px-4 py-2">Strategic Narrative Jumps</div>
                 <div class="p-6 grid grid-cols-2 gap-4">
                     <button 
@@ -111,7 +144,7 @@ import { SteelApiService } from '../../core/services/steel-api.service';
 
             <section class="bg-boreal-panel border border-boreal-border rounded-sm overflow-hidden flex flex-col shadow-2xl">
                 <div class="panel-header uppercase tracking-widest text-[9px] text-boreal-text-muted bg-boreal-panel-muted/20 px-4 py-2">Immediate Stress Situation Injectors</div>
-                <div class="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
                     <button 
                         (click)="triggerJamming()"
                         [class.border-boreal-red]="scenario.isJamming()"
@@ -119,6 +152,16 @@ import { SteelApiService } from '../../core/services/steel-api.service';
                     >
                         <mat-icon [class.animate-pulse]="scenario.isJamming()" class="text-boreal-red !w-8 !h-8 !text-2xl group-hover:scale-110 transition-transform">wifi_off</mat-icon>
                         <span class="text-[10px] uppercase font-bold tracking-tight text-boreal-text-primary">{{ scenario.isJamming() ? 'Disable Jamming' : 'Heavy Jamming' }}</span>
+                    </button>
+                    <button 
+                        (click)="triggerRedirect()"
+                        class="flex flex-col items-center gap-3 p-4 bg-boreal-panel-elevated border border-boreal-border rounded-sm hover:border-boreal-purple/50 group transition-all"
+                    >
+                        <mat-icon class="text-purple-400 !w-8 !h-8 !text-2xl group-hover:scale-110 transition-transform">alt_route</mat-icon>
+                        <div class="flex flex-col items-center">
+                            <span class="text-[10px] uppercase font-bold tracking-tight text-boreal-text-primary">Redirect</span>
+                            <span class="text-[8px] text-boreal-text-muted font-bold tracking-widest">FEINT→STRIKE</span>
+                        </div>
                     </button>
                     <button 
                         (click)="triggerFeintSwarm()"
@@ -189,15 +232,62 @@ import { SteelApiService } from '../../core/services/steel-api.service';
                 </div>
             </section>
 
+<section class="bg-boreal-panel border border-boreal-border rounded-sm overflow-hidden shadow-2xl">
+                 <div class="panel-header uppercase tracking-widest text-[9px] text-boreal-text-muted bg-boreal-panel-muted/20 px-4 py-2">Operation Surface Jump</div>
+                 <div class="p-4 grid grid-cols-2 gap-2">
+                     <button (click)="jump('/tactical')" class="p-3 bg-boreal-canvas/50 border border-boreal-border rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-text-muted hover:text-boreal-blue hover:border-boreal-blue/50 transition-all font-mono">Tactical COP</button>
+                     <button (click)="jump('/commander')" class="p-3 bg-boreal-canvas/50 border border-boreal-border rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-text-muted hover:text-boreal-blue hover:border-boreal-blue/50 transition-all font-mono">Commander</button>
+                     <button (click)="jump('/readiness')" class="p-3 bg-boreal-canvas/50 border border-boreal-border rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-text-muted hover:text-boreal-blue hover:border-boreal-blue/50 transition-all font-mono">Readiness</button>
+                     <button (click)="jump('/robustness-lab')" class="p-3 bg-boreal-canvas/50 border border-boreal-border rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-text-muted hover:text-boreal-blue hover:border-boreal-blue/50 transition-all font-mono">Robustness Lab</button>
+                 </div>
+             </section>
+
              <section class="bg-boreal-panel border border-boreal-border rounded-sm overflow-hidden shadow-2xl">
-                <div class="panel-header uppercase tracking-widest text-[9px] text-boreal-text-muted bg-boreal-panel-muted/20 px-4 py-2">Operation Surface Jump</div>
-                <div class="p-4 grid grid-cols-2 gap-2">
-                    <button (click)="jump('/tactical')" class="p-3 bg-boreal-canvas/50 border border-boreal-border rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-text-muted hover:text-boreal-blue hover:border-boreal-blue/50 transition-all font-mono">Tactical COP</button>
-                    <button (click)="jump('/commander')" class="p-3 bg-boreal-canvas/50 border border-boreal-border rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-text-muted hover:text-boreal-blue hover:border-boreal-blue/50 transition-all font-mono">Commander</button>
-                    <button (click)="jump('/readiness')" class="p-3 bg-boreal-canvas/50 border border-boreal-border rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-text-muted hover:text-boreal-blue hover:border-boreal-blue/50 transition-all font-mono">Readiness</button>
-                    <button (click)="jump('/robustness-lab')" class="p-3 bg-boreal-canvas/50 border border-boreal-border rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-text-muted hover:text-boreal-blue hover:border-boreal-blue/50 transition-all font-mono">Robustness Lab</button>
-                </div>
-            </section>
+                 <div class="panel-header uppercase tracking-widest text-[9px] text-boreal-text-muted bg-boreal-panel-muted/20 px-4 py-2">
+                     <span>Machine Learning</span>
+                     <span class="text-[8px] font-mono opacity-40 ml-2">GPU INFERENCE</span>
+                 </div>
+                 <div class="p-4 space-y-3">
+                     @if (mlProvisioning() === 'active') {
+                         <div class="flex items-center gap-2 px-3 py-2 bg-boreal-green/10 border border-boreal-green/30 rounded-sm">
+                             <span class="w-2 h-2 rounded-full bg-boreal-green animate-pulse"></span>
+                             <span class="text-[10px] uppercase font-black tracking-widest text-boreal-green">GPU Endpoint Active</span>
+                         </div>
+                         <div class="flex justify-between items-center text-[10px]">
+                             <span class="text-boreal-text-muted uppercase tracking-widest font-bold">Endpoint</span>
+                             <span class="font-mono text-boreal-text-primary text-[9px]">{{ mlEndpointId() }}</span>
+                         </div>
+                     } @else if (mlProvisioning() === 'provisioning') {
+                         <div class="flex items-center gap-2 px-3 py-2 bg-boreal-amber/10 border border-boreal-amber/30 rounded-sm">
+                             <span class="w-2 h-2 rounded-full bg-boreal-amber animate-pulse"></span>
+                             <span class="text-[10px] uppercase font-black tracking-widest text-boreal-amber">Provisioning GPU...</span>
+                         </div>
+                     } @else if (mlProvisioning() === 'error') {
+                         <div class="flex items-center gap-2 px-3 py-2 bg-boreal-red/10 border border-boreal-red/30 rounded-sm">
+                             <mat-icon class="text-boreal-red !w-4 !h-4 !text-sm">error</mat-icon>
+                             <span class="text-[10px] uppercase font-black tracking-widest text-boreal-red">Provisioning Failed</span>
+                         </div>
+                         <p class="text-[9px] text-boreal-text-muted">{{ mlError() }}</p>
+                         <button (click)="enableML()" class="w-full p-2 bg-boreal-canvas/50 border border-boreal-border rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-text-muted hover:text-boreal-blue hover:border-boreal-blue/50 transition-all">Retry</button>
+                     } @else {
+                         <div class="flex items-center gap-2 px-3 py-2 bg-boreal-canvas/30 border border-boreal-border rounded-sm">
+                             <span class="w-2 h-2 rounded-full bg-boreal-text-muted/30"></span>
+                             <span class="text-[10px] uppercase font-black tracking-widest text-boreal-text-muted">Local Inference Only</span>
+                         </div>
+                         <button
+                             (click)="enableML()"
+                             class="w-full flex items-center justify-center gap-2 p-3 bg-boreal-blue/10 border border-boreal-blue/40 rounded-sm text-[10px] uppercase font-black tracking-widest text-boreal-blue hover:bg-boreal-blue/20 transition-all"
+                         >
+                             <mat-icon class="!w-4 !h-4 !text-sm">precision_manufacturing</mat-icon>
+                             Enable Machine Learning
+                         </button>
+                     }
+                     <div class="flex justify-between items-center text-[10px]">
+                         <span class="text-boreal-text-muted uppercase tracking-widest font-bold">RF Model</span>
+                         <span class="font-mono text-boreal-green text-[9px]">LOADED</span>
+                     </div>
+                 </div>
+             </section>
         </div>
       </div>
     </div>
@@ -208,7 +298,7 @@ import { SteelApiService } from '../../core/services/steel-api.service';
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DemoDirector {
+export class DemoDirector implements OnInit {
     scenario = inject(ScenarioStore);
     tactical = inject(TacticalStore);
     policy = inject(PolicyStore);
@@ -216,6 +306,22 @@ export class DemoDirector {
     router = inject(Router);
     audit = inject(AuditLogger);
     api = inject(SteelApiService);
+
+    mlProvisioning = signal<'idle' | 'provisioning' | 'active' | 'error'>('idle');
+    mlEndpointId = signal('');
+    mlError = signal('');
+
+    ngOnInit() {
+        this.api.getMLStatus().subscribe({
+            next: (res) => {
+                if (res.endpoint_id) {
+                    this.mlEndpointId.set(res.endpoint_id);
+                    this.mlProvisioning.set('active');
+                }
+            },
+            error: () => { /* ML status check is optional */ },
+        });
+    }
 
     simTimeFormatted = computed(() => {
         const totalSecs = this.scenario.simTime();
@@ -264,6 +370,7 @@ export class DemoDirector {
     triggerJamming() {
         const newState = !this.scenario.isJamming();
         this.scenario.setJamming(newState);
+        this.api.setJamming(newState, newState ? 0.7 : 0.0).subscribe();
         this.audit.log({
             actor: 'DIRECTOR',
             action: newState ? 'Inject Jamming' : 'Remove Jamming',
@@ -272,12 +379,82 @@ export class DemoDirector {
         });
     }
 
+    triggerRedirect() {
+        this.api.redirectTracks({
+            velocity: 450,
+            targetId: 'BASE-2',
+        }).subscribe();
+        this.audit.log({
+            actor: 'DIRECTOR',
+            action: 'Redirect Tracks → STRIKE',
+            rationale: 'Feint tracks accelerating and redirecting toward Highridge Command.',
+            category: 'SYSTEM'
+        });
+    }
+
+    launchScenarioA() {
+        this.orchestration.setDemoStory({ id: 'BOREAL_STRIKE', name: 'Boreal Strike', currentStep: 1, totalSteps: 3 });
+        this.audit.log({
+            actor: 'DIRECTOR',
+            action: 'Scenario A: Boreal Strike',
+            rationale: 'Coordinated kinetic missile strike on Highridge Command.',
+            category: 'SYSTEM'
+        });
+        this.scenario.setPhase('phase-3');
+        this.policy.updateWeights({ safety: 1.0, sustainability: 0.3 });
+        this.api.loadScenario('boreal-strike').subscribe();
+        setTimeout(() => this.jump('/tactical'), 500);
+    }
+
+    launchScenarioB() {
+        this.orchestration.setDemoStory({ id: 'GHOST_FEINT', name: 'Ghost Feint', currentStep: 1, totalSteps: 5 });
+        this.audit.log({
+            actor: 'DIRECTOR',
+            action: 'Scenario B: Ghost Feint',
+            rationale: '10 slow aircraft detected — probe/feint classification. Redirect will follow.',
+            category: 'SYSTEM'
+        });
+        this.scenario.setPhase('phase-2');
+        this.policy.updateWeights({ safety: 0.5, sustainability: 0.6 });
+        this.api.loadScenario('ghost-feint').subscribe();
+        setTimeout(() => this.jump('/tactical'), 500);
+    }
+
     triggerFeintSwarm() {
         this.api.injectTracks(10, 'FEINT').subscribe();
     }
 
     triggerKineticWave() {
         this.api.injectTracks(5, 'KINETIC').subscribe();
+    }
+
+    enableML() {
+        this.mlProvisioning.set('provisioning');
+        this.mlError.set('');
+        this.api.enableML().subscribe({
+            next: (res) => {
+                if (res.endpoint_id) {
+                    this.mlEndpointId.set(res.endpoint_id);
+                }
+                this.mlProvisioning.set(res.provider === 'runpod' || res.status === 'active' || res.status === 'provisioned' ? 'active' : 'idle');
+                this.audit.log({
+                    actor: 'DIRECTOR',
+                    action: 'Enable ML Inference',
+                    rationale: res.message || `ML provider: ${res.provider}`,
+                    category: 'SYSTEM',
+                });
+            },
+            error: (err) => {
+                this.mlProvisioning.set('error');
+                this.mlError.set(err.error?.detail || err.message || 'Provisioning failed');
+                this.audit.log({
+                    actor: 'DIRECTOR',
+                    action: 'ML Provisioning Failed',
+                    rationale: this.mlError(),
+                    category: 'SYSTEM',
+                });
+            },
+        });
     }
 
     resetBaseline() {
