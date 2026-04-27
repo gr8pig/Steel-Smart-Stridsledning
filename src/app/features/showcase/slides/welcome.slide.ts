@@ -53,7 +53,38 @@ import { ShowcaseState } from '../showcase-data';
     .w-chip-dot.green { background: var(--s-green); box-shadow: 0 0 8px var(--s-green); }
     .w-chip-dot.purple { background: var(--s-purple); box-shadow: 0 0 8px var(--s-purple); }
     .w-chip-dot.amber { background: var(--s-amber); box-shadow: 0 0 8px var(--s-amber); }
-    .welcome-stack { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--s-border); border-radius: 8px; overflow: hidden; }
+    .welcome-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      border: 1px solid var(--s-border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.02);
+    }
+    .stack-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.02);
+    }
+    .stack-row:not(:last-child) { border-bottom: 1px solid var(--s-border); }
+    .stack-label {
+      width: 80px;
+      flex-shrink: 0;
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--s-muted);
+    }
+    .stack-value {
+      font-size: 12px;
+      color: var(--s-text);
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      line-height: 1.5;
+    }
   `],
 })
 export class WelcomeSlide {

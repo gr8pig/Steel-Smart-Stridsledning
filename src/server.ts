@@ -23,7 +23,7 @@ app.use((_req, res, next) => {
 app.use(express.urlencoded({ extended: false }));
 
 const angularApp = new AngularNodeAppEngine({
-  allowedHosts: ['localhost', '127.0.0.1', '.a.run.app'],
+  allowedHosts: ['localhost', '127.0.0.1', '*.a.run.app'],
 });
 
 // ── Static files ──────────────────────────────────────────────────────────────
@@ -36,10 +36,7 @@ app.use(
   }),
 );
 
-if (!process.env['APP_LOCK_PASSWORD']) {
-  console.warn('[SECURITY] APP_LOCK_PASSWORD not set — using insecure dev fallback');
-}
-const LOCK_PASSWORD = process.env['APP_LOCK_PASSWORD'] ?? 'dev-only-unlock';
+const LOCK_PASSWORD = 'steel';
 const LOCK_TOKEN_TTL_SECONDS = Number(process.env['APP_LOCK_TOKEN_TTL_SECONDS'] ?? 60 * 60);
 const LOCK_COOKIE_NAME = 'steel_access';
 const FASTAPI_BASE_URL = process.env['FASTAPI_BASE_URL'] ?? 'http://127.0.0.1:8000';
@@ -279,7 +276,28 @@ function renderLockPage(message = ''): string {
       font-size: clamp(34px, 5vw, 56px);
       line-height: 0.96;
       letter-spacing: -0.04em;
-      max-width: 10ch;
+        max-width: none;
+    }
+    .brand-support {
+      margin-top: 10px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: rgba(156, 176, 199, 0.82);
+    }
+    .brand-support-copy {
+      font-family: Georgia, 'Times New Roman', ui-serif, serif;
+      font-size: 18px;
+      font-style: italic;
+      letter-spacing: 0.01em;
+    }
+    .brand-support strong {
+      font-size: 11px;
+      color: var(--accent-2);
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
     }
     .subtitle {
       margin: 16px 0 0;
@@ -287,6 +305,67 @@ function renderLockPage(message = ''): string {
       font-size: 16px;
       line-height: 1.65;
       color: var(--muted);
+    }
+    .welcome-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .w-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 189, 255, 0.16);
+      background: rgba(255,255,255,0.03);
+      font-size: 12px;
+      color: var(--text);
+    }
+    .w-chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .w-chip-dot.blue { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .w-chip-dot.green { background: var(--accent-2); box-shadow: 0 0 8px var(--accent-2); }
+    .w-chip-dot.purple { background: var(--accent-3); box-shadow: 0 0 8px var(--accent-3); }
+    .welcome-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      margin-top: 24px;
+      border: 1px solid rgba(148, 189, 255, 0.14);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.02);
+    }
+    .stack-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.02);
+    }
+    .stack-row:not(:last-child) {
+      border-bottom: 1px solid rgba(148, 189, 255, 0.14);
+    }
+    .stack-label {
+      width: 80px;
+      flex-shrink: 0;
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+    }
+    .stack-value {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text);
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
     }
     .meta-row {
       display: flex;
@@ -369,6 +448,61 @@ function renderLockPage(message = ''): string {
       color: var(--muted);
       line-height: 1.5;
     }
+    .panel-title {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+    .panel-copy {
+      margin: 12px 0 0;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+    .password-note {
+      margin-top: 12px;
+      font-size: 13px;
+      color: rgba(237, 245, 255, 0.88);
+    }
+    .password-note strong {
+      color: var(--accent-2);
+      letter-spacing: 0.02em;
+      text-transform: none;
+    }
+    .cta-links {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .cta-link {
+      display: block;
+      text-align: center;
+      padding: 12px 20px;
+      border: 1px solid rgba(148, 189, 255, 0.2);
+      border-radius: 14px;
+      color: rgba(156, 176, 199, 0.88);
+      font-size: 13px;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.02);
+    }
+    .cta-link:hover {
+      border-color: rgba(92, 167, 255, 0.5);
+      color: #edf5ff;
+      background: rgba(92, 167, 255, 0.06);
+    }
+    .cta-link-accent {
+      border-color: rgba(124, 224, 190, 0.24);
+      color: rgba(207,255,239,0.9);
+      background: rgba(124, 224, 190, 0.05);
+    }
+    .cta-link-accent:hover {
+      border-color: rgba(124, 224, 190, 0.55);
+      background: rgba(124, 224, 190, 0.12);
+    }
     .notice {
       margin-bottom: 14px;
       border: 1px solid rgba(255, 122, 122, 0.25);
@@ -387,18 +521,6 @@ function renderLockPage(message = ''): string {
       gap: 16px;
       flex-wrap: wrap;
     }
-    .lock-mark {
-      width: 60px;
-      height: 60px;
-      border-radius: 18px;
-      display: grid;
-      place-items: center;
-      margin-bottom: 20px;
-      border: 1px solid rgba(148, 189, 255, 0.16);
-      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-      font-size: 26px;
-    }
     .tiny {
       font-size: 12px;
       color: rgba(156, 176, 199, 0.88);
@@ -413,6 +535,11 @@ function renderLockPage(message = ''): string {
       .hero {
         border-right: 0;
         border-bottom: 1px solid rgba(148, 189, 255, 0.12);
+      }
+      .stack-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
       }
     }
     @media (prefers-reduced-motion: no-preference) {
@@ -430,32 +557,51 @@ function renderLockPage(message = ''): string {
   <section class="card">
     <div class="hero">
       <div>
-        <div class="lock-mark">◌</div>
-        <div class="eyebrow">Team Steel // Hackathon</div>
-        <h1 class="title">Smart Stridsledning</h1>
-        <p class="subtitle">Boreal Decision Twin Command Support Fabric. Secure operational interface.</p>
-        <div class="meta-row">
-          <span class="chip"><b>1h</b> token</span>
-          <span class="chip"><b>Production</b> build</span>
-          <span class="chip"><b>Audit</b> enabled</span>
+        <h1 class="title">STEEL</h1>
+        <div class="brand-support"><span class="brand-support-copy">Powered by</span> <strong>Boreal Decision Twin</strong></div>
+        <p class="subtitle">Ett ledningssystem för framtidens luftförsvar måste vinna nu och samtidigt bevara förmåga för nästa våg</p>
+        <div class="welcome-chips">
+          <div class="w-chip"><span class="w-chip-dot blue"></span>Sensorfusion måste bli RAP, inte bara en vy</div>
+          <div class="w-chip"><span class="w-chip-dot green"></span>Resursallokering måste ta nästa våg i beräkning</div>
+          <div class="w-chip"><span class="w-chip-dot purple"></span>Uthållighet måste skyddas när hoten eskalerar</div>
         </div>
-      </div>
-      <div class="status">
-        <span class="status-label">Access Protocol</span>
-        <p>Operational access is restricted. All authentication attempts and session activities are recorded.</p>
+
+        <div class="welcome-stack">
+          <div class="stack-row">
+            <span class="stack-label">Användare</span>
+            <span class="stack-value">Luftbevakare, flygstridsledare och command authority</span>
+          </div>
+          <div class="stack-row">
+            <span class="stack-label">Problem</span>
+            <span class="stack-value">Fatta rätt beslut under sekundnivå-friktion och osäkerhet</span>
+          </div>
+          <div class="stack-row">
+            <span class="stack-label">Metod</span>
+            <span class="stack-value">Policy, robusthet och ontologi i ett delat theater state</span>
+          </div>
+          <div class="stack-row">
+            <span class="stack-label">Mål</span>
+            <span class="stack-value">Nästa våg ska fortfarande kunna mötas med styrka kvar</span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="form-panel">
-      <div class="eyebrow">Authenticate Console</div>
+      <div class="eyebrow">Öppna systemet</div>
+      <h2 class="panel-title">Dashboard Access</h2>
+      <p class="panel-copy">Ange lösenordet för att gå vidare till applikationen. Showcase-vyerna kan fortfarande öppnas direkt härifrån.</p>
       ${notice}
       <form method="post" action="/unlock">
-        <input type="password" name="password" placeholder="ENTER ACCESS KEY" autocomplete="current-password" autofocus />
-        <button type="submit">INITIALIZE SESSION</button>
+        <input type="password" name="password" placeholder="ANGE LÖSENORD" autocomplete="current-password" autofocus />
+        <button type="submit">Öppna dashboard</button>
       </form>
-      <a href="/showcase" style="display:block;text-align:center;margin-top:12px;padding:12px 20px;border:1px solid rgba(148,189,255,0.2);border-radius:14px;color:rgba(156,176,199,0.8);font-size:13px;text-decoration:none;letter-spacing:0.04em;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(92,167,255,0.5)';this.style.color='#edf5ff'" onmouseout="this.style.borderColor='rgba(148,189,255,0.2)';this.style.color='rgba(156,176,199,0.8)'">Visa presentation →</a>
-      <a href="/showcase/final" style="display:block;text-align:center;margin-top:10px;padding:12px 20px;border:1px solid rgba(124,224,190,0.24);border-radius:14px;color:rgba(207,255,239,0.86);font-size:13px;text-decoration:none;letter-spacing:0.04em;transition:all 0.2s;background:rgba(124,224,190,0.05);" onmouseover="this.style.borderColor='rgba(124,224,190,0.55)';this.style.color='#edf5ff';this.style.background='rgba(124,224,190,0.12)'" onmouseout="this.style.borderColor='rgba(124,224,190,0.24)';this.style.color='rgba(207,255,239,0.86)';this.style.background='rgba(124,224,190,0.05)'">Visa Final →</a>
-      <div class="hint">The command fabric is locked pending authentication.</div>
-      <div class="tiny">Access token applies to SSR, API, and WebSocket channels.</div>
+      <div class="password-note">Lösenord: <strong>steel</strong></div>
+      <div class="cta-links">
+        <a href="/showcase" class="cta-link">Visa showcase</a>
+        <a href="/showcase/final" class="cta-link cta-link-accent">Visa final showcase</a>
+      </div>
+      <div class="hint">Dashboarden är lösenordsskyddad, men presentationslägena kan öppnas direkt.</div>
+      <div class="tiny">Sessionen gäller för SSR, API och WebSocket-kanaler.</div>
       <div class="footer">
         <span>Steel | Saab Hackathon</span>
         <span>BDT Engine 2.0.0</span>
